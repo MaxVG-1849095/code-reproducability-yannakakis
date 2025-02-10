@@ -1,7 +1,7 @@
 {
    "name":  "Query", 
-   "result": 0.450732,
-   "timing": 0.450732,
+   "result": 0.809543,
+   "timing": 0.809543,
    "cardinality": 0,
    "extra-info": "SELECT MIN(k.keyword) AS movie_keyword,\n       MIN(n.name) AS actor_name,\n       MIN(t.title) AS hero_movie\nFROM ci,\n     k,\n     mk,\n     n,\n     t\nWHERE k.keyword IN ('superhero',\n                    'sequel',\n                    'second-part',\n                    'marvel-comics',\n                    'based-on-comic',\n                    'tv-special',\n                    'fight',\n                    'violence')\n  AND n.name LIKE '%Downey%Robert%'\n  AND t.production_year > 2014\n  AND k.id = mk.keyword_id\n  AND t.id = mk.movie_id\n  AND t.id = ci.movie_id\n  AND ci.movie_id = mk.movie_id\n  AND n.id = ci.person_id;", 
    "timings": [
@@ -28,19 +28,19 @@
             "children": [
              {
                "name": "HASH_JOIN",
-               "timing":0.000060,
+               "timing":0.000081,
                "cardinality":12,
                "extra_info": "INNER\nci.person_id = n.id\n\n[INFOSEPARATOR]\nEC: 307724\n",
                "children": [
                 {
                   "name": "HASH_JOIN",
-                  "timing":0.099915,
+                  "timing":0.194369,
                   "cardinality":383,
                   "extra_info": "INNER\nci.movie_id = mk.movie_id\n\n[INFOSEPARATOR]\nEC: 1526637\n",
                   "children": [
                    {
                      "name": "SEQ_SCAN ",
-                     "timing":0.103887,
+                     "timing":0.231972,
                      "cardinality":36244327,
                      "extra_info": "ci\n[INFOSEPARATOR]\nmovie_id\nperson_id\n[INFOSEPARATOR]\nFilters: movie_id>=2 AND movie_id<=2525971 AND movie_id IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 36244344",
                      "children": [
@@ -49,19 +49,19 @@
 ,
                    {
                      "name": "HASH_JOIN",
-                     "timing":0.000072,
+                     "timing":0.000508,
                      "cardinality":36,
                      "extra_info": "INNER\nmk.keyword_id = k.id\n\n[INFOSEPARATOR]\nBuild Min: 1\nBuild Max: 134170\n\n[INFOSEPARATOR]\nEC: 138819\n",
                      "children": [
                       {
                         "name": "HASH_JOIN",
-                        "timing":0.016706,
+                        "timing":0.029215,
                         "cardinality":1054,
                         "extra_info": "INNER\nmk.movie_id = t.id\n\n[INFOSEPARATOR]\nEC: 694098\n",
                         "children": [
                          {
                            "name": "SEQ_SCAN ",
-                           "timing":0.009605,
+                           "timing":0.018119,
                            "cardinality":4523930,
                            "extra_info": "mk\n[INFOSEPARATOR]\nkeyword_id\nmovie_id\n[INFOSEPARATOR]\nEC: 4523930",
                            "children": [
@@ -70,13 +70,13 @@
 ,
                          {
                            "name": "FILTER",
-                           "timing":0.000311,
+                           "timing":0.000693,
                            "cardinality":438,
                            "extra_info": "(t.id BETWEEN 2 AND 2525971)\n[INFOSEPARATOR]\nEC: 505662",
                            "children": [
                             {
                               "name": "SEQ_SCAN ",
-                              "timing":0.024085,
+                              "timing":0.030994,
                               "cardinality":438,
                               "extra_info": "t\n[INFOSEPARATOR]\nid\ntitle\n[INFOSEPARATOR]\nFilters: production_year>2014 AND production_year IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 505662",
                               "children": [
@@ -89,19 +89,19 @@
 ,
                       {
                         "name": "FILTER",
-                        "timing":0.000104,
+                        "timing":0.000158,
                         "cardinality":8,
                         "extra_info": "IN (...)\n[INFOSEPARATOR]\nEC: 26834",
                         "children": [
                          {
                            "name": "HASH_JOIN",
-                           "timing":0.002145,
+                           "timing":0.002701,
                            "cardinality":134170,
                            "extra_info": "MARK\nk.keyword = #0\n\n[INFOSEPARATOR]\nEC: 134170\n",
                            "children": [
                             {
                               "name": "SEQ_SCAN ",
-                              "timing":0.004119,
+                              "timing":0.005179,
                               "cardinality":134170,
                               "extra_info": "k\n[INFOSEPARATOR]\nkeyword\nid\n[INFOSEPARATOR]\nEC: 134170",
                               "children": [
@@ -110,7 +110,7 @@
 ,
                             {
                               "name": "COLUMN_DATA_SCAN",
-                              "timing":0.000005,
+                              "timing":0.000007,
                               "cardinality":8,
                               "extra_info": "",
                               "children": [
@@ -127,13 +127,13 @@
 ,
                 {
                   "name": "FILTER",
-                  "timing":0.049905,
+                  "timing":0.077188,
                   "cardinality":2,
                   "extra_info": "(n.name ~~ '%Downey%Robert%')\n[INFOSEPARATOR]\nEC: 833498",
                   "children": [
                    {
                      "name": "SEQ_SCAN ",
-                     "timing":0.131884,
+                     "timing":0.197126,
                      "cardinality":4061926,
                      "extra_info": "n\n[INFOSEPARATOR]\nname\nid\n[INFOSEPARATOR]\nFilters: id<=4061926 AND id IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 833498",
                      "children": [

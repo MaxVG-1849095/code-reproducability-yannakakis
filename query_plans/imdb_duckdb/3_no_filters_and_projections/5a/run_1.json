@@ -1,7 +1,7 @@
 {
     "name": "Query",
-    "result": 0.216438,
-    "timing": 0.216438,
+    "result": 0.473345,
+    "timing": 0.473345,
     "cardinality": 0,
     "extra-info": "SELECT MIN(t.title) AS typical_european_movie\nFROM ct,\n     it,\n     mc,\n     mi,\n     t\nWHERE ct.kind = 'production companies'\n  AND mc.note LIKE '%(theatrical)%'\n  AND mc.note LIKE '%(France)%'\n  AND mi.info IN ('Sweden',\n                  'Norway',\n                  'Germany',\n                  'Denmark',\n                  'Swedish',\n                  'Denish',\n                  'Norwegian',\n                  'German')\n  AND t.production_year > 2005\n  AND t.id = mi.movie_id\n  AND t.id = mc.movie_id\n  AND mc.movie_id = mi.movie_id\n  AND ct.id = mc.company_type_id\n  AND it.id = mi.info_type_id;",
     "timings": [],
@@ -26,15 +26,15 @@
                             "children": [
                                 {
                                     "name": "HASH_JOIN",
-                                    "timing": 2.8e-05,
+                                    "timing": 0.000253,
                                     "cardinality": 0,
-                                    "extra_info": "INNER\nmi.info_type_id = it.id\n\n[INFOSEPARATOR]\nBuild Min: 1\nBuild Max: 110\n\n[INFOSEPARATOR]\nEC: 27123\n",
+                                    "extra_info": "INNER\nmi.info_type_id = it.id\n\n[INFOSEPARATOR]\nBuild Min: 1\nBuild Max: 110\n\n[INFOSEPARATOR]\nEC: 27124\n",
                                     "children": [
                                         {
                                             "name": "HASH_JOIN",
-                                            "timing": 3e-06,
+                                            "timing": 4e-06,
                                             "cardinality": 0,
-                                            "extra_info": "INNER\nmi.movie_id = t.id\n\n[INFOSEPARATOR]\nEC: 26883\n",
+                                            "extra_info": "INNER\nmi.movie_id = t.id\n\n[INFOSEPARATOR]\nEC: 26884\n",
                                             "children": [
                                                 {
                                                     "name": "PROJECTION",
@@ -44,38 +44,38 @@
                                                     "children": [
                                                         {
                                                             "name": "FILTER",
-                                                            "timing": 2e-06,
+                                                            "timing": 3e-06,
                                                             "cardinality": 88,
                                                             "extra_info": "(mi.movie_id BETWEEN 2 AND 2525745)\n[INFOSEPARATOR]\nEC: 2967144",
                                                             "children": [
                                                                 {
                                                                     "name": "PROJECTION",
-                                                                    "timing": 0.0,
+                                                                    "timing": 1e-06,
                                                                     "cardinality": 88,
                                                                     "extra_info": "#1\n#2\n#3\n",
                                                                     "children": [
                                                                         {
                                                                             "name": "FILTER",
-                                                                            "timing": 6e-06,
+                                                                            "timing": 1e-05,
                                                                             "cardinality": 88,
                                                                             "extra_info": "IN (...)\n[INFOSEPARATOR]\nEC: 2967144",
                                                                             "children": [
                                                                                 {
                                                                                     "name": "HASH_JOIN",
-                                                                                    "timing": 6.8e-05,
+                                                                                    "timing": 0.000116,
                                                                                     "cardinality": 6144,
                                                                                     "extra_info": "MARK\nmi.info = #0\n\n[INFOSEPARATOR]\nEC: 14835720\n",
                                                                                     "children": [
                                                                                         {
                                                                                             "name": "SEQ_SCAN ",
-                                                                                            "timing": 1.6e-05,
+                                                                                            "timing": 4.8e-05,
                                                                                             "cardinality": 6144,
                                                                                             "extra_info": "mi\n[INFOSEPARATOR]\ninfo\nmovie_id\ninfo_type_id\n[INFOSEPARATOR]\nEC: 14835720",
                                                                                             "children": []
                                                                                         },
                                                                                         {
                                                                                             "name": "COLUMN_DATA_SCAN",
-                                                                                            "timing": 4e-06,
+                                                                                            "timing": 2.9e-05,
                                                                                             "cardinality": 8,
                                                                                             "extra_info": "",
                                                                                             "children": []
@@ -92,25 +92,25 @@
                                                 },
                                                 {
                                                     "name": "HASH_JOIN",
-                                                    "timing": 6.4e-05,
+                                                    "timing": 0.000191,
                                                     "cardinality": 0,
-                                                    "extra_info": "INNER\nmc.company_type_id = ct.id\n\n[INFOSEPARATOR]\nBuild Min: 1\nBuild Max: 2\n\n[INFOSEPARATOR]\nEC: 24447\n",
+                                                    "extra_info": "INNER\nmc.company_type_id = ct.id\n\n[INFOSEPARATOR]\nBuild Min: 1\nBuild Max: 2\n\n[INFOSEPARATOR]\nEC: 24448\n",
                                                     "children": [
                                                         {
                                                             "name": "HASH_JOIN",
-                                                            "timing": 0.030511,
+                                                            "timing": 0.082535,
                                                             "cardinality": 3929,
-                                                            "extra_info": "INNER\nmc.movie_id = t.id\n\n[INFOSEPARATOR]\nEC: 97790\n",
+                                                            "extra_info": "INNER\nmc.movie_id = t.id\n\n[INFOSEPARATOR]\nEC: 97792\n",
                                                             "children": [
                                                                 {
                                                                     "name": "FILTER",
-                                                                    "timing": 0.032807,
+                                                                    "timing": 0.04489,
                                                                     "cardinality": 24025,
                                                                     "extra_info": "(contains(mc.note, '(theatrical)') AND contains(mc.note, '(France)'))\n[INFOSEPARATOR]\nEC: 521825",
                                                                     "children": [
                                                                         {
                                                                             "name": "SEQ_SCAN ",
-                                                                            "timing": 0.043065,
+                                                                            "timing": 0.070512,
                                                                             "cardinality": 2609129,
                                                                             "extra_info": "mc\n[INFOSEPARATOR]\nnote\nmovie_id\ncompany_type_id\n[INFOSEPARATOR]\nEC: 521825",
                                                                             "children": []
@@ -119,13 +119,13 @@
                                                                 },
                                                                 {
                                                                     "name": "FILTER",
-                                                                    "timing": 0.003061,
+                                                                    "timing": 0.005446,
                                                                     "cardinality": 1012641,
                                                                     "extra_info": "(t.id BETWEEN 2 AND 2525745)\n[INFOSEPARATOR]\nEC: 505662",
                                                                     "children": [
                                                                         {
                                                                             "name": "SEQ_SCAN ",
-                                                                            "timing": 0.089896,
+                                                                            "timing": 0.128936,
                                                                             "cardinality": 1012920,
                                                                             "extra_info": "t\n[INFOSEPARATOR]\nid\ntitle\n[INFOSEPARATOR]\nFilters: production_year>2005 AND production_year IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 505662",
                                                                             "children": []
@@ -136,13 +136,13 @@
                                                         },
                                                         {
                                                             "name": "FILTER",
-                                                            "timing": 3e-06,
+                                                            "timing": 1.9e-05,
                                                             "cardinality": 1,
                                                             "extra_info": "(ct.id <= 2)\n[INFOSEPARATOR]\nEC: 1",
                                                             "children": [
                                                                 {
                                                                     "name": "SEQ_SCAN ",
-                                                                    "timing": 4e-06,
+                                                                    "timing": 2.5e-05,
                                                                     "cardinality": 1,
                                                                     "extra_info": "ct\n[INFOSEPARATOR]\nid\n[INFOSEPARATOR]\nFilters: kind='production companies' AND kind IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 1",
                                                                     "children": []
@@ -155,7 +155,7 @@
                                         },
                                         {
                                             "name": "SEQ_SCAN ",
-                                            "timing": 5e-06,
+                                            "timing": 8.5e-05,
                                             "cardinality": 110,
                                             "extra_info": "it\n[INFOSEPARATOR]\nid\n[INFOSEPARATOR]\nFilters: id<=110 AND id IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 113",
                                             "children": []

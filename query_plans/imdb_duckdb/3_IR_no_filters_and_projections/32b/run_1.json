@@ -1,76 +1,76 @@
 {
-    "execution_time": 0.12777,
+    "execution_time": 0.462462,
     "root": {
         "name": "AGGREGATE",
-        "execution_time": 2.8e-05,
+        "execution_time": 0.000216,
         "actual_rows": 1,
         "estimated_cardinality": null,
         "children": [
             {
                 "name": "PROJECTION",
-                "execution_time": 1e-06,
+                "execution_time": 1.4e-05,
                 "actual_rows": 4388,
                 "estimated_cardinality": null,
                 "children": [
                     {
                         "name": "HASHJOIN",
-                        "execution_time": 0.003485,
+                        "execution_time": 0.059081,
                         "actual_rows": 4388,
                         "estimated_cardinality": null,
                         "children": [
                             {
                                 "name": "SEQUENTIALSCAN",
-                                "execution_time": 0.007744,
-                                "actual_rows": 186174,
+                                "execution_time": 0.340188,
+                                "actual_rows": 2524711,
                                 "estimated_cardinality": 2528312,
                                 "children": [],
                                 "relation": "title",
-                                "opt_filter": "id>=2 AND id<=186175 AND id IS NOT NULL",
+                                "opt_filter": "id>=284 AND id<=2524994 AND id IS NOT NULL",
                                 "projection": [
                                     {
-                                        "table_name": "t1",
+                                        "table_name": "t2",
                                         "field_name": "id"
                                     },
                                     {
-                                        "table_name": "t1",
+                                        "table_name": "t2",
                                         "field_name": "title"
                                     }
                                 ]
                             },
                             {
                                 "name": "HASHJOIN",
-                                "execution_time": 0.01602,
+                                "execution_time": 0.008914,
                                 "actual_rows": 4388,
                                 "estimated_cardinality": null,
                                 "children": [
                                     {
                                         "name": "SEQUENTIALSCAN",
-                                        "execution_time": 0.092255,
-                                        "actual_rows": 2524711,
+                                        "execution_time": 0.029735,
+                                        "actual_rows": 186174,
                                         "estimated_cardinality": 2528312,
                                         "children": [],
                                         "relation": "title",
-                                        "opt_filter": "id>=284 AND id<=2524994 AND id IS NOT NULL",
+                                        "opt_filter": "id>=2 AND id<=186175 AND id IS NOT NULL",
                                         "projection": [
                                             {
-                                                "table_name": "t2",
+                                                "table_name": "t1",
                                                 "field_name": "id"
                                             },
                                             {
-                                                "table_name": "t2",
+                                                "table_name": "t1",
                                                 "field_name": "title"
                                             }
                                         ]
                                     },
                                     {
                                         "name": "HASHJOIN",
-                                        "execution_time": 0.001104,
+                                        "execution_time": 0.002257,
                                         "actual_rows": 4388,
                                         "estimated_cardinality": null,
                                         "children": [
                                             {
                                                 "name": "SEQUENTIALSCAN",
-                                                "execution_time": 4e-06,
+                                                "execution_time": 1.5e-05,
                                                 "actual_rows": 17,
                                                 "estimated_cardinality": 18,
                                                 "children": [],
@@ -89,13 +89,13 @@
                                             },
                                             {
                                                 "name": "HASHJOIN",
-                                                "execution_time": 0.000233,
+                                                "execution_time": 0.001158,
                                                 "actual_rows": 4388,
                                                 "estimated_cardinality": null,
                                                 "children": [
                                                     {
                                                         "name": "SEQUENTIALSCAN",
-                                                        "execution_time": 9.9e-05,
+                                                        "execution_time": 0.000379,
                                                         "actual_rows": 29997,
                                                         "estimated_cardinality": 29997,
                                                         "children": [],
@@ -118,13 +118,13 @@
                                                     },
                                                     {
                                                         "name": "HASHJOIN",
-                                                        "execution_time": 0.000284,
+                                                        "execution_time": 0.0007,
                                                         "actual_rows": 2233,
                                                         "estimated_cardinality": null,
                                                         "children": [
                                                             {
                                                                 "name": "SEQUENTIALSCAN",
-                                                                "execution_time": 0.000393,
+                                                                "execution_time": 0.000903,
                                                                 "actual_rows": 97854,
                                                                 "estimated_cardinality": 4523930,
                                                                 "children": [],
@@ -143,7 +143,7 @@
                                                             },
                                                             {
                                                                 "name": "SEQUENTIALSCAN",
-                                                                "execution_time": 0.003821,
+                                                                "execution_time": 0.008053,
                                                                 "actual_rows": 1,
                                                                 "estimated_cardinality": 1,
                                                                 "children": [],
@@ -202,12 +202,12 @@
                                 "condition": [
                                     [
                                         {
-                                            "table_name": "t2",
+                                            "table_name": "t1",
                                             "field_name": "id"
                                         },
                                         {
                                             "table_name": "ml",
-                                            "field_name": "linked_movie_id"
+                                            "field_name": "movie_id"
                                         }
                                     ]
                                 ]
@@ -216,12 +216,12 @@
                         "condition": [
                             [
                                 {
-                                    "table_name": "t1",
+                                    "table_name": "t2",
                                     "field_name": "id"
                                 },
                                 {
                                     "table_name": "ml",
-                                    "field_name": "movie_id"
+                                    "field_name": "linked_movie_id"
                                 }
                             ]
                         ]
@@ -251,11 +251,11 @@
         ]
     },
     "aliases": {
-        "mk": "movie_keyword",
+        "ml": "movie_link",
         "k": "keyword",
         "t2": "title",
-        "ml": "movie_link",
         "lt": "link_type",
+        "mk": "movie_keyword",
         "t1": "title"
     }
 }

@@ -1,32 +1,32 @@
 {
-    "execution_time": 0.563349,
+    "execution_time": 1.200574,
     "root": {
         "name": "AGGREGATE",
-        "execution_time": 0.003894,
+        "execution_time": 0.005364,
         "actual_rows": 1,
         "estimated_cardinality": null,
         "children": [
             {
                 "name": "PROJECTION",
-                "execution_time": 0.00024,
+                "execution_time": 0.000262,
                 "actual_rows": 670390,
                 "estimated_cardinality": null,
                 "children": [
                     {
                         "name": "HASHJOIN",
-                        "execution_time": 0.017093,
+                        "execution_time": 0.020179,
                         "actual_rows": 670390,
                         "estimated_cardinality": null,
                         "children": [
                             {
                                 "name": "HASHJOIN",
-                                "execution_time": 0.222435,
+                                "execution_time": 0.591269,
                                 "actual_rows": 4316584,
                                 "estimated_cardinality": null,
                                 "children": [
                                     {
                                         "name": "SEQUENTIALSCAN",
-                                        "execution_time": 0.033705,
+                                        "execution_time": 0.052487,
                                         "actual_rows": 14834457,
                                         "estimated_cardinality": 14835720,
                                         "children": [],
@@ -45,19 +45,19 @@
                                     },
                                     {
                                         "name": "HASHJOIN",
-                                        "execution_time": 0.002684,
+                                        "execution_time": 0.004363,
                                         "actual_rows": 87293,
                                         "estimated_cardinality": null,
                                         "children": [
                                             {
                                                 "name": "HASHJOIN",
-                                                "execution_time": 0.070876,
+                                                "execution_time": 0.187714,
                                                 "actual_rows": 248554,
                                                 "estimated_cardinality": null,
                                                 "children": [
                                                     {
                                                         "name": "SEQUENTIALSCAN",
-                                                        "execution_time": 0.086713,
+                                                        "execution_time": 0.101199,
                                                         "actual_rows": 2525744,
                                                         "estimated_cardinality": 2528312,
                                                         "children": [],
@@ -80,19 +80,19 @@
                                                     },
                                                     {
                                                         "name": "HASHJOIN",
-                                                        "execution_time": 0.003215,
+                                                        "execution_time": 0.004437,
                                                         "actual_rows": 248554,
                                                         "estimated_cardinality": null,
                                                         "children": [
                                                             {
                                                                 "name": "HASHJOIN",
-                                                                "execution_time": 0.041657,
+                                                                "execution_time": 0.092471,
                                                                 "actual_rows": 746064,
                                                                 "estimated_cardinality": null,
                                                                 "children": [
                                                                     {
                                                                         "name": "SEQUENTIALSCAN",
-                                                                        "execution_time": 0.022332,
+                                                                        "execution_time": 0.02807,
                                                                         "actual_rows": 1380011,
                                                                         "estimated_cardinality": 1380035,
                                                                         "children": [],
@@ -115,19 +115,19 @@
                                                                     },
                                                                     {
                                                                         "name": "HASHJOIN",
-                                                                        "execution_time": 0.002989,
+                                                                        "execution_time": 0.003721,
                                                                         "actual_rows": 552328,
                                                                         "estimated_cardinality": null,
                                                                         "children": [
                                                                             {
                                                                                 "name": "HASHJOIN",
-                                                                                "execution_time": 0.00995,
+                                                                                "execution_time": 0.015207,
                                                                                 "actual_rows": 1153798,
                                                                                 "estimated_cardinality": null,
                                                                                 "children": [
                                                                                     {
                                                                                         "name": "SEQUENTIALSCAN",
-                                                                                        "execution_time": 0.004522,
+                                                                                        "execution_time": 0.007558,
                                                                                         "actual_rows": 2609129,
                                                                                         "estimated_cardinality": 2609129,
                                                                                         "children": [],
@@ -150,7 +150,7 @@
                                                                                     },
                                                                                     {
                                                                                         "name": "SEQUENTIALSCAN",
-                                                                                        "execution_time": 0.00984,
+                                                                                        "execution_time": 0.013649,
                                                                                         "actual_rows": 84843,
                                                                                         "estimated_cardinality": 1425,
                                                                                         "children": [],
@@ -183,13 +183,13 @@
                                                                             },
                                                                             {
                                                                                 "name": "FILTER",
-                                                                                "execution_time": 1e-06,
+                                                                                "execution_time": 2e-06,
                                                                                 "actual_rows": 1,
                                                                                 "estimated_cardinality": 1,
                                                                                 "children": [
                                                                                     {
                                                                                         "name": "SEQUENTIALSCAN",
-                                                                                        "execution_time": 3e-06,
+                                                                                        "execution_time": 4e-06,
                                                                                         "actual_rows": 1,
                                                                                         "estimated_cardinality": 1,
                                                                                         "children": [],
@@ -235,13 +235,13 @@
                                                             },
                                                             {
                                                                 "name": "FILTER",
-                                                                "execution_time": 2e-06,
+                                                                "execution_time": 3e-06,
                                                                 "actual_rows": 1,
                                                                 "estimated_cardinality": 1,
                                                                 "children": [
                                                                     {
                                                                         "name": "SEQUENTIALSCAN",
-                                                                        "execution_time": 5e-06,
+                                                                        "execution_time": 8e-06,
                                                                         "actual_rows": 1,
                                                                         "estimated_cardinality": 1,
                                                                         "children": [],
@@ -287,7 +287,7 @@
                                             },
                                             {
                                                 "name": "SEQUENTIALSCAN",
-                                                "execution_time": 3e-06,
+                                                "execution_time": 6e-06,
                                                 "actual_rows": 1,
                                                 "estimated_cardinality": 1,
                                                 "children": [],
@@ -330,13 +330,13 @@
                             },
                             {
                                 "name": "FILTER",
-                                "execution_time": 3e-06,
+                                "execution_time": 1.7e-05,
                                 "actual_rows": 1,
                                 "estimated_cardinality": 1,
                                 "children": [
                                     {
                                         "name": "SEQUENTIALSCAN",
-                                        "execution_time": 8e-06,
+                                        "execution_time": 3.2e-05,
                                         "actual_rows": 1,
                                         "estimated_cardinality": 1,
                                         "children": [],
@@ -392,13 +392,13 @@
     },
     "aliases": {
         "cn": "company_name",
-        "miidx": "movie_info_idx",
-        "kt": "kind_type",
         "it2": "info_type",
         "ct": "company_type",
+        "kt": "kind_type",
         "mi": "movie_info",
         "it": "info_type",
-        "t": "title",
-        "mc": "movie_companies"
+        "mc": "movie_companies",
+        "miidx": "movie_info_idx",
+        "t": "title"
     }
 }

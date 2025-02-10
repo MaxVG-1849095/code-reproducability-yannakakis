@@ -1,44 +1,44 @@
 {
     "name": "Query",
-    "result": 0.405723,
-    "timing": 0.405723,
+    "result": 0.637973,
+    "timing": 0.637973,
     "cardinality": 0,
     "extra-info": "SELECT MIN(k.keyword) AS movie_keyword,\n       MIN(n.name) AS actor_name,\n       MIN(t.title) AS marvel_movie\nFROM ci,\n     k,\n     mk,\n     n,\n     t\nWHERE k.keyword = 'marvel-cinematic-universe'\n  AND n.name LIKE '%Downey%Robert%'\n  AND t.production_year > 2014\n  AND k.id = mk.keyword_id\n  AND t.id = mk.movie_id\n  AND t.id = ci.movie_id\n  AND ci.movie_id = mk.movie_id\n  AND n.id = ci.person_id;",
     "timings": [],
     "children": [
         {
             "name": "RESULT_COLLECTOR",
-            "timing": 8e-06,
+            "timing": 1.1e-05,
             "cardinality": 0,
             "extra_info": "",
             "children": [
                 {
                     "name": "UNGROUPED_AGGREGATE",
-                    "timing": 4e-06,
+                    "timing": 1.7e-05,
                     "cardinality": 1,
                     "extra_info": "min(#0)\nmin(#1)\nmin(#2)",
                     "children": [
                         {
                             "name": "PROJECTION",
-                            "timing": 1e-06,
+                            "timing": 4e-06,
                             "cardinality": 2,
                             "extra_info": "k.keyword\nn.name\nt.title\n",
                             "children": [
                                 {
                                     "name": "HASH_JOIN",
-                                    "timing": 0.000108,
+                                    "timing": 0.000336,
                                     "cardinality": 2,
                                     "extra_info": "INNER\nn.id = ci.person_id\n\n[INFOSEPARATOR]\nEC: 11\n",
                                     "children": [
                                         {
                                             "name": "FILTER",
-                                            "timing": 0.047453,
+                                            "timing": 0.069161,
                                             "cardinality": 2,
                                             "extra_info": "(n.name ~~ '%Downey%Robert%')\n[INFOSEPARATOR]\nEC: 833498",
                                             "children": [
                                                 {
                                                     "name": "SEQ_SCAN ",
-                                                    "timing": 0.127279,
+                                                    "timing": 0.181877,
                                                     "cardinality": 4061926,
                                                     "extra_info": "n\n[INFOSEPARATOR]\nname\nid\n[INFOSEPARATOR]\nFilters: id<=4061926 AND id IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 833498",
                                                     "children": []
@@ -47,32 +47,32 @@
                                         },
                                         {
                                             "name": "HASH_JOIN",
-                                            "timing": 0.07963,
+                                            "timing": 0.143973,
                                             "cardinality": 33,
                                             "extra_info": "INNER\nci.movie_id = mk.movie_id\n\n[INFOSEPARATOR]\nEC: 56\n",
                                             "children": [
                                                 {
                                                     "name": "SEQ_SCAN ",
-                                                    "timing": 0.103292,
+                                                    "timing": 0.174711,
                                                     "cardinality": 36244327,
                                                     "extra_info": "ci\n[INFOSEPARATOR]\nmovie_id\nperson_id\n[INFOSEPARATOR]\nFilters: movie_id>=2 AND movie_id<=2525971 AND movie_id IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 36244344",
                                                     "children": []
                                                 },
                                                 {
                                                     "name": "HASH_JOIN",
-                                                    "timing": 5.5e-05,
+                                                    "timing": 0.000588,
                                                     "cardinality": 2,
                                                     "extra_info": "INNER\nt.id = mk.movie_id\n\n[INFOSEPARATOR]\nEC: 5\n",
                                                     "children": [
                                                         {
                                                             "name": "FILTER",
-                                                            "timing": 0.000251,
+                                                            "timing": 0.000715,
                                                             "cardinality": 438,
                                                             "extra_info": "(t.id BETWEEN 2 AND 2525971)\n[INFOSEPARATOR]\nEC: 505662",
                                                             "children": [
                                                                 {
                                                                     "name": "SEQ_SCAN ",
-                                                                    "timing": 0.022518,
+                                                                    "timing": 0.027564,
                                                                     "cardinality": 438,
                                                                     "extra_info": "t\n[INFOSEPARATOR]\nid\ntitle\n[INFOSEPARATOR]\nFilters: production_year>2014 AND production_year IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 505662",
                                                                     "children": []
@@ -81,20 +81,20 @@
                                                         },
                                                         {
                                                             "name": "HASH_JOIN",
-                                                            "timing": 0.004726,
+                                                            "timing": 0.006141,
                                                             "cardinality": 14,
                                                             "extra_info": "INNER\nmk.keyword_id = k.id\n\n[INFOSEPARATOR]\nBuild Min: 1\nBuild Max: 134170\n\n[INFOSEPARATOR]\nEC: 33\n",
                                                             "children": [
                                                                 {
                                                                     "name": "SEQ_SCAN ",
-                                                                    "timing": 0.008948,
+                                                                    "timing": 0.012275,
                                                                     "cardinality": 4523930,
                                                                     "extra_info": "mk\n[INFOSEPARATOR]\nkeyword_id\nmovie_id\n[INFOSEPARATOR]\nEC: 4523930",
                                                                     "children": []
                                                                 },
                                                                 {
                                                                     "name": "SEQ_SCAN ",
-                                                                    "timing": 0.003894,
+                                                                    "timing": 0.004588,
                                                                     "cardinality": 1,
                                                                     "extra_info": "k\n[INFOSEPARATOR]\nkeyword\nid\n[INFOSEPARATOR]\nFilters: keyword='marvel-cinematic-universe' AND keyword IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 1",
                                                                     "children": []

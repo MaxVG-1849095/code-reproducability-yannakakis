@@ -47,7 +47,7 @@
     "replacements": {
         "n": {
             "name": "SEQUENTIALSCAN",
-            "execution_time": 0.128848,
+            "execution_time": 0.205091,
             "actual_rows": 4061926,
             "estimated_cardinality": 4167491,
             "children": [],
@@ -66,13 +66,13 @@
         },
         "chn": {
             "name": "FILTER",
-            "execution_time": 0.090676,
+            "execution_time": 0.138379,
             "actual_rows": 180152,
             "estimated_cardinality": 628067,
             "children": [
                 {
                     "name": "SEQUENTIALSCAN",
-                    "execution_time": 0.100636,
+                    "execution_time": 0.159119,
                     "actual_rows": 3140339,
                     "estimated_cardinality": 628067,
                     "children": [],
@@ -94,7 +94,7 @@
         },
         "ci": {
             "name": "SEQUENTIALSCAN",
-            "execution_time": 0.131804,
+            "execution_time": 0.274513,
             "actual_rows": 36241770,
             "estimated_cardinality": 36244344,
             "children": [],
@@ -117,19 +117,19 @@
         },
         "k": {
             "name": "PROJECTION",
-            "execution_time": 1e-06,
+            "execution_time": 5e-06,
             "actual_rows": 10,
             "estimated_cardinality": null,
             "children": [
                 {
                     "name": "FILTER",
-                    "execution_time": 9.9e-05,
+                    "execution_time": 0.000255,
                     "actual_rows": 10,
                     "estimated_cardinality": 26834,
                     "children": [
                         {
                             "name": "SEQUENTIALSCAN",
-                            "execution_time": 0.003949,
+                            "execution_time": 0.006201,
                             "actual_rows": 134170,
                             "estimated_cardinality": 134170,
                             "children": [],
@@ -159,7 +159,7 @@
         },
         "mk": {
             "name": "SEQUENTIALSCAN",
-            "execution_time": 0.011364,
+            "execution_time": 0.020233,
             "actual_rows": 4523792,
             "estimated_cardinality": 4523930,
             "children": [],
@@ -178,13 +178,13 @@
         },
         "t": {
             "name": "FILTER",
-            "execution_time": 0.002187,
+            "execution_time": 0.006061,
             "actual_rows": 1381201,
             "estimated_cardinality": 505662,
             "children": [
                 {
                     "name": "SEQUENTIALSCAN",
-                    "execution_time": 0.093163,
+                    "execution_time": 0.142004,
                     "actual_rows": 1381453,
                     "estimated_cardinality": 505662,
                     "children": [],
@@ -210,7 +210,7 @@
         },
         "cc": {
             "name": "SEQUENTIALSCAN",
-            "execution_time": 0.000236,
+            "execution_time": 0.000982,
             "actual_rows": 135086,
             "estimated_cardinality": 135086,
             "children": [],
@@ -233,7 +233,7 @@
         },
         "kt": {
             "name": "SEQUENTIALSCAN",
-            "execution_time": 3e-06,
+            "execution_time": 5e-06,
             "actual_rows": 1,
             "estimated_cardinality": 1,
             "children": [],
@@ -248,13 +248,13 @@
         },
         "cct1": {
             "name": "FILTER",
-            "execution_time": 3e-06,
+            "execution_time": 5e-06,
             "actual_rows": 1,
             "estimated_cardinality": 1,
             "children": [
                 {
                     "name": "SEQUENTIALSCAN",
-                    "execution_time": 3e-06,
+                    "execution_time": 7e-06,
                     "actual_rows": 1,
                     "estimated_cardinality": 1,
                     "children": [],
@@ -272,13 +272,13 @@
         },
         "cct2": {
             "name": "FILTER",
-            "execution_time": 6e-06,
+            "execution_time": 2.8e-05,
             "actual_rows": 2,
             "estimated_cardinality": 1,
             "children": [
                 {
                     "name": "SEQUENTIALSCAN",
-                    "execution_time": 6e-06,
+                    "execution_time": 3.7e-05,
                     "actual_rows": 2,
                     "estimated_cardinality": 1,
                     "children": [],

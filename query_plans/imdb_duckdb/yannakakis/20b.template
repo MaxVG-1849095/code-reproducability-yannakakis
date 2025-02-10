@@ -45,43 +45,15 @@
         ]
     },
     "replacements": {
-        "n": {
-            "name": "FILTER",
-            "execution_time": 0.047621,
-            "actual_rows": 2,
-            "estimated_cardinality": 833498,
-            "children": [
-                {
-                    "name": "SEQUENTIALSCAN",
-                    "execution_time": 0.128313,
-                    "actual_rows": 4061926,
-                    "estimated_cardinality": 833498,
-                    "children": [],
-                    "relation": "name",
-                    "opt_filter": "id<=4061926 AND id IS NOT NULL",
-                    "projection": [
-                        {
-                            "table_name": "n",
-                            "field_name": "name"
-                        },
-                        {
-                            "table_name": "n",
-                            "field_name": "id"
-                        }
-                    ]
-                }
-            ],
-            "condition": "(n.name LIKE '%Downey%Robert%')"
-        },
         "chn": {
             "name": "FILTER",
-            "execution_time": 0.074013,
+            "execution_time": 0.136196,
             "actual_rows": 30,
             "estimated_cardinality": 628067,
             "children": [
                 {
                     "name": "SEQUENTIALSCAN",
-                    "execution_time": 0.098518,
+                    "execution_time": 0.179852,
                     "actual_rows": 3140339,
                     "estimated_cardinality": 628067,
                     "children": [],
@@ -101,9 +73,37 @@
             ],
             "condition": "(((chn.name LIKE '%Tony%Stark%') OR (chn.name LIKE '%Iron%Man%')) AND (NOT chn.name LIKE '%Sherlock%'))"
         },
+        "n": {
+            "name": "FILTER",
+            "execution_time": 0.07421,
+            "actual_rows": 2,
+            "estimated_cardinality": 833498,
+            "children": [
+                {
+                    "name": "SEQUENTIALSCAN",
+                    "execution_time": 0.194134,
+                    "actual_rows": 4061926,
+                    "estimated_cardinality": 833498,
+                    "children": [],
+                    "relation": "name",
+                    "opt_filter": "id<=4061926 AND id IS NOT NULL",
+                    "projection": [
+                        {
+                            "table_name": "n",
+                            "field_name": "name"
+                        },
+                        {
+                            "table_name": "n",
+                            "field_name": "id"
+                        }
+                    ]
+                }
+            ],
+            "condition": "(n.name LIKE '%Downey%Robert%')"
+        },
         "ci": {
             "name": "SEQUENTIALSCAN",
-            "execution_time": 0.131793,
+            "execution_time": 0.326437,
             "actual_rows": 36241770,
             "estimated_cardinality": 36244344,
             "children": [],
@@ -126,19 +126,19 @@
         },
         "k": {
             "name": "PROJECTION",
-            "execution_time": 1e-06,
+            "execution_time": 3e-06,
             "actual_rows": 8,
             "estimated_cardinality": null,
             "children": [
                 {
                     "name": "FILTER",
-                    "execution_time": 0.000135,
+                    "execution_time": 0.000241,
                     "actual_rows": 8,
                     "estimated_cardinality": 26834,
                     "children": [
                         {
                             "name": "SEQUENTIALSCAN",
-                            "execution_time": 0.00413,
+                            "execution_time": 0.006116,
                             "actual_rows": 134170,
                             "estimated_cardinality": 134170,
                             "children": [],
@@ -168,7 +168,7 @@
         },
         "mk": {
             "name": "SEQUENTIALSCAN",
-            "execution_time": 0.011883,
+            "execution_time": 0.017199,
             "actual_rows": 4523792,
             "estimated_cardinality": 4523930,
             "children": [],
@@ -187,13 +187,13 @@
         },
         "t": {
             "name": "FILTER",
-            "execution_time": 0.002309,
+            "execution_time": 0.004214,
             "actual_rows": 1381201,
             "estimated_cardinality": 505662,
             "children": [
                 {
                     "name": "SEQUENTIALSCAN",
-                    "execution_time": 0.099097,
+                    "execution_time": 0.120774,
                     "actual_rows": 1381453,
                     "estimated_cardinality": 505662,
                     "children": [],
@@ -219,7 +219,7 @@
         },
         "cc": {
             "name": "SEQUENTIALSCAN",
-            "execution_time": 0.000236,
+            "execution_time": 0.000261,
             "actual_rows": 135086,
             "estimated_cardinality": 135086,
             "children": [],
@@ -242,7 +242,7 @@
         },
         "kt": {
             "name": "SEQUENTIALSCAN",
-            "execution_time": 3e-06,
+            "execution_time": 5e-06,
             "actual_rows": 1,
             "estimated_cardinality": 1,
             "children": [],
@@ -257,13 +257,13 @@
         },
         "cct1": {
             "name": "FILTER",
-            "execution_time": 3e-06,
+            "execution_time": 5e-06,
             "actual_rows": 1,
             "estimated_cardinality": 1,
             "children": [
                 {
                     "name": "SEQUENTIALSCAN",
-                    "execution_time": 3e-06,
+                    "execution_time": 6e-06,
                     "actual_rows": 1,
                     "estimated_cardinality": 1,
                     "children": [],
@@ -281,13 +281,13 @@
         },
         "cct2": {
             "name": "FILTER",
-            "execution_time": 7e-06,
+            "execution_time": 2.3e-05,
             "actual_rows": 2,
             "estimated_cardinality": 1,
             "children": [
                 {
                     "name": "SEQUENTIALSCAN",
-                    "execution_time": 8e-06,
+                    "execution_time": 3.7e-05,
                     "actual_rows": 2,
                     "estimated_cardinality": 1,
                     "children": [],

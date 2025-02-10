@@ -1,14 +1,14 @@
 {
-    "execution_time": 1.403688,
+    "execution_time": 2.827929,
     "root": {
         "name": "AGGREGATE",
-        "execution_time": 4.9e-05,
+        "execution_time": 0.000142,
         "actual_rows": 1,
         "estimated_cardinality": null,
         "children": [
             {
                 "name": "PROJECTION",
-                "execution_time": 6e-06,
+                "execution_time": 9e-06,
                 "actual_rows": 11538,
                 "estimated_cardinality": null,
                 "children": [
@@ -26,13 +26,13 @@
                             ],
                             "guard": {
                                 "name": "FILTER",
-                                "execution_time": 0.04548,
+                                "execution_time": 0.06891,
                                 "actual_rows": 5081,
                                 "estimated_cardinality": 833498,
                                 "children": [
                                     {
                                         "name": "SEQUENTIALSCAN",
-                                        "execution_time": 0.125436,
+                                        "execution_time": 0.184216,
                                         "actual_rows": 4061926,
                                         "estimated_cardinality": 833498,
                                         "children": [],
@@ -70,7 +70,7 @@
                                         ],
                                         "guard": {
                                             "name": "SEQUENTIALSCAN",
-                                            "execution_time": 0.116764,
+                                            "execution_time": 0.168199,
                                             "actual_rows": 36242603,
                                             "estimated_cardinality": 36244344,
                                             "children": [],
@@ -111,7 +111,7 @@
                                                     ],
                                                     "guard": {
                                                         "name": "SEQUENTIALSCAN",
-                                                        "execution_time": 0.004209,
+                                                        "execution_time": 0.006862,
                                                         "actual_rows": 2609129,
                                                         "estimated_cardinality": 2609129,
                                                         "children": [],
@@ -146,7 +146,7 @@
                                                                 ],
                                                                 "guard": {
                                                                     "name": "SEQUENTIALSCAN",
-                                                                    "execution_time": 0.00496,
+                                                                    "execution_time": 0.007136,
                                                                     "actual_rows": 2525970,
                                                                     "estimated_cardinality": 2528312,
                                                                     "children": [],
@@ -177,7 +177,7 @@
                                                                             ],
                                                                             "guard": {
                                                                                 "name": "SEQUENTIALSCAN",
-                                                                                "execution_time": 0.009591,
+                                                                                "execution_time": 0.012992,
                                                                                 "actual_rows": 4523930,
                                                                                 "estimated_cardinality": 4523930,
                                                                                 "children": [],
@@ -205,7 +205,7 @@
                                                                                         "equijoin_keys": [],
                                                                                         "guard": {
                                                                                             "name": "SEQUENTIALSCAN",
-                                                                                            "execution_time": 0.003972,
+                                                                                            "execution_time": 0.004099,
                                                                                             "actual_rows": 1,
                                                                                             "estimated_cardinality": 1,
                                                                                             "children": [],
@@ -237,7 +237,7 @@
                                                                 "equijoin_keys": [],
                                                                 "guard": {
                                                                     "name": "SEQUENTIALSCAN",
-                                                                    "execution_time": 0.000236,
+                                                                    "execution_time": 0.000485,
                                                                     "actual_rows": 234997,
                                                                     "estimated_cardinality": 234997,
                                                                     "children": [],
@@ -277,12 +277,12 @@
         ]
     },
     "aliases": {
-        "cn": "company_name",
-        "mk": "movie_keyword",
-        "k": "keyword",
         "n": "name",
+        "cn": "company_name",
         "ci": "cast_info",
+        "k": "keyword",
         "t": "title",
-        "mc": "movie_companies"
+        "mc": "movie_companies",
+        "mk": "movie_keyword"
     }
 }

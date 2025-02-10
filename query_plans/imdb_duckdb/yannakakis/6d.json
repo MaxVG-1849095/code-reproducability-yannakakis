@@ -1,14 +1,14 @@
 {
-    "execution_time": 0.88278,
+    "execution_time": 1.649193,
     "root": {
         "name": "AGGREGATE",
-        "execution_time": 6e-06,
+        "execution_time": 1.9e-05,
         "actual_rows": 1,
         "estimated_cardinality": null,
         "children": [
             {
                 "name": "PROJECTION",
-                "execution_time": 1e-06,
+                "execution_time": 5e-06,
                 "actual_rows": 88,
                 "estimated_cardinality": null,
                 "children": [
@@ -32,7 +32,7 @@
                             ],
                             "guard": {
                                 "name": "SEQUENTIALSCAN",
-                                "execution_time": 0.104752,
+                                "execution_time": 0.184987,
                                 "actual_rows": 36244327,
                                 "estimated_cardinality": 36244344,
                                 "children": [],
@@ -73,7 +73,7 @@
                                         ],
                                         "guard": {
                                             "name": "SEQUENTIALSCAN",
-                                            "execution_time": 0.008977,
+                                            "execution_time": 0.019625,
                                             "actual_rows": 4523930,
                                             "estimated_cardinality": 4523930,
                                             "children": [],
@@ -101,13 +101,13 @@
                                                     "equijoin_keys": [],
                                                     "guard": {
                                                         "name": "FILTER",
-                                                        "execution_time": 0.003891,
+                                                        "execution_time": 0.005373,
                                                         "actual_rows": 1381132,
                                                         "estimated_cardinality": 505662,
                                                         "children": [
                                                             {
                                                                 "name": "SEQUENTIALSCAN",
-                                                                "execution_time": 0.089979,
+                                                                "execution_time": 0.113819,
                                                                 "actual_rows": 1381453,
                                                                 "estimated_cardinality": 505662,
                                                                 "children": [],
@@ -140,13 +140,13 @@
                                                     "equijoin_keys": [],
                                                     "guard": {
                                                         "name": "FILTER",
-                                                        "execution_time": 0.0001,
+                                                        "execution_time": 0.000282,
                                                         "actual_rows": 8,
                                                         "estimated_cardinality": 26834,
                                                         "children": [
                                                             {
                                                                 "name": "SEQUENTIALSCAN",
-                                                                "execution_time": 0.003886,
+                                                                "execution_time": 0.005064,
                                                                 "actual_rows": 134170,
                                                                 "estimated_cardinality": 134170,
                                                                 "children": [],
@@ -182,13 +182,13 @@
                                         "equijoin_keys": [],
                                         "guard": {
                                             "name": "FILTER",
-                                            "execution_time": 0.047663,
+                                            "execution_time": 0.083243,
                                             "actual_rows": 2,
                                             "estimated_cardinality": 833498,
                                             "children": [
                                                 {
                                                     "name": "SEQUENTIALSCAN",
-                                                    "execution_time": 0.127729,
+                                                    "execution_time": 0.191445,
                                                     "actual_rows": 4061926,
                                                     "estimated_cardinality": 833498,
                                                     "children": [],
@@ -239,10 +239,10 @@
         ]
     },
     "aliases": {
-        "mk": "movie_keyword",
-        "k": "keyword",
         "n": "name",
         "ci": "cast_info",
-        "t": "title"
+        "k": "keyword",
+        "t": "title",
+        "mk": "movie_keyword"
     }
 }

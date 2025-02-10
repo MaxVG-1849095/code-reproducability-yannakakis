@@ -1,108 +1,108 @@
 {
     "name": "Query",
-    "result": 0.563349,
-    "timing": 0.563349,
+    "result": 1.200574,
+    "timing": 1.200574,
     "cardinality": 0,
     "extra-info": "SELECT MIN(cn.name) AS producing_company,\n       MIN(miidx.info) AS rating,\n       MIN(t.title) AS movie\nFROM cn,\n     ct,\n     it,\n     it2,\n     kt,\n     mc,\n     mi,\n     miidx,\n     t\nWHERE cn.country_code ='[us]'\n  AND ct.kind ='production companies'\n  AND it.info ='rating'\n  AND it2.info ='release dates'\n  AND kt.kind ='movie'\n  AND mi.movie_id = t.id\n  AND it2.id = mi.info_type_id\n  AND kt.id = t.kind_id\n  AND mc.movie_id = t.id\n  AND cn.id = mc.company_id\n  AND ct.id = mc.company_type_id\n  AND miidx.movie_id = t.id\n  AND it.id = miidx.info_type_id\n  AND mi.movie_id = miidx.movie_id\n  AND mi.movie_id = mc.movie_id\n  AND miidx.movie_id = mc.movie_id;",
     "timings": [],
     "children": [
         {
             "name": "RESULT_COLLECTOR",
-            "timing": 9e-06,
+            "timing": 1.9e-05,
             "cardinality": 0,
             "extra_info": "",
             "children": [
                 {
                     "name": "UNGROUPED_AGGREGATE",
-                    "timing": 0.003894,
+                    "timing": 0.005364,
                     "cardinality": 1,
                     "extra_info": "min(#0)\nmin(#1)\nmin(#2)",
                     "children": [
                         {
                             "name": "PROJECTION",
-                            "timing": 0.00024,
+                            "timing": 0.000262,
                             "cardinality": 670390,
                             "extra_info": "cn.name\nmiidx.info\nt.title\n",
                             "children": [
                                 {
                                     "name": "HASH_JOIN",
-                                    "timing": 0.017093,
+                                    "timing": 0.020179,
                                     "cardinality": 670390,
                                     "extra_info": "INNER\nmi.info_type_id = it2.id\n\n[INFOSEPARATOR]\nBuild Min: 1\nBuild Max: 110\n\n[INFOSEPARATOR]\nEC: 0\n",
                                     "children": [
                                         {
                                             "name": "HASH_JOIN",
-                                            "timing": 0.222435,
+                                            "timing": 0.591269,
                                             "cardinality": 4316584,
                                             "extra_info": "INNER\nmi.movie_id = t.id\n\n[INFOSEPARATOR]\nEC: 13\n",
                                             "children": [
                                                 {
                                                     "name": "SEQ_SCAN ",
-                                                    "timing": 0.033705,
+                                                    "timing": 0.052487,
                                                     "cardinality": 14834457,
                                                     "extra_info": "mi\n[INFOSEPARATOR]\nmovie_id\ninfo_type_id\n[INFOSEPARATOR]\nFilters: movie_id>=2 AND movie_id<=2525745 AND movie_id IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 14835720",
                                                     "children": []
                                                 },
                                                 {
                                                     "name": "HASH_JOIN",
-                                                    "timing": 0.002684,
+                                                    "timing": 0.004363,
                                                     "cardinality": 87293,
                                                     "extra_info": "INNER\nt.kind_id = kt.id\n\n[INFOSEPARATOR]\nBuild Min: 1\nBuild Max: 7\n\n[INFOSEPARATOR]\nEC: 2\n",
                                                     "children": [
                                                         {
                                                             "name": "HASH_JOIN",
-                                                            "timing": 0.070876,
+                                                            "timing": 0.187714,
                                                             "cardinality": 248554,
                                                             "extra_info": "INNER\nt.id = miidx.movie_id\n\n[INFOSEPARATOR]\nEC: 17\n",
                                                             "children": [
                                                                 {
                                                                     "name": "SEQ_SCAN ",
-                                                                    "timing": 0.086713,
+                                                                    "timing": 0.101199,
                                                                     "cardinality": 2525744,
                                                                     "extra_info": "t\n[INFOSEPARATOR]\nid\nkind_id\ntitle\n[INFOSEPARATOR]\nFilters: id>=2 AND id<=2525745 AND id IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 2528312",
                                                                     "children": []
                                                                 },
                                                                 {
                                                                     "name": "HASH_JOIN",
-                                                                    "timing": 0.003215,
+                                                                    "timing": 0.004437,
                                                                     "cardinality": 248554,
                                                                     "extra_info": "INNER\nmiidx.info_type_id = it.id\n\n[INFOSEPARATOR]\nBuild Min: 99\nBuild Max: 113\n\n[INFOSEPARATOR]\nEC: 18\n",
                                                                     "children": [
                                                                         {
                                                                             "name": "HASH_JOIN",
-                                                                            "timing": 0.041657,
+                                                                            "timing": 0.092471,
                                                                             "cardinality": 746064,
                                                                             "extra_info": "INNER\nmiidx.movie_id = mc.movie_id\n\n[INFOSEPARATOR]\nEC: 2085\n",
                                                                             "children": [
                                                                                 {
                                                                                     "name": "SEQ_SCAN ",
-                                                                                    "timing": 0.022332,
+                                                                                    "timing": 0.02807,
                                                                                     "cardinality": 1380011,
                                                                                     "extra_info": "miidx\n[INFOSEPARATOR]\nmovie_id\ninfo_type_id\ninfo\n[INFOSEPARATOR]\nFilters: movie_id<=2525745 AND movie_id IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 1380035",
                                                                                     "children": []
                                                                                 },
                                                                                 {
                                                                                     "name": "HASH_JOIN",
-                                                                                    "timing": 0.002989,
+                                                                                    "timing": 0.003721,
                                                                                     "cardinality": 552328,
                                                                                     "extra_info": "INNER\nmc.company_type_id = ct.id\n\n[INFOSEPARATOR]\nBuild Min: 1\nBuild Max: 2\n\n[INFOSEPARATOR]\nEC: 4078\n",
                                                                                     "children": [
                                                                                         {
                                                                                             "name": "HASH_JOIN",
-                                                                                            "timing": 0.00995,
+                                                                                            "timing": 0.015207,
                                                                                             "cardinality": 1153798,
                                                                                             "extra_info": "INNER\nmc.company_id = cn.id\n\n[INFOSEPARATOR]\nBuild Min: 1\nBuild Max: 234997\n\n[INFOSEPARATOR]\nEC: 16312\n",
                                                                                             "children": [
                                                                                                 {
                                                                                                     "name": "SEQ_SCAN ",
-                                                                                                    "timing": 0.004522,
+                                                                                                    "timing": 0.007558,
                                                                                                     "cardinality": 2609129,
                                                                                                     "extra_info": "mc\n[INFOSEPARATOR]\nmovie_id\ncompany_id\ncompany_type_id\n[INFOSEPARATOR]\nEC: 2609129",
                                                                                                     "children": []
                                                                                                 },
                                                                                                 {
                                                                                                     "name": "SEQ_SCAN ",
-                                                                                                    "timing": 0.00984,
+                                                                                                    "timing": 0.013649,
                                                                                                     "cardinality": 84843,
                                                                                                     "extra_info": "cn\n[INFOSEPARATOR]\nid\nname\n[INFOSEPARATOR]\nFilters: country_code='[us]' AND country_code IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 1425",
                                                                                                     "children": []
@@ -111,13 +111,13 @@
                                                                                         },
                                                                                         {
                                                                                             "name": "FILTER",
-                                                                                            "timing": 1e-06,
+                                                                                            "timing": 2e-06,
                                                                                             "cardinality": 1,
                                                                                             "extra_info": "(ct.id <= 2)\n[INFOSEPARATOR]\nEC: 1",
                                                                                             "children": [
                                                                                                 {
                                                                                                     "name": "SEQ_SCAN ",
-                                                                                                    "timing": 3e-06,
+                                                                                                    "timing": 4e-06,
                                                                                                     "cardinality": 1,
                                                                                                     "extra_info": "ct\n[INFOSEPARATOR]\nid\n[INFOSEPARATOR]\nFilters: kind='production companies' AND kind IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 1",
                                                                                                     "children": []
@@ -130,13 +130,13 @@
                                                                         },
                                                                         {
                                                                             "name": "FILTER",
-                                                                            "timing": 2e-06,
+                                                                            "timing": 3e-06,
                                                                             "cardinality": 1,
                                                                             "extra_info": "(it.id >= 99)\n[INFOSEPARATOR]\nEC: 1",
                                                                             "children": [
                                                                                 {
                                                                                     "name": "SEQ_SCAN ",
-                                                                                    "timing": 5e-06,
+                                                                                    "timing": 8e-06,
                                                                                     "cardinality": 1,
                                                                                     "extra_info": "it\n[INFOSEPARATOR]\nid\n[INFOSEPARATOR]\nFilters: info='rating' AND info IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 1",
                                                                                     "children": []
@@ -149,7 +149,7 @@
                                                         },
                                                         {
                                                             "name": "SEQ_SCAN ",
-                                                            "timing": 3e-06,
+                                                            "timing": 6e-06,
                                                             "cardinality": 1,
                                                             "extra_info": "kt\n[INFOSEPARATOR]\nid\n[INFOSEPARATOR]\nFilters: kind='movie' AND kind IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 1",
                                                             "children": []
@@ -160,13 +160,13 @@
                                         },
                                         {
                                             "name": "FILTER",
-                                            "timing": 3e-06,
+                                            "timing": 1.7e-05,
                                             "cardinality": 1,
                                             "extra_info": "(it2.id <= 110)\n[INFOSEPARATOR]\nEC: 1",
                                             "children": [
                                                 {
                                                     "name": "SEQ_SCAN ",
-                                                    "timing": 8e-06,
+                                                    "timing": 3.2e-05,
                                                     "cardinality": 1,
                                                     "extra_info": "it2\n[INFOSEPARATOR]\nid\n[INFOSEPARATOR]\nFilters: info='release dates' AND info IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 1",
                                                     "children": []

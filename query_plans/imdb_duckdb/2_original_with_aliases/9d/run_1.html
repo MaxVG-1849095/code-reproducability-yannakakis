@@ -66,54 +66,54 @@
 		</thead><tbody>
 	<tr>
 			<td><b>TOTAL TIME</b></td>
-            <td>2.188763</td>
+            <td>4.932163</td>
             <td>100.0%</td>
     </tr>
 
 	<tr>
 			<td><b>Execution Time</b></td>
-            <td>2.060053</td>
-            <td>94.119%</td>
+            <td>4.531368</td>
+            <td>91.873%</td>
     </tr>
 
 	<tr>
 			<td>HASH_JOIN</td>
-            <td>1.0445940000000002</td>
-            <td>47.725%</td>
+            <td>2.788761</td>
+            <td>56.542%</td>
     </tr>
 
 	<tr>
 			<td>SEQ_SCAN </td>
-            <td>0.67498</td>
-            <td>30.838%</td>
+            <td>1.1747619999999999</td>
+            <td>23.818%</td>
     </tr>
 
 	<tr>
 			<td>FILTER</td>
-            <td>0.337801</td>
-            <td>15.433%</td>
+            <td>0.555293</td>
+            <td>11.258%</td>
     </tr>
 
 	<tr>
 			<td>UNGROUPED_AGGREGATE</td>
-            <td>0.002218</td>
-            <td>0.1013%</td>
+            <td>0.011069</td>
+            <td>0.2244%</td>
     </tr>
 
 	<tr>
 			<td>PROJECTION</td>
-            <td>0.00045200000000000004</td>
-            <td>0.0206%</td>
+            <td>0.001444</td>
+            <td>0.0292%</td>
     </tr>
 
 	<tr>
 			<td>RESULT_COLLECTOR</td>
-            <td>8e-06</td>
-            <td>0.0003%</td>
+            <td>3.9e-05</td>
+            <td>0.0007%</td>
     </tr>
 </tbody></table>
 	</div>
 	<div class="tf-tree tf-gap-lg"> 
- <ul><li><span class="tf-nc" style=""><div class="node-body"><p> <b>RESULT COLLECTOR (8e-06s) </b></p><p> cardinality = 0 </p></div></span><ul><li><span class="tf-nc" style="background-color: #ffdfba;"><div class="node-body"><p> <b>UNGROUPED AGGREGATE (0.002218s) </b></p><p> min(#0)<br>min(#1)<br>min(#2)<br>min(#3) </p><p> cardinality = 1 </p></div></span><ul><li><span class="tf-nc" style="background-color: #ffb3ba;"><div class="node-body"><p> <b>PROJECTION (6.8e-05s) </b></p><p> an.name<br>chn.name<br>n.name<br>t.title<br> </p><p> cardinality = 483082 </p></div></span><ul><li><span class="tf-nc" style="background-color: #ffffba;"><div class="node-body"><p> <b>HASH JOIN (0.326962s) </b></p><p> INNER<br>chn.id = ci.person_role_id<br>----<br>EC: 253<br> </p><p> cardinality = 483082 </p></div></span><ul><li><span class="tf-nc" style="background-color: #baffc9;"><div class="node-body"><p> <b>SEQ SCAN  (0.09844s) </b></p><p> chn<br>----<br>id<br>name<br>----<br>EC: 3140339 </p><p> cardinality = 3140339 </p></div></span></li><li><span class="tf-nc" style="background-color: #ffffba;"><div class="node-body"><p> <b>HASH JOIN (0.200436s) </b></p><p> INNER<br>t.id = mc.movie_id<br>----<br>EC: 251<br> </p><p> cardinality = 505134 </p></div></span><ul><li><span class="tf-nc" style="background-color: #baffc9;"><div class="node-body"><p> <b>SEQ SCAN  (0.080499s) </b></p><p> t<br>----<br>id<br>title<br>----<br>Filters: id>=2 AND id<=2525745 AND id IS NOT NULL<br>----<br>EC: 2528312 </p><p> cardinality = 2525744 </p></div></span></li><li><span class="tf-nc" style="background-color: #ffffba;"><div class="node-body"><p> <b>HASH JOIN (0.318742s) </b></p><p> INNER<br>n.id = ci.person_id<br>----<br>EC: 328<br> </p><p> cardinality = 505134 </p></div></span><ul><li><span class="tf-nc" style="background-color: #bae1ff;"><div class="node-body"><p> <b>FILTER (0.002546s) </b></p><p> (n.id BETWEEN 4 AND 4061926)<br>----<br>EC: 2083746 </p><p> cardinality = 961555 </p></div></span><ul><li><span class="tf-nc" style="background-color: #baffc9;"><div class="node-body"><p> <b>SEQ SCAN  (0.032221s) </b></p><p> n<br>----<br>id<br>name<br>----<br>Filters: gender='f' AND gender IS NOT NULL<br>----<br>EC: 2083746 </p><p> cardinality = 961555 </p></div></span></li></ul></li><li><span class="tf-nc" style="background-color: #ffffba;"><div class="node-body"><p> <b>HASH JOIN (0.092952s) </b></p><p> INNER<br>an.person_id = ci.person_id<br>----<br>EC: 651<br> </p><p> cardinality = 505250 </p></div></span><ul><li><span class="tf-nc" style="background-color: #baffc9;"><div class="node-body"><p> <b>SEQ SCAN  (0.029781s) </b></p><p> an<br>----<br>person_id<br>name<br>----<br>Filters: person_id<=4061926 AND person_id IS NOT NULL<br>----<br>EC: 901343 </p><p> cardinality = 772581 </p></div></span></li><li><span class="tf-nc" style="background-color: #ffffba;"><div class="node-body"><p> <b>HASH JOIN (0.004766s) </b></p><p> INNER<br>ci.role_id = rt.id<br>----<br>EC: 35878<br> </p><p> cardinality = 189554 </p></div></span><ul><li><span class="tf-nc" style="background-color: #ffb3ba;"><div class="node-body"><p> <b>PROJECTION (0.000384s) </b></p><p> #1<br>#2<br>#3<br>#4<br> </p><p> cardinality = 671694 </p></div></span><ul><li><span class="tf-nc" style="background-color: #bae1ff;"><div class="node-body"><p> <b>FILTER (0.001852s) </b></p><p> (ci.person_id >= 4)<br>----<br>EC: 35878 </p><p> cardinality = 671694 </p></div></span><ul><li><span class="tf-nc" style="background-color: #ffffba;"><div class="node-body"><p> <b>HASH JOIN (0.07099s) </b></p><p> INNER<br>ci.movie_id = mc.movie_id<br>----<br>EC: 35878<br> </p><p> cardinality = 671694 </p></div></span><ul><li><span class="tf-nc" style="background-color: #bae1ff;"><div class="node-body"><p> <b>FILTER (0.333399s) </b></p><p> ((ci.note = '(voice)') OR (ci.note = '(voice: Japanese version)') OR (ci.note = '(voice) (uncredited)') OR (ci.note = '(voice: English version)'))<br>----<br>EC: 7248868 </p><p> cardinality = 867470 </p></div></span><ul><li><span class="tf-nc" style="background-color: #baffc9;"><div class="node-body"><p> <b>SEQ SCAN  (0.427967s) </b></p><p> ci<br>----<br>note<br>movie_id<br>role_id<br>person_id<br>person_role_id<br>----<br>Filters: movie_id>=2 AND movie_id<=2525745 AND movie_id IS NOT NULL<br>----<br>EC: 7248868 </p><p> cardinality = 36242603 </p></div></span></li></ul></li><li><span class="tf-nc" style="background-color: #ffffba;"><div class="node-body"><p> <b>HASH JOIN (0.029746s) </b></p><p> INNER<br>mc.company_id = cn.id<br>----<br>EC: 2609129<br> </p><p> cardinality = 1153798 </p></div></span><ul><li><span class="tf-nc" style="background-color: #baffc9;"><div class="node-body"><p> <b>SEQ SCAN  (0.004126s) </b></p><p> mc<br>----<br>movie_id<br>company_id<br>----<br>EC: 2609129 </p><p> cardinality = 2609129 </p></div></span></li><li><span class="tf-nc" style="background-color: #baffc9;"><div class="node-body"><p> <b>SEQ SCAN  (0.001939s) </b></p><p> cn<br>----<br>id<br>----<br>Filters: country_code='[us]' AND country_code IS NOT NULL<br>----<br>EC: 1425 </p><p> cardinality = 84843 </p></div></span></li></ul></li></ul></li></ul></li></ul></li><li><span class="tf-nc" style="background-color: #bae1ff;"><div class="node-body"><p> <b>FILTER (4e-06s) </b></p><p> (rt.id <= 11)<br>----<br>EC: 1 </p><p> cardinality = 1 </p></div></span><ul><li><span class="tf-nc" style="background-color: #baffc9;"><div class="node-body"><p> <b>SEQ SCAN  (7e-06s) </b></p><p> rt<br>----<br>id<br>----<br>Filters: role='actress' AND role IS NOT NULL<br>----<br>EC: 1 </p><p> cardinality = 1 </p></div></span></li></ul></li></ul></li></ul></li></ul></li></ul></li></ul></li></ul></li></ul></li></ul></li></ul> </div>
+ <ul><li><span class="tf-nc" style=""><div class="node-body"><p> <b>RESULT COLLECTOR (3.9e-05s) </b></p><p> cardinality = 0 </p></div></span><ul><li><span class="tf-nc" style="background-color: #ffdfba;"><div class="node-body"><p> <b>UNGROUPED AGGREGATE (0.011069s) </b></p><p> min(#0)<br>min(#1)<br>min(#2)<br>min(#3) </p><p> cardinality = 1 </p></div></span><ul><li><span class="tf-nc" style="background-color: #ffb3ba;"><div class="node-body"><p> <b>PROJECTION (0.000637s) </b></p><p> an.name<br>chn.name<br>n.name<br>t.title<br> </p><p> cardinality = 483082 </p></div></span><ul><li><span class="tf-nc" style="background-color: #ffffba;"><div class="node-body"><p> <b>HASH JOIN (0.918475s) </b></p><p> INNER<br>chn.id = ci.person_role_id<br>----<br>EC: 254<br> </p><p> cardinality = 483082 </p></div></span><ul><li><span class="tf-nc" style="background-color: #baffc9;"><div class="node-body"><p> <b>SEQ SCAN  (0.166775s) </b></p><p> chn<br>----<br>id<br>name<br>----<br>EC: 3140339 </p><p> cardinality = 3140339 </p></div></span></li><li><span class="tf-nc" style="background-color: #ffffba;"><div class="node-body"><p> <b>HASH JOIN (0.67966s) </b></p><p> INNER<br>t.id = mc.movie_id<br>----<br>EC: 251<br> </p><p> cardinality = 505134 </p></div></span><ul><li><span class="tf-nc" style="background-color: #baffc9;"><div class="node-body"><p> <b>SEQ SCAN  (0.134334s) </b></p><p> t<br>----<br>id<br>title<br>----<br>Filters: id>=2 AND id<=2525745 AND id IS NOT NULL<br>----<br>EC: 2528312 </p><p> cardinality = 2525744 </p></div></span></li><li><span class="tf-nc" style="background-color: #ffffba;"><div class="node-body"><p> <b>HASH JOIN (0.662438s) </b></p><p> INNER<br>n.id = ci.person_id<br>----<br>EC: 328<br> </p><p> cardinality = 505134 </p></div></span><ul><li><span class="tf-nc" style="background-color: #bae1ff;"><div class="node-body"><p> <b>FILTER (0.005812s) </b></p><p> (n.id BETWEEN 4 AND 4061926)<br>----<br>EC: 2083746 </p><p> cardinality = 961555 </p></div></span><ul><li><span class="tf-nc" style="background-color: #baffc9;"><div class="node-body"><p> <b>SEQ SCAN  (0.057357s) </b></p><p> n<br>----<br>id<br>name<br>----<br>Filters: gender='f' AND gender IS NOT NULL<br>----<br>EC: 2083746 </p><p> cardinality = 961555 </p></div></span></li></ul></li><li><span class="tf-nc" style="background-color: #ffffba;"><div class="node-body"><p> <b>HASH JOIN (0.227096s) </b></p><p> INNER<br>an.person_id = ci.person_id<br>----<br>EC: 651<br> </p><p> cardinality = 505250 </p></div></span><ul><li><span class="tf-nc" style="background-color: #baffc9;"><div class="node-body"><p> <b>SEQ SCAN  (0.048882s) </b></p><p> an<br>----<br>person_id<br>name<br>----<br>Filters: person_id<=4061926 AND person_id IS NOT NULL<br>----<br>EC: 901343 </p><p> cardinality = 772581 </p></div></span></li><li><span class="tf-nc" style="background-color: #ffffba;"><div class="node-body"><p> <b>HASH JOIN (0.011265s) </b></p><p> INNER<br>ci.role_id = rt.id<br>----<br>EC: 35878<br> </p><p> cardinality = 189554 </p></div></span><ul><li><span class="tf-nc" style="background-color: #ffb3ba;"><div class="node-body"><p> <b>PROJECTION (0.000807s) </b></p><p> #1<br>#2<br>#3<br>#4<br> </p><p> cardinality = 671694 </p></div></span><ul><li><span class="tf-nc" style="background-color: #bae1ff;"><div class="node-body"><p> <b>FILTER (0.00498s) </b></p><p> (ci.person_id >= 4)<br>----<br>EC: 35878 </p><p> cardinality = 671694 </p></div></span><ul><li><span class="tf-nc" style="background-color: #ffffba;"><div class="node-body"><p> <b>HASH JOIN (0.206363s) </b></p><p> INNER<br>ci.movie_id = mc.movie_id<br>----<br>EC: 35878<br> </p><p> cardinality = 671694 </p></div></span><ul><li><span class="tf-nc" style="background-color: #bae1ff;"><div class="node-body"><p> <b>FILTER (0.544481s) </b></p><p> ((ci.note = '(voice)') OR (ci.note = '(voice: Japanese version)') OR (ci.note = '(voice) (uncredited)') OR (ci.note = '(voice: English version)'))<br>----<br>EC: 7248868 </p><p> cardinality = 867470 </p></div></span><ul><li><span class="tf-nc" style="background-color: #baffc9;"><div class="node-body"><p> <b>SEQ SCAN  (0.753977s) </b></p><p> ci<br>----<br>note<br>movie_id<br>role_id<br>person_id<br>person_role_id<br>----<br>Filters: movie_id>=2 AND movie_id<=2525745 AND movie_id IS NOT NULL<br>----<br>EC: 7248868 </p><p> cardinality = 36242603 </p></div></span></li></ul></li><li><span class="tf-nc" style="background-color: #ffffba;"><div class="node-body"><p> <b>HASH JOIN (0.083464s) </b></p><p> INNER<br>mc.company_id = cn.id<br>----<br>EC: 2609129<br> </p><p> cardinality = 1153798 </p></div></span><ul><li><span class="tf-nc" style="background-color: #baffc9;"><div class="node-body"><p> <b>SEQ SCAN  (0.010999s) </b></p><p> mc<br>----<br>movie_id<br>company_id<br>----<br>EC: 2609129 </p><p> cardinality = 2609129 </p></div></span></li><li><span class="tf-nc" style="background-color: #baffc9;"><div class="node-body"><p> <b>SEQ SCAN  (0.002406s) </b></p><p> cn<br>----<br>id<br>----<br>Filters: country_code='[us]' AND country_code IS NOT NULL<br>----<br>EC: 1425 </p><p> cardinality = 84843 </p></div></span></li></ul></li></ul></li></ul></li></ul></li><li><span class="tf-nc" style="background-color: #bae1ff;"><div class="node-body"><p> <b>FILTER (2e-05s) </b></p><p> (rt.id <= 11)<br>----<br>EC: 1 </p><p> cardinality = 1 </p></div></span><ul><li><span class="tf-nc" style="background-color: #baffc9;"><div class="node-body"><p> <b>SEQ SCAN  (3.2e-05s) </b></p><p> rt<br>----<br>id<br>----<br>Filters: role='actress' AND role IS NOT NULL<br>----<br>EC: 1 </p><p> cardinality = 1 </p></div></span></li></ul></li></ul></li></ul></li></ul></li></ul></li></ul></li></ul></li></ul></li></ul></li></ul> </div>
 </body>
 </html>
