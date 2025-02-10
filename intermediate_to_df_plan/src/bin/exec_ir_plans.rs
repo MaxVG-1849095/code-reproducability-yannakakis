@@ -9,8 +9,7 @@ use std::{
 
 use clap::Parser;
 use datafusion::{
-    arrow::util::pretty::pretty_format_batches,
-    prelude::{SessionConfig, SessionContext},
+    arrow::util::pretty::pretty_format_batches, physical_plan::displayable, prelude::{SessionConfig, SessionContext}
 };
 use intermediate_to_df_plan::{
     time_execution, to_execution_plan,
@@ -165,9 +164,11 @@ async fn exec_plan(
         let plan = to_execution_plan(&path, catalog, false).await?;
 
         // print execution plan
-        // let display_plan = displayable(plan.as_ref()).set_show_statistics(true);
-        // println!("{}", display_plan.indent(true));
-
+        if(rep == 0) {
+            println!("Execution plan:");
+            let display_plan = displayable(plan.as_ref()).set_show_statistics(true);
+            println!("{}", display_plan.indent(true));
+        }
         let (results, duration) = time_execution(plan.clone(), task_ctx.clone()).await?;
 
         println!("{}", pretty_format_batches(&results)?.to_string());

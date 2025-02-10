@@ -83,7 +83,6 @@ impl MultiSemiJoin {
 
         for (i, keys) in equijoin_keys.iter().enumerate() {
             let child_schema = children[i].schema();
-
             // Each equi-join must be between a field in guard and a *regular* field in child
             for (guard_col, child_col) in keys {
                 let guard_field = guard_schema.field(*guard_col); // panics if out of bounds
