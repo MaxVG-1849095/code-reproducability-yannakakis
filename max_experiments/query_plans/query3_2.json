@@ -8,6 +8,7 @@
                 "root": {
                     "name": "MULTISEMIJOIN",
                     "partitioned": false,
+                    "id": 1,
                     "equijoin_keys": [
                         [
                             [
@@ -42,6 +43,7 @@
                                 "name": "MULTISEMIJOIN",
                                 "equijoin_keys": [],
                                 "partitioned": true,
+                                "id" : 2,
                                 "guard": {
                                     "name": "REPARTITION",
                                     "children": [
@@ -58,7 +60,7 @@
                                             ]
                                         }
                                     ],
-                                    "num_partitions":2,
+                                    "num_partitions":8,
                                     "partitioning": "unknown"
                                 },
                                 "children": []

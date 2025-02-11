@@ -111,6 +111,8 @@ impl ToPhysicalNode for intermediate_plan::YannakakisNode {
                 msj.set_partitioned(true);
             }
 
+            msj.set_id(node.id);
+
             Ok((
                 schema,
                 msj,

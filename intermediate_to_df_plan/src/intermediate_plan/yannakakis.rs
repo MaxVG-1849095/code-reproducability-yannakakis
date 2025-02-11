@@ -21,6 +21,7 @@ pub struct MultiSemiJoinNode {
     pub guard: Node,
     pub children: Vec<GroupByNode>,
     pub partitioned: bool,
+    pub id: usize, // for debugging
 }
 
 impl MultiSemiJoinNode {

@@ -1,8 +1,8 @@
 {
-    "execution_time": 0.373786,
+    "execution_time": 0.327214,
     "root": {
         "name": "PROJECTION",
-        "execution_time": 0.000403,
+        "execution_time": 0.000395,
         "actual_rows": 1380035,
         "estimated_cardinality": null,
         "children": [
@@ -20,7 +20,7 @@
                     ],
                     "guard": {
                         "name": "SEQUENTIALSCAN",
-                        "execution_time": 0.127156,
+                        "execution_time": 0.143969,
                         "actual_rows": 2525792,
                         "estimated_cardinality": 2528312,
                         "children": [],
@@ -48,7 +48,7 @@
                                 "equijoin_keys": [],
                                 "guard": {
                                     "name": "SEQUENTIALSCAN",
-                                    "execution_time": 0.005168,
+                                    "execution_time": 0.008607,
                                     "actual_rows": 1380035,
                                     "estimated_cardinality": 1380035,
                                     "children": [],
@@ -80,7 +80,7 @@
         ]
     },
     "aliases": {
-        "mi_idx": "movie_info_idx",
-        "t": "title"
+        "t": "title",
+        "mi_idx": "movie_info_idx"
     }
 }

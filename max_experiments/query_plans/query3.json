@@ -10,6 +10,8 @@
                 "name": "YANNAKAKIS",
                 "root": {
                     "name": "MULTISEMIJOIN",
+                    "id": 1,
+                    "partitioned": false,
                     "equijoin_keys": [
                         [
                             [
@@ -46,6 +48,8 @@
                             "child": {
                                 "name": "MULTISEMIJOIN",
                                 "equijoin_keys": [],
+                                "id": 2,
+                                "partitioned": false,
                                 "guard": {
                                     "name": "SEQUENTIALSCAN",
                                     "execution_time": 0.005168,

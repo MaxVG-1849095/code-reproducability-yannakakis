@@ -66,6 +66,8 @@ pub struct MultiSemiJoin {
 
     /// Wether or not the input is partitioned
     partitioned: bool,
+
+    id: usize, // for debugging
 }
 
 impl MultiSemiJoin {
@@ -136,6 +138,7 @@ impl MultiSemiJoin {
             // once_fut: Default::default(),
             once_futs,
             partitioned: false,
+            id: 0,
         }
     }
 
@@ -160,13 +163,21 @@ impl MultiSemiJoin {
         self.metrics.clone_inner()
     }
 
-    //getter and setter for partitioned (setter for ease of use, don't want to change every creation of a MultiSemiJoin :))
+    //getter and setter for partitioned & id (setter for ease of use, don't want to change every creation of a MultiSemiJoin :))
     pub fn partitioned(&self) -> bool {
         self.partitioned
     }
 
     pub fn set_partitioned(&mut self, partitioned: bool) {
         self.partitioned = partitioned;
+    }
+
+    pub fn id(&self) -> usize {
+        self.id
+    }
+
+    pub fn set_id(&mut self, id: usize) {
+        self.id = id;
     }
 
     /// Get a JSON representation of the MultiSemiJoin node and all its descendants ([MultiSemiJoin] & [GroupBy]), including their metrics.
@@ -229,14 +240,16 @@ impl MultiSemiJoin {
                 onceasync.once(|| materialize_child(child.clone(), context.clone()))
             })
             .collect();
-
+        
+        //start timer to measure time of guard stream execute
+        let guard_time_start = std::time::Instant::now();
         
         let guard_stream : Pin<Box<dyn RecordBatchStream + Send>>;
         //remake guard stream depending on partitioned
         if self.partitioned {
             let mut streams   = Vec::new();
-            println!("Partitioned MultiSemiJoin");
-            println!("Partition count: {}", self.guard.output_partitioning().partition_count());
+            println!("Partitioned MultiSemiJoin with {} partitions", self.guard.output_partitioning().partition_count());
+            // println!("Partition count: {}", self.guard.output_partitioning().partition_count());
             for i in 0..self.guard.output_partitioning().partition_count(){
                 streams.push(self.guard.execute(i, context.clone())?);
             }
@@ -245,6 +258,11 @@ impl MultiSemiJoin {
         else{
             guard_stream = self.guard.execute(partition, context)?;
         }
+
+        let guard_time = guard_time_start.elapsed();
+        println!("node {} guard_time: {}", self.id,guard_time.as_nanos());
+
+
         let schema = self.schema.clone();
         let semijoin_keys = self.semijoin_keys.clone();
         let semijoin_metrics = SemiJoinMetrics::new(partition, &self.metrics);
