@@ -4,7 +4,9 @@ use std::pin::Pin;
 use std::sync::Arc;
 use std::task::Poll;
 
+use datafusion::execution::RecordBatchStream;
 use datafusion::physical_plan::metrics::MetricsSet;
+use datafusion::physical_plan::stream::RecordBatchStreamAdapter;
 use futures::ready;
 use futures::Stream;
 use futures::StreamExt;
@@ -61,6 +63,9 @@ pub struct MultiSemiJoin {
     // once_fut: OnceAsync<Vec<GroupedRelRef>>,
     /// For each child, a OnceAsync that returns the materialized result of the child groupby.
     once_futs: Vec<OnceAsync<GroupedRelRef>>,
+
+    /// Wether or not the input is partitioned
+    partitioned: bool,
 }
 
 impl MultiSemiJoin {
@@ -130,6 +135,7 @@ impl MultiSemiJoin {
             metrics: ExecutionPlanMetricsSet::new(),
             // once_fut: Default::default(),
             once_futs,
+            partitioned: false,
         }
     }
 
@@ -152,6 +158,15 @@ impl MultiSemiJoin {
 
     pub fn metrics(&self) -> MetricsSet {
         self.metrics.clone_inner()
+    }
+
+    //getter and setter for partitioned (setter for ease of use, don't want to change every creation of a MultiSemiJoin :))
+    pub fn partitioned(&self) -> bool {
+        self.partitioned
+    }
+
+    pub fn set_partitioned(&mut self, partitioned: bool) {
+        self.partitioned = partitioned;
     }
 
     /// Get a JSON representation of the MultiSemiJoin node and all its descendants ([MultiSemiJoin] & [GroupBy]), including their metrics.
@@ -205,7 +220,6 @@ impl MultiSemiJoin {
         ) -> Result<GroupedRelRef, DataFusionError> {
             child.materialize(context).await
         }
-        println!("MultiSemiJoin::execute {}", partition);
 
         let materialized_children_futs = self
             .once_futs
@@ -216,7 +230,21 @@ impl MultiSemiJoin {
             })
             .collect();
 
-        let guard_stream = self.guard.execute(partition, context)?;
+        
+        let guard_stream : Pin<Box<dyn RecordBatchStream + Send>>;
+        //remake guard stream depending on partitioned
+        if self.partitioned {
+            let mut streams   = Vec::new();
+            println!("Partitioned MultiSemiJoin");
+            println!("Partition count: {}", self.guard.output_partitioning().partition_count());
+            for i in 0..self.guard.output_partitioning().partition_count(){
+                streams.push(self.guard.execute(i, context.clone())?);
+            }
+            guard_stream = MultiSemiJoin::combine_streams(self.guard.schema(), streams);
+        }
+        else{
+            guard_stream = self.guard.execute(partition, context)?;
+        }
         let schema = self.schema.clone();
         let semijoin_keys = self.semijoin_keys.clone();
         let semijoin_metrics = SemiJoinMetrics::new(partition, &self.metrics);
@@ -231,6 +259,15 @@ impl MultiSemiJoin {
             hashes_buffer,
             guard_batch_cache: None,
         }))
+    }
+
+
+    //function to combine recordbatchstreams into one
+    fn combine_streams(schema: Arc<datafusion::arrow::datatypes::Schema>, streams: Vec<Pin<Box<dyn RecordBatchStream + Send>>>) -> Pin<Box<dyn RecordBatchStream + Send>> {
+        //combine all streams (becomes selectall object so no recordbatch)
+        let streams_combined = futures::stream::select_all(streams); 
+        //turn it into a recordbatchstream and return
+        Box::pin(RecordBatchStreamAdapter::new(schema, streams_combined)) 
     }
 }
 

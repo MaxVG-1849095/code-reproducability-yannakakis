@@ -41,7 +41,7 @@
                             "child": {
                                 "name": "MULTISEMIJOIN",
                                 "equijoin_keys": [],
-                                "partitioned": true,
+                                "partitioned": false,
                                 "guard": {
                                     "name": "REPARTITION",
                                     "children": [
@@ -58,7 +58,7 @@
                                             ]
                                         }
                                     ],
-                                    "num_partitions":2,
+                                    "num_partitions":1,
                                     "partitioning": "unknown"
                                 },
                                 "children": []

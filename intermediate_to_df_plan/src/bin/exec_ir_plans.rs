@@ -159,7 +159,7 @@ async fn exec_plan(
     println!("Processing file: {:?}", path);
 
     let task_ctx = catalog.get_state().task_ctx();
-
+    let mut durations = Vec::new();
     for rep in 0..repetitions {
         let plan = to_execution_plan(&path, catalog, false).await?;
 
@@ -173,8 +173,9 @@ async fn exec_plan(
 
         // println!("{}", pretty_format_batches(&results)?.to_string());
         //print amount of rows
-        println!("Rows: {}", results[0].num_rows());
+        println!("Rows: {} of target 2751", results[0].num_rows());
         println!("Execution time: {:?}", duration);
+        durations.push(duration);
 
         let mut extra_param_field_names = extra_param_field_names.clone();
         extra_param_field_names.insert(0, "path".into());
@@ -205,6 +206,11 @@ async fn exec_plan(
             }
         }
     }
+
+    // write average duration
+    let avg_duration = durations.iter().sum::<Duration>() / repetitions as u32;
+    println!("Average execution time: {:?}", avg_duration);
+
     Ok(())
 }
 

@@ -7,6 +7,7 @@
                 "name": "YANNAKAKIS",
                 "root": {
                     "name": "MULTISEMIJOIN",
+                    "partitioned": false,
                     "equijoin_keys": [
                         [
                             [
@@ -40,6 +41,7 @@
                             "child": {
                                 "name": "MULTISEMIJOIN",
                                 "equijoin_keys": [],
+                                "partitioned":false,
                                 "guard": {
                                     "name": "SEQUENTIALSCAN",
                                     "children": [],

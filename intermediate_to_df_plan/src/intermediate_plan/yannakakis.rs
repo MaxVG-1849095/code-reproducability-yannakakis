@@ -20,6 +20,7 @@ pub struct MultiSemiJoinNode {
     pub equijoin_keys: Vec<Vec<(usize, usize)>>,
     pub guard: Node,
     pub children: Vec<GroupByNode>,
+    pub partitioned: bool,
 }
 
 impl MultiSemiJoinNode {
