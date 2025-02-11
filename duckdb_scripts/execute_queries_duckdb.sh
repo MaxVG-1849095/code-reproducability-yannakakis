@@ -58,3 +58,5 @@ EOF
 
 rm $tmp
 
+echo "Done executing queries in DuckDB."
+

@@ -1,79 +1,44 @@
 {
     "semijoin_plan": {
-        "guard": "mc",
+        "guard": "mi_idx",
         "children": [
             {
                 "guard": "t",
-                "children": [
-                    {
-                        "guard": "mi_idx",
-                        "children": [
-                            {
-                                "guard": "it",
-                                "children": []
-                            }
-                        ]
-                    }
-                ]
-            },
-            {
-                "guard": "ct",
                 "children": []
             }
         ]
     },
     "replacements": {
-        "mc": {
-            "name": "FILTER",
-            "execution_time": 0.020345,
-            "actual_rows": 1337088,
-            "estimated_cardinality": 521825,
-            "children": [
+        "mi_idx": {
+            "name": "SEQUENTIALSCAN",
+            "execution_time": 0.001324,
+            "actual_rows": 1380035,
+            "estimated_cardinality": 1380035,
+            "children": [],
+            "relation": "movie_info_idx",
+            "opt_filter": null,
+            "projection": [
                 {
-                    "name": "SEQUENTIALSCAN",
-                    "execution_time": 0.044372,
-                    "actual_rows": 2609129,
-                    "estimated_cardinality": 521825,
-                    "children": [],
-                    "relation": "movie_companies",
-                    "opt_filter": null,
-                    "projection": [
-                        {
-                            "table_name": "mc",
-                            "field_name": "note"
-                        },
-                        {
-                            "table_name": "mc",
-                            "field_name": "company_type_id"
-                        },
-                        {
-                            "table_name": "mc",
-                            "field_name": "movie_id"
-                        }
-                    ]
+                    "table_name": "mi_idx",
+                    "field_name": "movie_id"
                 }
-            ],
-            "condition": "(NOT mc.note LIKE '%(as Metro-Goldwyn-Mayer Pictures)%')"
+            ]
         },
         "t": {
             "name": "FILTER",
-            "execution_time": 0.002338,
-            "actual_rows": 716114,
-            "estimated_cardinality": 505662,
+            "execution_time": 3.1e-05,
+            "actual_rows": 1,
+            "estimated_cardinality": 3,
             "children": [
                 {
                     "name": "SEQUENTIALSCAN",
-                    "execution_time": 0.095129,
-                    "actual_rows": 716259,
-                    "estimated_cardinality": 505662,
+                    "execution_time": 0.081494,
+                    "actual_rows": 1,
+                    "estimated_cardinality": 3,
                     "children": [],
                     "relation": "title",
-                    "opt_filter": "production_year>=2005 AND production_year<=2010 AND production_year IS NOT NULL",
+                    "opt_filter": "title='The Shawshank Redemption' AND title IS NOT NULL",
                     "projection": [
-                        {
-                            "table_name": "t",
-                            "field_name": "production_year"
-                        },
                         {
                             "table_name": "t",
                             "field_name": "id"
@@ -86,73 +51,6 @@
                 }
             ],
             "condition": "(t.id BETWEEN 2 AND 2525793)"
-        },
-        "mi_idx": {
-            "name": "SEQUENTIALSCAN",
-            "execution_time": 0.002264,
-            "actual_rows": 1380035,
-            "estimated_cardinality": 1380035,
-            "children": [],
-            "relation": "movie_info_idx",
-            "opt_filter": null,
-            "projection": [
-                {
-                    "table_name": "mi_idx",
-                    "field_name": "movie_id"
-                },
-                {
-                    "table_name": "mi_idx",
-                    "field_name": "info_type_id"
-                }
-            ]
-        },
-        "it": {
-            "name": "FILTER",
-            "execution_time": 2e-06,
-            "actual_rows": 1,
-            "estimated_cardinality": 1,
-            "children": [
-                {
-                    "name": "SEQUENTIALSCAN",
-                    "execution_time": 5e-06,
-                    "actual_rows": 1,
-                    "estimated_cardinality": 1,
-                    "children": [],
-                    "relation": "info_type",
-                    "opt_filter": "info='bottom 10 rank' AND info IS NOT NULL",
-                    "projection": [
-                        {
-                            "table_name": "it",
-                            "field_name": "id"
-                        }
-                    ]
-                }
-            ],
-            "condition": "(it.id >= 99)"
-        },
-        "ct": {
-            "name": "FILTER",
-            "execution_time": 4e-06,
-            "actual_rows": 1,
-            "estimated_cardinality": 1,
-            "children": [
-                {
-                    "name": "SEQUENTIALSCAN",
-                    "execution_time": 8e-06,
-                    "actual_rows": 1,
-                    "estimated_cardinality": 1,
-                    "children": [],
-                    "relation": "company_type",
-                    "opt_filter": "kind='production companies' AND kind IS NOT NULL",
-                    "projection": [
-                        {
-                            "table_name": "ct",
-                            "field_name": "id"
-                        }
-                    ]
-                }
-            ],
-            "condition": "(ct.id <= 2)"
         }
     }
 }

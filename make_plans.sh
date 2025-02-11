@@ -7,7 +7,7 @@ root=$(pwd)
 
 
 # # Run all benchmark queries in DuckDB
-repetitions=10  # Number of repetitions for each query
+repetitions=1  # Number of repetitions for each query
 cd "$root"/duckdb_scripts || exit
 ./execute_queries_duckdb.sh "$root"/benchmarks/imdb/preprocessed_queries/ ./imdb.db "$root"/query_plans/imdb_duckdb/2_original_with_aliases $repetitions
 

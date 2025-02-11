@@ -1,248 +1,79 @@
 {
-    "execution_time": 0.221652,
+    "execution_time": 0.373786,
     "root": {
-        "name": "AGGREGATE",
-        "execution_time": 0.004744,
-        "actual_rows": 1,
+        "name": "PROJECTION",
+        "execution_time": 0.000403,
+        "actual_rows": 1380035,
         "estimated_cardinality": null,
         "children": [
             {
-                "name": "PROJECTION",
-                "execution_time": 1e-06,
-                "actual_rows": 142,
+                "name": "HASHJOIN",
+                "execution_time": 0.133775,
+                "actual_rows": 1380035,
                 "estimated_cardinality": null,
                 "children": [
                     {
-                        "name": "HASHJOIN",
-                        "execution_time": 0.009904,
-                        "actual_rows": 142,
-                        "estimated_cardinality": null,
-                        "children": [
+                        "name": "SEQUENTIALSCAN",
+                        "execution_time": 0.127156,
+                        "actual_rows": 2525792,
+                        "estimated_cardinality": 2528312,
+                        "children": [],
+                        "relation": "title",
+                        "opt_filter": "id>=2 AND id<=2525793 AND id IS NOT NULL",
+                        "projection": [
                             {
-                                "name": "SEQUENTIALSCAN",
-                                "execution_time": 0.081608,
-                                "actual_rows": 2525744,
-                                "estimated_cardinality": 2528312,
-                                "children": [],
-                                "relation": "title",
-                                "opt_filter": "id>=2 AND id<=2525745 AND id IS NOT NULL",
-                                "projection": [
-                                    {
-                                        "table_name": "t",
-                                        "field_name": "id"
-                                    },
-                                    {
-                                        "table_name": "t",
-                                        "field_name": "title"
-                                    },
-                                    {
-                                        "table_name": "t",
-                                        "field_name": "production_year"
-                                    }
-                                ]
+                                "table_name": "t",
+                                "field_name": "id"
                             },
                             {
-                                "name": "HASHJOIN",
-                                "execution_time": 1.5e-05,
-                                "actual_rows": 142,
-                                "estimated_cardinality": null,
-                                "children": [
-                                    {
-                                        "name": "HASHJOIN",
-                                        "execution_time": 0.000529,
-                                        "actual_rows": 147,
-                                        "estimated_cardinality": null,
-                                        "children": [
-                                            {
-                                                "name": "FILTER",
-                                                "execution_time": 0.072533,
-                                                "actual_rows": 28889,
-                                                "estimated_cardinality": 521825,
-                                                "children": [
-                                                    {
-                                                        "name": "SEQUENTIALSCAN",
-                                                        "execution_time": 0.04408,
-                                                        "actual_rows": 2609129,
-                                                        "estimated_cardinality": 521825,
-                                                        "children": [],
-                                                        "relation": "movie_companies",
-                                                        "opt_filter": null,
-                                                        "projection": [
-                                                            {
-                                                                "table_name": "mc",
-                                                                "field_name": "note"
-                                                            },
-                                                            {
-                                                                "table_name": "mc",
-                                                                "field_name": "company_type_id"
-                                                            },
-                                                            {
-                                                                "table_name": "mc",
-                                                                "field_name": "movie_id"
-                                                            }
-                                                        ]
-                                                    }
-                                                ],
-                                                "condition": "((NOT mc.note LIKE '%(as Metro-Goldwyn-Mayer Pictures)%') AND (mc.note LIKE '%(co-production)%' OR mc.note LIKE '%(presents)%'))"
-                                            },
-                                            {
-                                                "name": "HASHJOIN",
-                                                "execution_time": 0.002817,
-                                                "actual_rows": 250,
-                                                "estimated_cardinality": null,
-                                                "children": [
-                                                    {
-                                                        "name": "SEQUENTIALSCAN",
-                                                        "execution_time": 0.003292,
-                                                        "actual_rows": 1380011,
-                                                        "estimated_cardinality": 1380035,
-                                                        "children": [],
-                                                        "relation": "movie_info_idx",
-                                                        "opt_filter": "movie_id<=2525745 AND movie_id IS NOT NULL",
-                                                        "projection": [
-                                                            {
-                                                                "table_name": "mi_idx",
-                                                                "field_name": "movie_id"
-                                                            },
-                                                            {
-                                                                "table_name": "mi_idx",
-                                                                "field_name": "info_type_id"
-                                                            }
-                                                        ]
-                                                    },
-                                                    {
-                                                        "name": "FILTER",
-                                                        "execution_time": 1e-06,
-                                                        "actual_rows": 1,
-                                                        "estimated_cardinality": 1,
-                                                        "children": [
-                                                            {
-                                                                "name": "SEQUENTIALSCAN",
-                                                                "execution_time": 5e-06,
-                                                                "actual_rows": 1,
-                                                                "estimated_cardinality": 1,
-                                                                "children": [],
-                                                                "relation": "info_type",
-                                                                "opt_filter": "info='top 250 rank' AND info IS NOT NULL",
-                                                                "projection": [
-                                                                    {
-                                                                        "table_name": "it",
-                                                                        "field_name": "id"
-                                                                    }
-                                                                ]
-                                                            }
-                                                        ],
-                                                        "condition": "(it.id >= 99)"
-                                                    }
-                                                ],
-                                                "condition": [
-                                                    [
-                                                        {
-                                                            "table_name": "mi_idx",
-                                                            "field_name": "info_type_id"
-                                                        },
-                                                        {
-                                                            "table_name": "it",
-                                                            "field_name": "id"
-                                                        }
-                                                    ]
-                                                ]
-                                            }
-                                        ],
-                                        "condition": [
-                                            [
-                                                {
-                                                    "table_name": "mc",
-                                                    "field_name": "movie_id"
-                                                },
-                                                {
-                                                    "table_name": "mi_idx",
-                                                    "field_name": "movie_id"
-                                                }
-                                            ]
-                                        ]
-                                    },
-                                    {
-                                        "name": "FILTER",
-                                        "execution_time": 7e-06,
-                                        "actual_rows": 1,
-                                        "estimated_cardinality": 1,
-                                        "children": [
-                                            {
-                                                "name": "SEQUENTIALSCAN",
-                                                "execution_time": 1.2e-05,
-                                                "actual_rows": 1,
-                                                "estimated_cardinality": 1,
-                                                "children": [],
-                                                "relation": "company_type",
-                                                "opt_filter": "kind='production companies' AND kind IS NOT NULL",
-                                                "projection": [
-                                                    {
-                                                        "table_name": "ct",
-                                                        "field_name": "id"
-                                                    }
-                                                ]
-                                            }
-                                        ],
-                                        "condition": "(ct.id <= 2)"
-                                    }
-                                ],
-                                "condition": [
-                                    [
-                                        {
-                                            "table_name": "mc",
-                                            "field_name": "company_type_id"
-                                        },
-                                        {
-                                            "table_name": "ct",
-                                            "field_name": "id"
-                                        }
-                                    ]
-                                ]
+                                "table_name": "t",
+                                "field_name": "title"
                             }
-                        ],
-                        "condition": [
-                            [
-                                {
-                                    "table_name": "t",
-                                    "field_name": "id"
-                                },
-                                {
-                                    "table_name": "mi_idx",
-                                    "field_name": "movie_id"
-                                }
-                            ]
+                        ]
+                    },
+                    {
+                        "name": "SEQUENTIALSCAN",
+                        "execution_time": 0.005168,
+                        "actual_rows": 1380035,
+                        "estimated_cardinality": 1380035,
+                        "children": [],
+                        "relation": "movie_info_idx",
+                        "opt_filter": null,
+                        "projection": [
+                            {
+                                "table_name": "mi_idx",
+                                "field_name": "movie_id"
+                            }
                         ]
                     }
                 ],
-                "on": [
-                    {
-                        "table_name": "mc",
-                        "field_name": "note"
-                    },
-                    {
-                        "table_name": "t",
-                        "field_name": "title"
-                    },
-                    {
-                        "table_name": "t",
-                        "field_name": "production_year"
-                    }
+                "condition": [
+                    [
+                        {
+                            "table_name": "t",
+                            "field_name": "id"
+                        },
+                        {
+                            "table_name": "mi_idx",
+                            "field_name": "movie_id"
+                        }
+                    ]
                 ]
             }
         ],
-        "group_by": null,
-        "aggregate": [
-            "min(mc.note)",
-            "min(t.title)",
-            "min(t.production_year)"
+        "on": [
+            {
+                "table_name": "t",
+                "field_name": "id"
+            },
+            {
+                "table_name": "t",
+                "field_name": "title"
+            }
         ]
     },
     "aliases": {
         "mi_idx": "movie_info_idx",
-        "ct": "company_type",
-        "it": "info_type",
-        "t": "title",
-        "mc": "movie_companies"
+        "t": "title"
     }
 }

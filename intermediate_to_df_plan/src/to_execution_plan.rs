@@ -18,13 +18,7 @@ use datafusion::{
     },
     physical_expr::create_physical_expr,
     physical_plan::{
-        aggregates::{create_aggregate_expr, AggregateExec, PhysicalGroupBy},
-        expressions::Column,
-        filter::FilterExec,
-        joins::{utils::JoinOn, HashJoinExec, SortMergeJoinExec},
-        memory::MemoryExec,
-        projection::ProjectionExec,
-        AggregateExpr, ExecutionPlan, PhysicalExpr,
+        aggregates::{create_aggregate_expr, AggregateExec, PhysicalGroupBy}, expressions::Column, filter::FilterExec, joins::{utils::JoinOn, HashJoinExec, SortMergeJoinExec}, memory::MemoryExec, projection::ProjectionExec, AggregateExpr, ExecutionPlan, Partitioning, PhysicalExpr
     },
     prelude::Expr,
     sql::TableReference,
@@ -66,6 +60,7 @@ impl ToPhysicalNode for intermediate_plan::Node {
             Node::MergeJoin(n) => n.to_execution_plan(catalog, alternative_flatten).await,
             Node::SequentialScan(n) => n.to_execution_plan(catalog, alternative_flatten).await,
             Node::Yannakakis(n) => n.to_execution_plan(catalog, alternative_flatten).await,
+            Node::Repartition(n) => n.to_execution_plan(catalog, alternative_flatten).await,
         }
     }
 }
@@ -521,6 +516,37 @@ impl ToPhysicalNode for intermediate_plan::SequentialScanNode {
         );
 
         return Ok((Arc::new(df_output_schema_projected), execplan));
+    }
+}
+
+#[async_trait]
+impl ToPhysicalNode for intermediate_plan::RepartitionExecNode {
+
+    async fn to_execution_plan(
+        &self,
+        catalog: &Catalog,
+        alternative_flatten: bool,
+    ) -> Result<(DFSchemaRef, Arc<dyn ExecutionPlan>), DataFusionError> {
+        // 1 child, currently only supports repartitioning the output of a sequential scan
+        assert!(self.base.children.len() == 1);
+        let (input_dfschema, input) = self.base.children[0]
+            .to_execution_plan(catalog, alternative_flatten)
+            .await?;
+
+        let num_partitions = self.num_partitions;
+        let schema = input.schema();
+
+        //unknown partitioning for now
+        // let partitioning = Partitioning::UnknownPartitioning(num_partitions);
+        let partitioning = Partitioning::RoundRobinBatch(num_partitions);
+
+        let repartition = datafusion::physical_plan::repartition::RepartitionExec::try_new(
+            input,
+            partitioning
+        )?;
+
+
+        Ok((input_dfschema, Arc::new(repartition)))
     }
 }
 

@@ -1,129 +1,46 @@
 {
    "name":  "Query", 
-   "result": 0.221652,
-   "timing": 0.221652,
+   "result": 0.373786,
+   "timing": 0.373786,
    "cardinality": 0,
-   "extra-info": "SELECT MIN(mc.note) AS production_note,\n       MIN(t.title) AS movie_title,\n       MIN(t.production_year) AS movie_year\nFROM ct,\n     it,\n     mc,\n     mi_idx,\n     t\nWHERE ct.kind = 'production companies'\n  AND it.info = 'top 250 rank'\n  AND mc.note NOT LIKE '%(as Metro-Goldwyn-Mayer Pictures)%'\n  AND (mc.note LIKE '%(co-production)%'\n       OR mc.note LIKE '%(presents)%')\n  AND ct.id = mc.company_type_id\n  AND t.id = mc.movie_id\n  AND t.id = mi_idx.movie_id\n  AND mc.movie_id = mi_idx.movie_id\n  AND it.id = mi_idx.info_type_id;", 
+   "extra-info": "SELECT t.id,\n         t.title\nFROM mi_idx,\n     t\nWHERE t.id = mi_idx.movie_id;PRAGMA profile_output = '/home/maxvg/Documents/masterINF/Masterproef/code-reproducability-yannakakis/query_plans/imdb_duckdb/2_original_with_aliases/1b/run_1.json';", 
    "timings": [
 
    ],
    "children": [
     {
       "name": "RESULT_COLLECTOR",
-      "timing":0.000002,
+      "timing":0.054933,
       "cardinality":0,
       "extra_info": "",
       "children": [
        {
-         "name": "UNGROUPED_AGGREGATE",
-         "timing":0.004744,
-         "cardinality":1,
-         "extra_info": "min(#0)\nmin(#1)\nmin(#2)",
+         "name": "PROJECTION",
+         "timing":0.000403,
+         "cardinality":1380035,
+         "extra_info": "t.id\nt.title\n",
          "children": [
           {
-            "name": "PROJECTION",
-            "timing":0.000001,
-            "cardinality":142,
-            "extra_info": "mc.note\nt.title\nt.production_year\n",
+            "name": "HASH_JOIN",
+            "timing":0.133775,
+            "cardinality":1380035,
+            "extra_info": "INNER\nt.id = mi_idx.movie_id\n\n[INFOSEPARATOR]\nEC: 1474359\n",
             "children": [
              {
-               "name": "HASH_JOIN",
-               "timing":0.009904,
-               "cardinality":142,
-               "extra_info": "INNER\nt.id = mi_idx.movie_id\n\n[INFOSEPARATOR]\nEC: 725\n",
+               "name": "SEQ_SCAN ",
+               "timing":0.127156,
+               "cardinality":2525792,
+               "extra_info": "t\n[INFOSEPARATOR]\nid\ntitle\n[INFOSEPARATOR]\nFilters: id>=2 AND id<=2525793 AND id IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 2528312",
                "children": [
-                {
-                  "name": "SEQ_SCAN ",
-                  "timing":0.081608,
-                  "cardinality":2525744,
-                  "extra_info": "t\n[INFOSEPARATOR]\nid\ntitle\nproduction_year\n[INFOSEPARATOR]\nFilters: id>=2 AND id<=2525745 AND id IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 2528312",
-                  "children": [
-                  ]
-                }
+               ]
+             }
 ,
-                {
-                  "name": "HASH_JOIN",
-                  "timing":0.000015,
-                  "cardinality":142,
-                  "extra_info": "INNER\nmc.company_type_id = ct.id\n\n[INFOSEPARATOR]\nBuild Min: 1\nBuild Max: 2\n\n[INFOSEPARATOR]\nEC: 679\n",
-                  "children": [
-                   {
-                     "name": "HASH_JOIN",
-                     "timing":0.000529,
-                     "cardinality":147,
-                     "extra_info": "INNER\nmc.movie_id = mi_idx.movie_id\n\n[INFOSEPARATOR]\nEC: 2716\n",
-                     "children": [
-                      {
-                        "name": "FILTER",
-                        "timing":0.072533,
-                        "cardinality":28889,
-                        "extra_info": "((NOT contains(mc.note, '(as Metro-Goldwyn-Mayer Pictures)')) AND (contains(mc.note, '(co-production)') OR contains(mc.note, '(presents)')))\n[INFOSEPARATOR]\nEC: 521825",
-                        "children": [
-                         {
-                           "name": "SEQ_SCAN ",
-                           "timing":0.044080,
-                           "cardinality":2609129,
-                           "extra_info": "mc\n[INFOSEPARATOR]\nnote\ncompany_type_id\nmovie_id\n[INFOSEPARATOR]\nEC: 521825",
-                           "children": [
-                           ]
-                         }
-                        ]
-                      }
-,
-                      {
-                        "name": "HASH_JOIN",
-                        "timing":0.002817,
-                        "cardinality":250,
-                        "extra_info": "INNER\nmi_idx.info_type_id = it.id\n\n[INFOSEPARATOR]\nEC: 1380035\n",
-                        "children": [
-                         {
-                           "name": "SEQ_SCAN ",
-                           "timing":0.003292,
-                           "cardinality":1380011,
-                           "extra_info": "mi_idx\n[INFOSEPARATOR]\nmovie_id\ninfo_type_id\n[INFOSEPARATOR]\nFilters: movie_id<=2525745 AND movie_id IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 1380035",
-                           "children": [
-                           ]
-                         }
-,
-                         {
-                           "name": "FILTER",
-                           "timing":0.000001,
-                           "cardinality":1,
-                           "extra_info": "(it.id >= 99)\n[INFOSEPARATOR]\nEC: 1",
-                           "children": [
-                            {
-                              "name": "SEQ_SCAN ",
-                              "timing":0.000005,
-                              "cardinality":1,
-                              "extra_info": "it\n[INFOSEPARATOR]\nid\n[INFOSEPARATOR]\nFilters: info='top 250 rank' AND info IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 1",
-                              "children": [
-                              ]
-                            }
-                           ]
-                         }
-                        ]
-                      }
-                     ]
-                   }
-,
-                   {
-                     "name": "FILTER",
-                     "timing":0.000007,
-                     "cardinality":1,
-                     "extra_info": "(ct.id <= 2)\n[INFOSEPARATOR]\nEC: 1",
-                     "children": [
-                      {
-                        "name": "SEQ_SCAN ",
-                        "timing":0.000012,
-                        "cardinality":1,
-                        "extra_info": "ct\n[INFOSEPARATOR]\nid\n[INFOSEPARATOR]\nFilters: kind='production companies' AND kind IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 1",
-                        "children": [
-                        ]
-                      }
-                     ]
-                   }
-                  ]
-                }
+             {
+               "name": "SEQ_SCAN ",
+               "timing":0.005168,
+               "cardinality":1380035,
+               "extra_info": "mi_idx\n[INFOSEPARATOR]\nmovie_id\n[INFOSEPARATOR]\nEC: 1380035",
+               "children": [
                ]
              }
             ]

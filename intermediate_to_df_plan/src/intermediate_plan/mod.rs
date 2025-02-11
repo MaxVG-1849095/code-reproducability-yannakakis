@@ -22,6 +22,7 @@ pub enum Node {
     MergeJoin(MergeJoinNode),
     SequentialScan(SequentialScanNode),
     Yannakakis(Box<yannakakis::YannakakisNode>),
+    Repartition(RepartitionExecNode),
 }
 
 impl Node {
@@ -34,6 +35,7 @@ impl Node {
             Node::MergeJoin(n) => Box::new(n.base.children.iter()),
             Node::SequentialScan(n) => Box::new(n.base.children.iter()),
             Node::Yannakakis(n) => n.children(),
+            Node::Repartition(n) => Box::new(n.base.children.iter()),
         }
     }
 }
@@ -94,6 +96,14 @@ pub struct SequentialScanNode {
     pub opt_filter: Option<String>,
 }
 
+#[derive(Serialize, Deserialize, Debug)]
+pub struct RepartitionExecNode {
+    #[serde(flatten)]
+    pub base: BaseNode,
+    pub partitioning: String,
+    pub num_partitions: usize,
+}
+
 #[derive(Serialize, Deserialize, Debug, Eq, Hash, PartialEq, Clone)]
 pub struct Field {
     pub table_name: Option<String>, // None if not qualified
@@ -132,6 +142,94 @@ impl Field {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_max_plan(){
+        let plan = r#"
+            {
+            "root": {
+                "name": "PROJECTION",
+                "estimated_cardinality": null,
+                "children": [
+                    {
+                        "name": "YANNAKAKIS",
+                        "root": {
+                            "name": "MULTISEMIJOIN",
+                            "equijoin_keys": [
+                                [
+                                    [
+                                        0,
+                                        0
+                                    ]
+                                ]
+                            ],
+                            "guard": {
+                                "name": "SEQUENTIALSCAN",
+                                "children": [],
+                                "relation": "title",
+                                "opt_filter": "id>=2 AND id<=2525793 AND id IS NOT NULL",
+                                "projection": [
+                                    {
+                                        "table_name": "t",
+                                        "field_name": "id"
+                                    },
+                                    {
+                                        "table_name": "t",
+                                        "field_name": "title"
+                                    }
+                                ]
+                            },
+                            "children": [
+                                {
+                                    "name": "GROUPBY",
+                                    "group_on": [
+                                        0
+                                    ],
+                                    "child": {
+                                        "name": "MULTISEMIJOIN",
+                                        "equijoin_keys": [],
+                                        "guard": {
+                                            
+                                            "name": "SEQUENTIALSCAN",
+                                            "children": [],
+                                            "relation": "movie_info_idx",
+                                            "opt_filter": null,
+                                            "projection": [
+                                                {
+                                                    "table_name": "mi_idx",
+                                                    "field_name": "movie_id"
+                                                }
+                                            ]
+                                        },
+                                        "children": []
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "on": [
+                    {
+                        "table_name": "t",
+                        "field_name": "id"
+                    },
+                    {
+                        "table_name": "t",
+                        "field_name": "title"
+                    }
+                ]
+            },
+            "aliases": {
+                "mi_idx": "movie_info_idx",
+                "t": "title"
+            }
+        }"#;
+
+        let plan: Plan = serde_json::from_str(plan).unwrap();
+
+        println!("{:#?}", plan)
+
+    }
 
     #[test]
     fn test_deserialize_plan() {

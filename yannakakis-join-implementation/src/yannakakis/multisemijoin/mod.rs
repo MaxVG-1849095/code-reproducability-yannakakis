@@ -205,6 +205,7 @@ impl MultiSemiJoin {
         ) -> Result<GroupedRelRef, DataFusionError> {
             child.materialize(context).await
         }
+        println!("MultiSemiJoin::execute {}", partition);
 
         let materialized_children_futs = self
             .once_futs

@@ -1,9 +1,6 @@
 {
-    "execution_time": 0.373786,
     "root": {
         "name": "PROJECTION",
-        "execution_time": 0.000403,
-        "actual_rows": 1380035,
         "estimated_cardinality": null,
         "children": [
             {
@@ -20,9 +17,6 @@
                     ],
                     "guard": {
                         "name": "SEQUENTIALSCAN",
-                        "execution_time": 0.127156,
-                        "actual_rows": 2525792,
-                        "estimated_cardinality": 2528312,
                         "children": [],
                         "relation": "title",
                         "opt_filter": "id>=2 AND id<=2525793 AND id IS NOT NULL",
@@ -47,19 +41,23 @@
                                 "name": "MULTISEMIJOIN",
                                 "equijoin_keys": [],
                                 "guard": {
-                                    "name": "SEQUENTIALSCAN",
-                                    "execution_time": 0.005168,
-                                    "actual_rows": 1380035,
-                                    "estimated_cardinality": 1380035,
-                                    "children": [],
-                                    "relation": "movie_info_idx",
-                                    "opt_filter": null,
-                                    "projection": [
+                                    "name": "REPARTITION",
+                                    "children": [
                                         {
-                                            "table_name": "mi_idx",
-                                            "field_name": "movie_id"
+                                            "name": "SEQUENTIALSCAN",
+                                            "children": [],
+                                            "relation": "movie_info_idx",
+                                            "opt_filter": null,
+                                            "projection": [
+                                                {
+                                                    "table_name": "mi_idx",
+                                                    "field_name": "movie_id"
+                                                }
+                                            ]
                                         }
-                                    ]
+                                    ],
+                                    "num_partitions":1,
+                                    "partitioning": "unknown"
                                 },
                                 "children": []
                             }
