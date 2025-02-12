@@ -4,14 +4,18 @@
         "children": [
             {
                 "guard": "t",
-                "children": []
+                "children": [],
+                "partitioned": false,
+                "id": 0
             }
-        ]
+        ],
+        "partitioned": false,
+        "id": 0
     },
     "replacements": {
         "mi_idx": {
             "name": "SEQUENTIALSCAN",
-            "execution_time": 0.001349,
+            "execution_time": 0.001394,
             "actual_rows": 1380035,
             "estimated_cardinality": 1380035,
             "children": [],
@@ -26,13 +30,13 @@
         },
         "t": {
             "name": "FILTER",
-            "execution_time": 0.000147,
+            "execution_time": 3e-05,
             "actual_rows": 1,
             "estimated_cardinality": 3,
             "children": [
                 {
                     "name": "SEQUENTIALSCAN",
-                    "execution_time": 0.079671,
+                    "execution_time": 0.078198,
                     "actual_rows": 1,
                     "estimated_cardinality": 3,
                     "children": [],

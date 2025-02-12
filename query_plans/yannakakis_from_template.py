@@ -162,6 +162,8 @@ def generate_semijoin_node(node, replacements):
         "equijoin_keys": [[] for _ in range(len(children))],
         "guard": guard,
         "children": children,
+        "partitioned": False,
+        "id": 0,
     }
 
 

@@ -49,11 +49,10 @@ class MultiSemiJoin:
 
     def to_yannakakis_template(self) -> str:
         """Convert the semijoin plan to a string that can be written to a Yannakakis template file."""
-
         def helper(node: MultiSemiJoin):
             children = [helper(child) for child in node.children]
 
-            return {"guard": node.guard, "children": children}
+            return {"guard": node.guard, "children": children, "partitioned": False, "id": 0}
 
         semijoin_plan = helper(self)
         result = {"semijoin_plan": semijoin_plan, "replacements": []}
