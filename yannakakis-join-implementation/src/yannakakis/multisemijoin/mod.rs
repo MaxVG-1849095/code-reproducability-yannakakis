@@ -245,14 +245,15 @@ impl MultiSemiJoin {
         let guard_time_start = std::time::Instant::now();
         
         let guard_stream : Pin<Box<dyn RecordBatchStream + Send>>;
-        //remake guard stream depending on partitioned
+        //remake guard stream depending on partitioned, this can be used to only calculate values of partitions that are attributed to this msj
+        //for now there is only 1 msj for all partitions so we need to calculate all partitions
         if self.partitioned {
             let mut streams   = Vec::new();
             println!("Partitioned MultiSemiJoin with {} partitions", self.guard.output_partitioning().partition_count());
-            // println!("Partition count: {}", self.guard.output_partitioning().partition_count());
             for i in 0..self.guard.output_partitioning().partition_count(){
                 streams.push(self.guard.execute(i, context.clone())?);
             }
+
             guard_stream = MultiSemiJoin::combine_streams(self.guard.schema(), streams);
         }
         else{
@@ -280,13 +281,22 @@ impl MultiSemiJoin {
     }
 
 
-    //function to combine recordbatchstreams into one
+    //function to combine an array of recordbatchstreams into one
     fn combine_streams(schema: Arc<datafusion::arrow::datatypes::Schema>, streams: Vec<Pin<Box<dyn RecordBatchStream + Send>>>) -> Pin<Box<dyn RecordBatchStream + Send>> {
         //combine all streams (becomes selectall object so no recordbatch)
         let streams_combined = futures::stream::select_all(streams); 
         //turn it into a recordbatchstream and return
         Box::pin(RecordBatchStreamAdapter::new(schema, streams_combined)) 
     }
+}
+
+
+async fn collect_guard_stream(
+    guard: Arc<dyn ExecutionPlan>,
+    partition: usize,
+    context: Arc<TaskContext>,
+) -> Result<SendableRecordBatchStream, DataFusionError> {
+    guard.execute(partition, context)
 }
 
 pub type SendableSemiJoinResultBatchStream = Pin<Box<MultiSemiJoinStream>>;

@@ -41,3 +41,9 @@ pub struct GroupByNode {
     pub group_on: Vec<usize>,
     pub child: MultiSemiJoinNode,
 }
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct RepartitionShreddedNode{
+    pub child: MultiSemiJoinNode,
+    pub partitions: usize,
+}

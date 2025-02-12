@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 
 mod yannakakis;
-pub use yannakakis::{GroupByNode, MultiSemiJoinNode, YannakakisNode};
+pub use yannakakis::{GroupByNode, MultiSemiJoinNode, YannakakisNode, RepartitionShreddedNode};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Plan {
@@ -23,6 +23,7 @@ pub enum Node {
     SequentialScan(SequentialScanNode),
     Yannakakis(Box<yannakakis::YannakakisNode>),
     Repartition(RepartitionExecNode),
+    // RepartitionShredded(RepartitionShreddedNode),
 }
 
 impl Node {
@@ -36,6 +37,7 @@ impl Node {
             Node::SequentialScan(n) => Box::new(n.base.children.iter()),
             Node::Yannakakis(n) => n.children(),
             Node::Repartition(n) => Box::new(n.base.children.iter()),
+            // Node::RepartitionShredded(n) => Box::new(n.base.children.iter()),
         }
     }
 }
@@ -103,6 +105,13 @@ pub struct RepartitionExecNode {
     pub partitioning: String,
     pub num_partitions: usize,
 }
+
+// #[derive(Serialize, Deserialize, Debug)]
+// pub struct RepartitionShreddedNode {
+//     #[serde(flatten)]
+//     pub base: BaseNode,
+//     pub num_partitions: usize,
+// }
 
 #[derive(Serialize, Deserialize, Debug, Eq, Hash, PartialEq, Clone)]
 pub struct Field {

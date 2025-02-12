@@ -25,7 +25,7 @@ use datafusion::{
 };
 use regex::Regex;
 use yannakakis_join_implementation::yannakakis::{
-    flatten::Flatten, groupby::GroupBy, multisemijoin::MultiSemiJoin,
+    flatten::Flatten, groupby::GroupBy, multisemijoin::MultiSemiJoin, repartitionshredded::{self, RepartitionShredded},
 };
 
 use crate::{
@@ -61,6 +61,7 @@ impl ToPhysicalNode for intermediate_plan::Node {
             Node::SequentialScan(n) => n.to_execution_plan(catalog, alternative_flatten).await,
             Node::Yannakakis(n) => n.to_execution_plan(catalog, alternative_flatten).await,
             Node::Repartition(n) => n.to_execution_plan(catalog, alternative_flatten).await,
+            // Node::RepartitionShredded(n) => n.to_execution_plan(catalog, alternative_flatten).await,
         }
     }
 }
@@ -98,21 +99,18 @@ impl ToPhysicalNode for intermediate_plan::YannakakisNode {
             schema.merge(&guard_schema);
 
             let mut children = Vec::with_capacity(node.children.len());
+            
             for child in &node.children {
                 let (child_schema, child) =
                     groupby_to_plan(child, catalog, alternative_flatten).await?;
                 schema.merge(&child_schema);
                 children.push(Arc::new(child));
             }
-
             let mut msj = MultiSemiJoin::new(guard, children, node.equijoin_keys.clone());
-
             if node.partitioned{
                 msj.set_partitioned(true);
             }
-
             msj.set_id(node.id);
-
             Ok((
                 schema,
                 msj,
@@ -557,6 +555,30 @@ impl ToPhysicalNode for intermediate_plan::RepartitionExecNode {
         Ok((input_dfschema, Arc::new(repartition)))
     }
 }
+
+// #[async_trait]
+// impl ToPhysicalNode for intermediate_plan::RepartitionShreddedNode{
+
+//     async fn to_execution_plan(
+//         &self,
+//         catalog: &Catalog,
+//         alternative_flatten:bool,
+//     ) -> Result<(DFSchemaRef, Arc<dyn ExecutionPlan>), DataFusionError> {
+//         // 1 child, currently only supports repartitioning the output of a single multisemijoin
+//         assert!(self.base.children.len() == 1);
+//         let (input_dfschema, input) = self.base.children[0]
+//             .to_execution_plan(catalog, alternative_flatten)
+//             .await?;
+
+//         let num_partitions = self.num_partitions;
+//         let schema = input.schema();
+
+//         let repartshredded = repartitionshredded::RepartitionShredded::new(input, num_partitions);
+
+
+//         Ok((input_dfschema, repartshredded))
+//     }
+// }
 
 async fn _seqscan_to_memoryexec(
     seqscannode: &SequentialScanNode,
