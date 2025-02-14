@@ -25,7 +25,7 @@ use datafusion::{
 };
 use regex::Regex;
 use yannakakis_join_implementation::yannakakis::{
-    flatten::Flatten, groupby::GroupBy, multisemijoin::MultiSemiJoin, repartitionshredded::{self, RepartitionShredded},
+    flatten::Flatten, groupby::GroupBy, multisemijoin::MultiSemiJoin, repartitionshredded::{self, MultiSemiJoinWrapper, RepartitionMultiSemiJoin},
 };
 
 use crate::{
@@ -82,7 +82,7 @@ impl ToPhysicalNode for intermediate_plan::YannakakisNode {
                 multisemijoin_to_plan(&node.child, catalog, alternative_flatten).await?;
             let group_on = node.group_on.clone();
 
-            Ok((child_schema, GroupBy::new(child, group_on)))
+            Ok((child_schema, GroupBy::new(child.into(), group_on)))
         }
 
         #[async_recursion]
@@ -90,7 +90,7 @@ impl ToPhysicalNode for intermediate_plan::YannakakisNode {
             node: &intermediate_plan::MultiSemiJoinNode,
             catalog: &Catalog,
             alternative_flatten: bool,
-        ) -> Result<(DFSchema, MultiSemiJoin), DataFusionError> {
+        ) -> Result<(DFSchema, Box<dyn MultiSemiJoinWrapper>), DataFusionError> {
             let mut schema: DFSchema = DFSchema::empty();
             let (guard_schema, guard) = node
                 .guard
@@ -113,7 +113,7 @@ impl ToPhysicalNode for intermediate_plan::YannakakisNode {
             msj.set_id(node.id);
             Ok((
                 schema,
-                msj,
+                Box::new(msj) as Box<dyn MultiSemiJoinWrapper>,
             ))
         }
 
@@ -123,10 +123,10 @@ impl ToPhysicalNode for intermediate_plan::YannakakisNode {
         if alternative_flatten {
             Ok((
                 Arc::new(dfschema),
-                Arc::new(Flatten::new_alternative(Arc::new(root))),
+                Arc::new(Flatten::new_alternative(root.into())),
             ))
         } else {
-            Ok((Arc::new(dfschema), Arc::new(Flatten::new(Arc::new(root)))))
+            Ok((Arc::new(dfschema), Arc::new(Flatten::new(root.into()))))
         }
     }
 }

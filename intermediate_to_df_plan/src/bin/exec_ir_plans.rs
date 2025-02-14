@@ -9,7 +9,7 @@ use std::{
 
 use clap::Parser;
 use datafusion::{
-    arrow::util::pretty::pretty_format_batches, physical_plan::displayable, prelude::{SessionConfig, SessionContext}
+    arrow::util::pretty::pretty_format_batches, physical_plan::{display::DisplayableExecutionPlan, displayable}, prelude::{SessionConfig, SessionContext}
 };
 use intermediate_to_df_plan::{
     time_execution, to_execution_plan,
@@ -65,10 +65,12 @@ struct Args {
     pub resume: Option<String>,
 }
 
+
+//TODO: multithreaded runtime
 // Single threaded, also known as "current_thread" runtime in Tokio
 // src: https://docs.rs/tokio/latest/tokio/attr.main.html#using-current-thread-runtime
-//#[tokio::main(flavor = "multi_thread", worker_threads = 1)]
-#[tokio::main(flavor = "current_thread")]
+#[tokio::main(flavor = "multi_thread", worker_threads = 8)]
+// #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Args = Args::parse();
 
@@ -165,8 +167,9 @@ async fn exec_plan(
 
         // print execution plan
         if rep == 0 {
-            println!("Execution plan:");
-            let display_plan = displayable(plan.as_ref()).set_show_statistics(true);
+            
+            let display_plan = DisplayableExecutionPlan::with_full_metrics(plan.as_ref());
+            
             println!("{}", display_plan.indent(true));
         }
         let (results, duration) = time_execution(plan.clone(), task_ctx.clone()).await?;

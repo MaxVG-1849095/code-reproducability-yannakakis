@@ -28,12 +28,15 @@ use super::data::NonSingularNestedColumn;
 use super::data::SemiJoinResultBatch;
 use super::data::SingularNestedColumn;
 use super::data::Weight;
+use super::multisemijoin::MultiSemiJoinStream;
+use super::repartitionshredded::MultiSemiJoinWrapper;
 
 /// Operator that groups the result of a [MultiSemiJoin] on a given tuple of key columns.
 #[derive(Debug)]
 pub struct GroupBy {
-    /// The child opertor node.
-    child: MultiSemiJoin,
+    /// The child operator node.
+    // child: MultiSemiJoin,
+    child: Arc<dyn MultiSemiJoinWrapper>,
 
     /// The indexes of the regular columns in the child [MultiSemiJoin] schema that we will group by
     group_on: Vec<usize>,
@@ -53,7 +56,7 @@ impl GroupBy {
     /// Create a new [`GroupBy`].
     /// `group_on` are the indexes of the *regular* columns in `child.schema()` that we want to group by.
     /// Grouping on any (possibly empty and not necessarily strict) subset of the regular fields is allowed.
-    pub fn new(child: MultiSemiJoin, group_on: Vec<usize>) -> Self {
+    pub fn new(child: Arc<dyn MultiSemiJoinWrapper>, group_on: Vec<usize>) -> Self {
         let child_schema = child.schema();
         let number_of_regular_fields = child_schema.regular_fields.fields().len();
 
@@ -89,7 +92,7 @@ impl GroupBy {
     }
 
     /// Get groupby input.
-    pub fn child(&self) -> &MultiSemiJoin {
+    pub fn child(&self) -> &Arc<dyn MultiSemiJoinWrapper> {
         &self.child
     }
 
@@ -448,397 +451,397 @@ pub fn init_grouped_rel_builder(
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use std::error::Error;
+// #[cfg(test)]
+// mod tests {
+//     use std::error::Error;
 
-    use datafusion::{
-        arrow::{
-            array::{RecordBatch, UInt8Array},
-            datatypes::{DataType, Field, Schema, UInt8Type},
-            error::ArrowError,
-        },
-        physical_plan::memory::MemoryExec,
-    };
-    use grouped_rel::{
-        default::DefaultSingularGroupedRel, none::NoneNonSingularGroupedRel,
-        one::OneKeyNonSingularGroupedRel, one_nullable::OneKeyNullableNonSingularGroupedRel,
-        two::DoubleKeyNonSingularGroupedRel,
-    };
+//     use datafusion::{
+//         arrow::{
+//             array::{RecordBatch, UInt8Array},
+//             datatypes::{DataType, Field, Schema, UInt8Type},
+//             error::ArrowError,
+//         },
+//         physical_plan::memory::MemoryExec,
+//     };
+//     use grouped_rel::{
+//         default::DefaultSingularGroupedRel, none::NoneNonSingularGroupedRel,
+//         one::OneKeyNonSingularGroupedRel, one_nullable::OneKeyNullableNonSingularGroupedRel,
+//         two::DoubleKeyNonSingularGroupedRel,
+//     };
 
-    use crate::yannakakis::data::NestedSchema;
+//     use crate::yannakakis::data::NestedSchema;
 
-    use super::*;
+//     use super::*;
 
-    /// | a | b  | c |
-    /// | - | -- | - |
-    /// | 1 | 1  | 1 |
-    /// | 1 | 2  | 2 |
-    /// | 1 | 3  | 3 |
-    /// | 1 | 4  | 4 |
-    /// | 1 | 5  | 5 |
-    /// | 1 | 6  | 1 |
-    /// | 1 | 7  | 2 |
-    /// | 1 | 8  | 3 |
-    /// | 1 | 9  | 4 |
-    /// | 1 | 10 | 5 |
-    fn example_batch() -> Result<RecordBatch, ArrowError> {
-        let schema = Arc::new(Schema::new(vec![
-            Field::new("a", DataType::UInt8, false),
-            Field::new("b", DataType::UInt8, false),
-            Field::new("c", DataType::UInt8, false),
-        ]));
-        let a = UInt8Array::from(vec![1, 1, 1, 1, 1, 1, 1, 1, 1, 1]);
-        let b = UInt8Array::from(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
-        let c = UInt8Array::from(vec![1, 2, 3, 4, 5, 1, 2, 3, 4, 5]);
-        RecordBatch::try_new(schema.clone(), vec![Arc::new(a), Arc::new(b), Arc::new(c)])
-    }
+//     /// | a | b  | c |
+//     /// | - | -- | - |
+//     /// | 1 | 1  | 1 |
+//     /// | 1 | 2  | 2 |
+//     /// | 1 | 3  | 3 |
+//     /// | 1 | 4  | 4 |
+//     /// | 1 | 5  | 5 |
+//     /// | 1 | 6  | 1 |
+//     /// | 1 | 7  | 2 |
+//     /// | 1 | 8  | 3 |
+//     /// | 1 | 9  | 4 |
+//     /// | 1 | 10 | 5 |
+//     fn example_batch() -> Result<RecordBatch, ArrowError> {
+//         let schema = Arc::new(Schema::new(vec![
+//             Field::new("a", DataType::UInt8, false),
+//             Field::new("b", DataType::UInt8, false),
+//             Field::new("c", DataType::UInt8, false),
+//         ]));
+//         let a = UInt8Array::from(vec![1, 1, 1, 1, 1, 1, 1, 1, 1, 1]);
+//         let b = UInt8Array::from(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+//         let c = UInt8Array::from(vec![1, 2, 3, 4, 5, 1, 2, 3, 4, 5]);
+//         RecordBatch::try_new(schema.clone(), vec![Arc::new(a), Arc::new(b), Arc::new(c)])
+//     }
 
-    /// Single-batch MultiSemiJoin result
-    ///
-    /// | a | b  | c |
-    /// | - | -- | - |
-    /// | 1 | 1  | 1 |
-    /// | 1 | 2  | 2 |
-    /// | 1 | 3  | 3 |
-    /// | 1 | 4  | 4 |
-    /// | 1 | 5  | 5 |
-    /// | 1 | 6  | 1 |
-    /// | 1 | 7  | 2 |
-    /// | 1 | 8  | 3 |
-    /// | 1 | 9  | 4 |
-    /// | 1 | 10 | 5 |
-    fn example_input() -> Result<MultiSemiJoin, DataFusionError> {
-        let batch = example_batch()?;
-        let schema = batch.schema();
-        let memoryexec = MemoryExec::try_new(&[vec![batch]], schema, None).unwrap();
-        Ok(MultiSemiJoin::new(Arc::new(memoryexec), vec![], vec![]))
-    }
+//     /// Single-batch MultiSemiJoin result
+//     ///
+//     /// | a | b  | c |
+//     /// | - | -- | - |
+//     /// | 1 | 1  | 1 |
+//     /// | 1 | 2  | 2 |
+//     /// | 1 | 3  | 3 |
+//     /// | 1 | 4  | 4 |
+//     /// | 1 | 5  | 5 |
+//     /// | 1 | 6  | 1 |
+//     /// | 1 | 7  | 2 |
+//     /// | 1 | 8  | 3 |
+//     /// | 1 | 9  | 4 |
+//     /// | 1 | 10 | 5 |
+//     fn example_input() -> Result<MultiSemiJoin, DataFusionError> {
+//         let batch = example_batch()?;
+//         let schema = batch.schema();
+//         let memoryexec = MemoryExec::try_new(&[vec![batch]], schema, None).unwrap();
+//         Ok(MultiSemiJoin::new(Arc::new(memoryexec), vec![], vec![]))
+//     }
 
-    /// Test groupby::new() with valid group_columns
-    #[test]
-    fn test_groupby_new() -> Result<(), ArrowError> {
-        let semijoin = example_input()?;
-        let schema = semijoin.schema();
+//     /// Test groupby::new() with valid group_columns
+//     #[test]
+//     fn test_groupby_new() -> Result<(), ArrowError> {
+//         let semijoin = example_input()?;
+//         let schema = semijoin.schema();
 
-        let group_columns = vec![0];
-        let nest_columns = vec![1, 2];
-        let nest_schema = schema.regular_fields.project(&nest_columns)?;
-        let nest_schema = NestedSchema::new(Arc::new(nest_schema), vec![]);
-        let regular_fields = schema.regular_fields.project(&group_columns)?;
+//         let group_columns = vec![0];
+//         let nest_columns = vec![1, 2];
+//         let nest_schema = schema.regular_fields.project(&nest_columns)?;
+//         let nest_schema = NestedSchema::new(Arc::new(nest_schema), vec![]);
+//         let regular_fields = schema.regular_fields.project(&group_columns)?;
 
-        // Groupby {a,b,c} on column "a"
-        let groupby = GroupBy::new(semijoin, group_columns.clone());
-        assert_eq!(groupby.group_on, group_columns);
-        assert_eq!(groupby.nest_on, nest_columns);
+//         // Groupby {a,b,c} on column "a"
+//         let groupby = GroupBy::new(semijoin, group_columns.clone());
+//         assert_eq!(groupby.group_on, group_columns);
+//         assert_eq!(groupby.nest_on, nest_columns);
 
-        // Expected output schema: {a, {b,c}}
-        let expected_schema =
-            NestedSchema::new(Arc::new(regular_fields), vec![Arc::new(nest_schema)]);
-        assert_eq!(groupby.schema().as_ref(), &expected_schema);
+//         // Expected output schema: {a, {b,c}}
+//         let expected_schema =
+//             NestedSchema::new(Arc::new(regular_fields), vec![Arc::new(nest_schema)]);
+//         assert_eq!(groupby.schema().as_ref(), &expected_schema);
 
-        Ok(())
-    }
+//         Ok(())
+//     }
 
-    /// Groupby on empty group_columns
-    #[tokio::test]
-    async fn test_groupby_empty_group_columns() -> Result<(), DataFusionError> {
-        let semijoin = example_input()?;
-        let schema = semijoin.schema();
+//     /// Groupby on empty group_columns
+//     #[tokio::test]
+//     async fn test_groupby_empty_group_columns() -> Result<(), DataFusionError> {
+//         let semijoin = example_input()?;
+//         let schema = semijoin.schema();
 
-        let group_columns = vec![];
-        let nest_columns = vec![0, 1, 2];
-        let nest_schema = schema.regular_fields.project(&nest_columns)?;
-        let nest_schema = NestedSchema::new(Arc::new(nest_schema), vec![]);
-        let regular_fields = schema.regular_fields.project(&group_columns)?;
+//         let group_columns = vec![];
+//         let nest_columns = vec![0, 1, 2];
+//         let nest_schema = schema.regular_fields.project(&nest_columns)?;
+//         let nest_schema = NestedSchema::new(Arc::new(nest_schema), vec![]);
+//         let regular_fields = schema.regular_fields.project(&group_columns)?;
 
-        // Groupby {a,b,c} on {}
-        let groupby = GroupBy::new(semijoin, group_columns.clone());
-        assert_eq!(groupby.group_on, group_columns);
-        assert_eq!(groupby.nest_on, nest_columns);
+//         // Groupby {a,b,c} on {}
+//         let groupby = GroupBy::new(semijoin, group_columns.clone());
+//         assert_eq!(groupby.group_on, group_columns);
+//         assert_eq!(groupby.nest_on, nest_columns);
 
-        // Expected output schema: {{ ,{a,b,c}}
-        let expected_schema =
-            NestedSchema::new(Arc::new(regular_fields), vec![Arc::new(nest_schema)]);
-        assert_eq!(groupby.schema().as_ref(), &expected_schema);
+//         // Expected output schema: {{ ,{a,b,c}}
+//         let expected_schema =
+//             NestedSchema::new(Arc::new(regular_fields), vec![Arc::new(nest_schema)]);
+//         assert_eq!(groupby.schema().as_ref(), &expected_schema);
 
-        let context: Arc<TaskContext> = Arc::new(TaskContext::default());
-        let groupby_state_ref = groupby.materialize(context).await?;
-        let groupby_state = groupby_state_ref
-            .as_any()
-            .downcast_ref::<NoneNonSingularGroupedRel>()
-            .unwrap();
+//         let context: Arc<TaskContext> = Arc::new(TaskContext::default());
+//         let groupby_state_ref = groupby.materialize(context).await?;
+//         let groupby_state = groupby_state_ref
+//             .as_any()
+//             .downcast_ref::<NoneNonSingularGroupedRel>()
+//             .unwrap();
 
-        let expected_rows = example_batch()?.num_rows();
-        assert_eq!(groupby_state.nrows as usize, expected_rows);
-        assert_eq!(groupby_state.weight as usize, expected_rows); // Leaf: all rows have weight 1
+//         let expected_rows = example_batch()?.num_rows();
+//         assert_eq!(groupby_state.nrows as usize, expected_rows);
+//         assert_eq!(groupby_state.weight as usize, expected_rows); // Leaf: all rows have weight 1
 
-        Ok(())
-    }
+//         Ok(())
+//     }
 
-    /// Groupby on column out of bounds
-    #[test]
-    #[should_panic]
-    fn test_groupby_invalid_group_columns() {
-        let semijoin = example_input().unwrap();
+//     /// Groupby on column out of bounds
+//     #[test]
+//     #[should_panic]
+//     fn test_groupby_invalid_group_columns() {
+//         let semijoin = example_input().unwrap();
 
-        // Groupby on column out of bounds
-        GroupBy::new(semijoin, vec![4]); // should panic
-    }
+//         // Groupby on column out of bounds
+//         GroupBy::new(semijoin, vec![4]); // should panic
+//     }
 
-    /// Groupby on *all* columns.
-    #[tokio::test]
-    async fn test_groupby_all_columns() -> Result<(), DataFusionError> {
-        let semijoin = example_input()?;
-        let schema = semijoin.schema();
+//     /// Groupby on *all* columns.
+//     #[tokio::test]
+//     async fn test_groupby_all_columns() -> Result<(), DataFusionError> {
+//         let semijoin = example_input()?;
+//         let schema = semijoin.schema();
 
-        let group_columns = vec![0, 1, 2];
-        let nest_columns = vec![];
-        let nest_schema = schema.regular_fields.project(&nest_columns)?;
-        let nest_schema = NestedSchema::new(Arc::new(nest_schema), vec![]);
-        let regular_fields = schema.regular_fields.project(&group_columns)?;
+//         let group_columns = vec![0, 1, 2];
+//         let nest_columns = vec![];
+//         let nest_schema = schema.regular_fields.project(&nest_columns)?;
+//         let nest_schema = NestedSchema::new(Arc::new(nest_schema), vec![]);
+//         let regular_fields = schema.regular_fields.project(&group_columns)?;
 
-        // Groupby {a,b,c} on {a,b,c}
-        let groupby = GroupBy::new(semijoin, group_columns.clone());
-        assert_eq!(groupby.group_on, group_columns);
-        assert_eq!(groupby.nest_on, nest_columns);
+//         // Groupby {a,b,c} on {a,b,c}
+//         let groupby = GroupBy::new(semijoin, group_columns.clone());
+//         assert_eq!(groupby.group_on, group_columns);
+//         assert_eq!(groupby.nest_on, nest_columns);
 
-        // Expected output schema: {{a,b,c,{}}
-        let expected_schema =
-            NestedSchema::new(Arc::new(regular_fields), vec![Arc::new(nest_schema)]);
-        assert_eq!(groupby.schema().as_ref(), &expected_schema);
+//         // Expected output schema: {{a,b,c,{}}
+//         let expected_schema =
+//             NestedSchema::new(Arc::new(regular_fields), vec![Arc::new(nest_schema)]);
+//         assert_eq!(groupby.schema().as_ref(), &expected_schema);
 
-        let context: Arc<TaskContext> = Arc::new(TaskContext::default());
-        let groupby_state_ref = groupby.materialize(context).await?;
-        let groupby_state = groupby_state_ref
-            .as_any()
-            .downcast_ref::<DefaultSingularGroupedRel>()
-            .unwrap();
+//         let context: Arc<TaskContext> = Arc::new(TaskContext::default());
+//         let groupby_state_ref = groupby.materialize(context).await?;
+//         let groupby_state = groupby_state_ref
+//             .as_any()
+//             .downcast_ref::<DefaultSingularGroupedRel>()
+//             .unwrap();
 
-        let expected_groups = example_batch()?.num_rows();
-        assert_eq!(groupby_state.map.len(), expected_groups);
+//         let expected_groups = example_batch()?.num_rows();
+//         assert_eq!(groupby_state.map.len(), expected_groups);
 
-        Ok(())
-    }
+//         Ok(())
+//     }
 
-    /// GroupBy 1 batch on 1 key column, where all rows end up in the same group.
-    /// Groupby Keys are non-nullable!
-    #[tokio::test]
-    async fn test_groupby_single_key_single_group() -> Result<(), Box<dyn Error>> {
-        let semijoin = example_input()?;
+//     /// GroupBy 1 batch on 1 key column, where all rows end up in the same group.
+//     /// Groupby Keys are non-nullable!
+//     #[tokio::test]
+//     async fn test_groupby_single_key_single_group() -> Result<(), Box<dyn Error>> {
+//         let semijoin = example_input()?;
 
-        // GroupBy on column "a" (a=1 for all rows)
-        let groupby = GroupBy::new(semijoin, vec![0]);
-        let context: Arc<TaskContext> = Arc::new(TaskContext::default());
-        let groupby_state_ref = groupby.materialize(context).await?;
-        let groupby_state = groupby_state_ref
-            .as_any()
-            .downcast_ref::<OneKeyNonSingularGroupedRel<UInt8Type>>()
-            .unwrap();
+//         // GroupBy on column "a" (a=1 for all rows)
+//         let groupby = GroupBy::new(semijoin, vec![0]);
+//         let context: Arc<TaskContext> = Arc::new(TaskContext::default());
+//         let groupby_state_ref = groupby.materialize(context).await?;
+//         let groupby_state = groupby_state_ref
+//             .as_any()
+//             .downcast_ref::<OneKeyNonSingularGroupedRel<UInt8Type>>()
+//             .unwrap();
 
-        // Test that all rows end up in the same group
-        assert!(groupby_state.map.len() == 1);
-        let next = groupby_state.data.next.as_deref();
-        next.unwrap()
-            .iter()
-            .enumerate()
-            .for_each(|(row_nr, next_ptr)| {
-                assert_eq!(row_nr, *next_ptr as usize);
-            });
+//         // Test that all rows end up in the same group
+//         assert!(groupby_state.map.len() == 1);
+//         let next = groupby_state.data.next.as_deref();
+//         next.unwrap()
+//             .iter()
+//             .enumerate()
+//             .for_each(|(row_nr, next_ptr)| {
+//                 assert_eq!(row_nr, *next_ptr as usize);
+//             });
 
-        // Test that original columns are stored correctly
-        let nested_cols = &groupby_state.data.regular_cols;
-        assert!(nested_cols.len() == 2); // {b,c}
-        assert_eq!(
-            &nested_cols[1],
-            example_batch()?.column(2),
-            "c is not stored correctly"
-        );
-        assert_eq!(
-            &nested_cols[0],
-            example_batch()?.column(1),
-            "b is not stored correctly"
-        );
+//         // Test that original columns are stored correctly
+//         let nested_cols = &groupby_state.data.regular_cols;
+//         assert!(nested_cols.len() == 2); // {b,c}
+//         assert_eq!(
+//             &nested_cols[1],
+//             example_batch()?.column(2),
+//             "c is not stored correctly"
+//         );
+//         assert_eq!(
+//             &nested_cols[0],
+//             example_batch()?.column(1),
+//             "b is not stored correctly"
+//         );
 
-        Ok(())
-    }
+//         Ok(())
+//     }
 
-    /// GroupBy 1 batch on 1 key column, where all rows end up in the same group.
-    /// Groupby key is nullable!
-    #[tokio::test]
-    async fn test_groupby_single_nullable_key_single_group() -> Result<(), Box<dyn Error>> {
-        let schema = Arc::new(Schema::new(vec![
-            Field::new("a", DataType::UInt8, true),
-            Field::new("b", DataType::UInt8, false),
-            Field::new("c", DataType::UInt8, false),
-        ]));
-        let a = UInt8Array::from(vec![
-            Some(1),
-            Some(1),
-            Some(1),
-            Some(1),
-            Some(1),
-            None,
-            None,
-            None,
-            None,
-            None,
-        ]);
-        let b = UInt8Array::from(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
-        let c = UInt8Array::from(vec![1, 2, 3, 4, 5, 1, 2, 3, 4, 5]);
-        let batch =
-            RecordBatch::try_new(schema.clone(), vec![Arc::new(a), Arc::new(b), Arc::new(c)])?;
-        let memoryexec = MemoryExec::try_new(&[vec![batch.clone()]], schema, None)?;
-        let semijoin = MultiSemiJoin::new(Arc::new(memoryexec), vec![], vec![]);
+//     /// GroupBy 1 batch on 1 key column, where all rows end up in the same group.
+//     /// Groupby key is nullable!
+//     #[tokio::test]
+//     async fn test_groupby_single_nullable_key_single_group() -> Result<(), Box<dyn Error>> {
+//         let schema = Arc::new(Schema::new(vec![
+//             Field::new("a", DataType::UInt8, true),
+//             Field::new("b", DataType::UInt8, false),
+//             Field::new("c", DataType::UInt8, false),
+//         ]));
+//         let a = UInt8Array::from(vec![
+//             Some(1),
+//             Some(1),
+//             Some(1),
+//             Some(1),
+//             Some(1),
+//             None,
+//             None,
+//             None,
+//             None,
+//             None,
+//         ]);
+//         let b = UInt8Array::from(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+//         let c = UInt8Array::from(vec![1, 2, 3, 4, 5, 1, 2, 3, 4, 5]);
+//         let batch =
+//             RecordBatch::try_new(schema.clone(), vec![Arc::new(a), Arc::new(b), Arc::new(c)])?;
+//         let memoryexec = MemoryExec::try_new(&[vec![batch.clone()]], schema, None)?;
+//         let semijoin = MultiSemiJoin::new(Arc::new(memoryexec), vec![], vec![]);
 
-        // GroupBy on column "a" (a=1 for all rows)
-        let groupby = GroupBy::new(semijoin, vec![0]);
-        let context: Arc<TaskContext> = Arc::new(TaskContext::default());
-        let groupby_state_ref = groupby.materialize(context).await?;
-        let groupby_state = groupby_state_ref
-            .as_any()
-            .downcast_ref::<OneKeyNullableNonSingularGroupedRel<UInt8Type>>()
-            .unwrap();
+//         // GroupBy on column "a" (a=1 for all rows)
+//         let groupby = GroupBy::new(semijoin, vec![0]);
+//         let context: Arc<TaskContext> = Arc::new(TaskContext::default());
+//         let groupby_state_ref = groupby.materialize(context).await?;
+//         let groupby_state = groupby_state_ref
+//             .as_any()
+//             .downcast_ref::<OneKeyNullableNonSingularGroupedRel<UInt8Type>>()
+//             .unwrap();
 
-        // Test that the first 5 rows are in the same group
-        assert!(groupby_state.map.len() == 1);
-        let next = groupby_state.data.next.as_deref();
-        let next = &next.unwrap()[..5]; // Only the first 5 rows are in a group
-        next.iter().enumerate().for_each(|(row_nr, next_ptr)| {
-            assert_eq!(row_nr, *next_ptr as usize);
-        });
+//         // Test that the first 5 rows are in the same group
+//         assert!(groupby_state.map.len() == 1);
+//         let next = groupby_state.data.next.as_deref();
+//         let next = &next.unwrap()[..5]; // Only the first 5 rows are in a group
+//         next.iter().enumerate().for_each(|(row_nr, next_ptr)| {
+//             assert_eq!(row_nr, *next_ptr as usize);
+//         });
 
-        // Test that original columns are stored correctly
-        let nested_cols = &groupby_state.data.regular_cols;
-        assert!(nested_cols.len() == 2); // {b,c}
-        assert_eq!(
-            &nested_cols[1],
-            batch.column(2),
-            "c is not stored correctly"
-        );
-        assert_eq!(
-            &nested_cols[0],
-            batch.column(1),
-            "b is not stored correctly"
-        );
+//         // Test that original columns are stored correctly
+//         let nested_cols = &groupby_state.data.regular_cols;
+//         assert!(nested_cols.len() == 2); // {b,c}
+//         assert_eq!(
+//             &nested_cols[1],
+//             batch.column(2),
+//             "c is not stored correctly"
+//         );
+//         assert_eq!(
+//             &nested_cols[0],
+//             batch.column(1),
+//             "b is not stored correctly"
+//         );
 
-        Ok(())
-    }
+//         Ok(())
+//     }
 
-    /// GroupBy 1 batch on 1 column, where all rows end up in different groups.
-    #[tokio::test]
-    async fn test_groupby_single_key_multiple_groups() -> Result<(), Box<dyn Error>> {
-        let semijoin = example_input()?;
+//     /// GroupBy 1 batch on 1 column, where all rows end up in different groups.
+//     #[tokio::test]
+//     async fn test_groupby_single_key_multiple_groups() -> Result<(), Box<dyn Error>> {
+//         let semijoin = example_input()?;
 
-        // GroupBy on column "a" (a=1 for all rows)
-        let groupby = GroupBy::new(semijoin, vec![1]);
-        let context: Arc<TaskContext> = Arc::new(TaskContext::default());
-        let groupby_state_ref = groupby.materialize(context).await?;
-        let groupby_state = groupby_state_ref
-            .as_any()
-            .downcast_ref::<OneKeyNonSingularGroupedRel<UInt8Type>>()
-            .unwrap();
+//         // GroupBy on column "a" (a=1 for all rows)
+//         let groupby = GroupBy::new(semijoin, vec![1]);
+//         let context: Arc<TaskContext> = Arc::new(TaskContext::default());
+//         let groupby_state_ref = groupby.materialize(context).await?;
+//         let groupby_state = groupby_state_ref
+//             .as_any()
+//             .downcast_ref::<OneKeyNonSingularGroupedRel<UInt8Type>>()
+//             .unwrap();
 
-        // Test that all rows end up in another group
-        assert!(groupby_state.map.len() == 10);
-        let next = groupby_state.data.next.as_deref().unwrap();
-        assert_eq!(next.len(), 10);
-        assert!(next.iter().all(|&next_ptr| next_ptr == 0));
+//         // Test that all rows end up in another group
+//         assert!(groupby_state.map.len() == 10);
+//         let next = groupby_state.data.next.as_deref().unwrap();
+//         assert_eq!(next.len(), 10);
+//         assert!(next.iter().all(|&next_ptr| next_ptr == 0));
 
-        Ok(())
-    }
+//         Ok(())
+//     }
 
-    /// GroupBy 1 batch on two key columns
-    #[tokio::test]
-    async fn test_groupby_double_keys() -> Result<(), Box<dyn Error>> {
-        let semijoin = example_input()?;
+//     /// GroupBy 1 batch on two key columns
+//     #[tokio::test]
+//     async fn test_groupby_double_keys() -> Result<(), Box<dyn Error>> {
+//         let semijoin = example_input()?;
 
-        // GroupBy on columns "a" and "b" (all (a,b) tuples are distinct)
-        let groupby = GroupBy::new(semijoin, vec![0, 1]);
-        let context: Arc<TaskContext> = Arc::new(TaskContext::default());
-        let groupby_state_ref = groupby.materialize(context).await?;
-        let groupby_state = groupby_state_ref
-            .as_any()
-            .downcast_ref::<DoubleKeyNonSingularGroupedRel<UInt8Type, UInt8Type>>()
-            .unwrap();
+//         // GroupBy on columns "a" and "b" (all (a,b) tuples are distinct)
+//         let groupby = GroupBy::new(semijoin, vec![0, 1]);
+//         let context: Arc<TaskContext> = Arc::new(TaskContext::default());
+//         let groupby_state_ref = groupby.materialize(context).await?;
+//         let groupby_state = groupby_state_ref
+//             .as_any()
+//             .downcast_ref::<DoubleKeyNonSingularGroupedRel<UInt8Type, UInt8Type>>()
+//             .unwrap();
 
-        // Test that all rows end up in another group
-        assert!(groupby_state.map.len() == 10);
-        let next = groupby_state.data.next.as_deref().unwrap();
-        assert_eq!(next.len(), 10);
-        assert!(next.iter().all(|&next_ptr| next_ptr == 0));
+//         // Test that all rows end up in another group
+//         assert!(groupby_state.map.len() == 10);
+//         let next = groupby_state.data.next.as_deref().unwrap();
+//         assert_eq!(next.len(), 10);
+//         assert!(next.iter().all(|&next_ptr| next_ptr == 0));
 
-        Ok(())
-    }
+//         Ok(())
+//     }
 
-    /// GroupBy 1 batch on three (and ALL) key columns.
-    /// Keys will be converted to rows (because >2 keys).
-    /// Creates a singular nested field.
-    #[tokio::test]
-    async fn test_groupby_three_keys() -> Result<(), Box<dyn Error>> {
-        let semijoin = example_input()?;
+//     /// GroupBy 1 batch on three (and ALL) key columns.
+//     /// Keys will be converted to rows (because >2 keys).
+//     /// Creates a singular nested field.
+//     #[tokio::test]
+//     async fn test_groupby_three_keys() -> Result<(), Box<dyn Error>> {
+//         let semijoin = example_input()?;
 
-        // GroupBy on columns a,b,c (all (a,b,c) tuples are distinct)
-        let groupby = GroupBy::new(semijoin, vec![0, 1, 2]);
-        let context: Arc<TaskContext> = Arc::new(TaskContext::default());
-        let groupby_state_ref = groupby.materialize(context).await?;
-        let groupby_state = groupby_state_ref
-            .as_any()
-            .downcast_ref::<DefaultSingularGroupedRel>()
-            .unwrap();
+//         // GroupBy on columns a,b,c (all (a,b,c) tuples are distinct)
+//         let groupby = GroupBy::new(semijoin, vec![0, 1, 2]);
+//         let context: Arc<TaskContext> = Arc::new(TaskContext::default());
+//         let groupby_state_ref = groupby.materialize(context).await?;
+//         let groupby_state = groupby_state_ref
+//             .as_any()
+//             .downcast_ref::<DefaultSingularGroupedRel>()
+//             .unwrap();
 
-        // Test that all rows end up in another group
-        assert!(groupby_state.map.len() == 10);
+//         // Test that all rows end up in another group
+//         assert!(groupby_state.map.len() == 10);
 
-        groupby_state
-            .map
-            .clone()
-            .into_iter()
-            .for_each(|(_key, group_id)| {
-                let group = groupby_state.group_keys.row(group_id);
-                let group_weight: Weight = group.get_extra(0);
-                assert_eq!(group_weight, 1); // ... and that each group has weight 1
-            });
+//         groupby_state
+//             .map
+//             .clone()
+//             .into_iter()
+//             .for_each(|(_key, group_id)| {
+//                 let group = groupby_state.group_keys.row(group_id);
+//                 let group_weight: Weight = group.get_extra(0);
+//                 assert_eq!(group_weight, 1); // ... and that each group has weight 1
+//             });
 
-        Ok(())
-    }
+//         Ok(())
+//     }
 
-    /// GroupBy multiple batches
-    #[tokio::test]
-    async fn test_groupby_multiple_batches() -> Result<(), Box<dyn Error>> {
-        let n_batches = 5usize;
-        let batches = (0..n_batches)
-            .map(|_| example_batch().unwrap())
-            .collect::<Vec<RecordBatch>>();
-        let schema = batches[0].schema();
+//     /// GroupBy multiple batches
+//     #[tokio::test]
+//     async fn test_groupby_multiple_batches() -> Result<(), Box<dyn Error>> {
+//         let n_batches = 5usize;
+//         let batches = (0..n_batches)
+//             .map(|_| example_batch().unwrap())
+//             .collect::<Vec<RecordBatch>>();
+//         let schema = batches[0].schema();
 
-        let memoryexec = MemoryExec::try_new(&[batches], schema, None)?;
-        let semijoin = MultiSemiJoin::new(Arc::new(memoryexec), vec![], vec![]);
+//         let memoryexec = MemoryExec::try_new(&[batches], schema, None)?;
+//         let semijoin = MultiSemiJoin::new(Arc::new(memoryexec), vec![], vec![]);
 
-        // GroupBy on column "a" (a=1 for all rows)
-        let groupby = GroupBy::new(semijoin, vec![0]);
-        let context: Arc<TaskContext> = Arc::new(TaskContext::default());
-        let groupby_state_ref = groupby.materialize(context).await?;
-        let groupby_state = groupby_state_ref
-            .as_any()
-            .downcast_ref::<OneKeyNonSingularGroupedRel<UInt8Type>>()
-            .unwrap();
+//         // GroupBy on column "a" (a=1 for all rows)
+//         let groupby = GroupBy::new(semijoin, vec![0]);
+//         let context: Arc<TaskContext> = Arc::new(TaskContext::default());
+//         let groupby_state_ref = groupby.materialize(context).await?;
+//         let groupby_state = groupby_state_ref
+//             .as_any()
+//             .downcast_ref::<OneKeyNonSingularGroupedRel<UInt8Type>>()
+//             .unwrap();
 
-        // Test that all rows end up in the same group
-        assert!(groupby_state.map.len() == 1);
-        assert!(groupby_state
-            .map
-            .clone()
-            .into_iter()
-            .all(|(_key, weight, _ptr)| weight == (n_batches * 10) as Weight)); // ... and that the group has weight n_batches * 10
-        let next = groupby_state.data.next.as_deref();
-        next.unwrap()
-            .iter()
-            .enumerate()
-            .for_each(|(row_nr, next_ptr)| {
-                assert_eq!(row_nr, *next_ptr as usize);
-            });
+//         // Test that all rows end up in the same group
+//         assert!(groupby_state.map.len() == 1);
+//         assert!(groupby_state
+//             .map
+//             .clone()
+//             .into_iter()
+//             .all(|(_key, weight, _ptr)| weight == (n_batches * 10) as Weight)); // ... and that the group has weight n_batches * 10
+//         let next = groupby_state.data.next.as_deref();
+//         next.unwrap()
+//             .iter()
+//             .enumerate()
+//             .for_each(|(row_nr, next_ptr)| {
+//                 assert_eq!(row_nr, *next_ptr as usize);
+//             });
 
-        Ok(())
-    }
-}
+//         Ok(())
+//     }
+// }

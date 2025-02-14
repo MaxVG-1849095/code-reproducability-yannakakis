@@ -7,7 +7,8 @@ use datafusion::arrow::{
     datatypes::{FieldRef, Schema, SchemaRef},
 };
 
-use crate::yannakakis::multisemijoin::MultiSemiJoin;
+use crate::yannakakis::multisemijoin::{MultiSemiJoin};
+use super::repartitionshredded::MultiSemiJoinWrapper;
 
 #[derive(Debug, Clone)]
 pub(super) enum FieldType {
@@ -93,21 +94,21 @@ impl YannakakisSchema {
         RecordBatch::try_new(schema, output)
     }
 
-    pub fn new(root: &MultiSemiJoin) -> Self {
+    pub fn new(root: &dyn MultiSemiJoinWrapper) -> Self {
         /// Fills `encoded_schema` and `full_schema`.
         /// Returns whether a MultiSemiJoin with >= 2 children (excl. guard) was encountered.
         fn helper(
-            node: &MultiSemiJoin,
+            node: &dyn MultiSemiJoinWrapper,
             offset: usize,
             encoded_schema: &mut Vec<FieldType>,
             full_schema: &mut Vec<FieldRef>,
         ) -> bool {
-            fn n_attrs_in_subtree(node: &MultiSemiJoin) -> usize {
+            fn n_attrs_in_subtree(node: &dyn MultiSemiJoinWrapper) -> usize {
                 node.schema().regular_fields.fields().len()
                     + node
                         .children()
                         .iter()
-                        .map(|child| n_attrs_in_subtree(child.child()))
+                        .map(|child| n_attrs_in_subtree(child.child().as_ref()))
                         .sum::<usize>()
             }
 
@@ -137,7 +138,7 @@ impl YannakakisSchema {
                     }
 
                     let multisemijoin_in_child = helper(
-                        child.child(),
+                        child.child().as_ref(),
                         offset + acc + node.schema().regular_fields.fields().len(),
                         encoded_schema,
                         full_schema,
@@ -145,7 +146,7 @@ impl YannakakisSchema {
 
                     multisemijoin |= multisemijoin_in_child;
 
-                    acc + n_attrs_in_subtree(child.child())
+                    acc + n_attrs_in_subtree(child.child().as_ref())
                 });
             multisemijoin
         }

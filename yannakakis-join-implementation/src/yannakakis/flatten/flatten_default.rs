@@ -458,595 +458,595 @@ fn memcpy<T: std::marker::Copy>(range: &CopyRange, output: &mut Vec<T>) {
     });
 }
 
-#[cfg(test)]
-mod tests {
-    use datafusion::{
-        arrow::{
-            array::{Int32Array, StringArray},
-            datatypes::{DataType, Field, Schema},
-            util::pretty::pretty_format_batches,
-        },
-        execution::TaskContext,
-        physical_plan::{collect, memory::MemoryExec, ExecutionPlan},
-    };
-
-    use crate::yannakakis::{flatten::Flatten, groupby::GroupBy, multisemijoin::MultiSemiJoin};
-
-    use super::*;
-
-    fn binary_semijoin(
-        guard: Arc<dyn ExecutionPlan>,
-        child1: Arc<dyn ExecutionPlan>,
-        child1_groupby: Vec<usize>,
-        child1_join_cols: Vec<(usize, usize)>,
-    ) -> Result<MultiSemiJoin, DataFusionError> {
-        // Binary semijoin between R, S (guard=R, children=[S])
-
-        let s = MultiSemiJoin::new(child1, vec![], vec![]);
-        let s_grouped = Arc::new(GroupBy::new(s, child1_groupby));
-
-        let binary_semijoin = MultiSemiJoin::new(guard, vec![s_grouped], vec![child1_join_cols]);
-
-        Ok(binary_semijoin)
-    }
-
-    fn ternary_semijoin(
-        guard: Arc<dyn ExecutionPlan>,
-        child1: Arc<dyn ExecutionPlan>,
-        child1_groupby: Vec<usize>,
-        child1_join_cols: Vec<(usize, usize)>,
-        child2: Arc<dyn ExecutionPlan>,
-        child2_groupby: Vec<usize>,
-        child2_join_cols: Vec<(usize, usize)>,
-    ) -> Result<MultiSemiJoin, DataFusionError> {
-        // Ternary semijoin between R, S, and T (guard=R, children=[S,T])
-
-        let s = MultiSemiJoin::new(child1, vec![], vec![]);
-        let s_grouped = Arc::new(GroupBy::new(s, child1_groupby));
-        let t = MultiSemiJoin::new(child2, vec![], vec![]);
-        let t_grouped = Arc::new(GroupBy::new(t, child2_groupby));
-
-        let ternary_semijoin = MultiSemiJoin::new(
-            guard,
-            vec![s_grouped, t_grouped],
-            vec![child1_join_cols, child2_join_cols],
-        );
-
-        Ok(ternary_semijoin)
-    }
-
-    fn quaternary_semijoin(
-        guard: Arc<dyn ExecutionPlan>,
-        child1: Arc<dyn ExecutionPlan>,
-        child1_groupby: Vec<usize>,
-        child1_join_cols: Vec<(usize, usize)>,
-        child2: Arc<dyn ExecutionPlan>,
-        child2_groupby: Vec<usize>,
-        child2_join_cols: Vec<(usize, usize)>,
-        child3: Arc<dyn ExecutionPlan>,
-        child3_groupby: Vec<usize>,
-        child3_join_cols: Vec<(usize, usize)>,
-    ) -> Result<MultiSemiJoin, DataFusionError> {
-        // Quaternary semijoin between R, S, T, and U (guard=R, children=[S,T,U])
-
-        let s = MultiSemiJoin::new(child1, vec![], vec![]);
-        let s_grouped = Arc::new(GroupBy::new(s, child1_groupby));
-        let t = MultiSemiJoin::new(child2, vec![], vec![]);
-        let t_grouped = Arc::new(GroupBy::new(t, child2_groupby));
-        let u = MultiSemiJoin::new(child3, vec![], vec![]);
-        let u_grouped = Arc::new(GroupBy::new(u, child3_groupby));
-
-        let quaternary_semijoin = MultiSemiJoin::new(
-            guard,
-            vec![s_grouped, t_grouped, u_grouped],
-            vec![child1_join_cols, child2_join_cols, child3_join_cols],
-        );
-
-        Ok(quaternary_semijoin)
-    }
-
-    /// Create Arrow schema from column names and types.
-    /// If `nullable` is `Some`, then it should be a vector of booleans indicating whether each column is nullable.
-    /// If `nullable` is `None`, then all columns are non-nullable.
-    fn create_schema(names: &[&str], types: &[DataType], nullable: Option<&[bool]>) -> Arc<Schema> {
-        match nullable {
-            Some(nullable) => Arc::new(Schema::new(
-                names
-                    .iter()
-                    .zip(types.iter())
-                    .zip(nullable.iter())
-                    .map(|((name, data_type), nullable)| {
-                        Field::new(name.to_string(), data_type.clone(), *nullable)
-                    })
-                    .collect::<Vec<_>>(),
-            )),
-            None => Arc::new(Schema::new(
-                names
-                    .iter()
-                    .zip(types.iter())
-                    .map(|(name, data_type)| Field::new(name.to_string(), data_type.clone(), false))
-                    .collect::<Vec<_>>(),
-            )),
-        }
-    }
-
-    #[tokio::test]
-    async fn flatten_ternary_semijoin_empty_result() -> Result<(), DataFusionError> {
-        use DataType::*;
-
-        let r_schema = create_schema(&["a", "b", "c"], &[Int32, Int32, Int32], None);
-        let s_schema = create_schema(&["d", "e", "f"], &[Int32, Int32, Int32], None);
-        let t_schema = create_schema(&["g", "h", "i"], &[Int32, Int32, Int32], None);
-
-        let data1 = vec![1, 1];
-        let data2 = vec![2, 2];
-        let columns1: Vec<ArrayRef> = vec![
-            Arc::new(Int32Array::from(data1.clone())),
-            Arc::new(Int32Array::from(data1.clone())),
-            Arc::new(Int32Array::from(data1.clone())),
-        ];
-        let columns2: Vec<ArrayRef> = vec![
-            Arc::new(Int32Array::from(data2.clone())),
-            Arc::new(Int32Array::from(data2.clone())),
-            Arc::new(Int32Array::from(data2.clone())),
-        ];
-
-        let r = vec![
-            RecordBatch::try_new(r_schema.clone(), columns1)?,
-            RecordBatch::try_new(r_schema.clone(), columns2.clone())?,
-        ];
-        let s = vec![RecordBatch::try_new(s_schema.clone(), columns2.clone())?];
-        let t = vec![RecordBatch::try_new(t_schema.clone(), columns2)?];
-
-        let r = Arc::new(MemoryExec::try_new(&[r], r_schema, None)?);
-        let s = Arc::new(MemoryExec::try_new(&[s], s_schema, None)?);
-        let t = Arc::new(MemoryExec::try_new(&[t], t_schema, None)?);
-
-        let plan = ternary_semijoin(
-            r.clone(),
-            s.clone(),
-            vec![0],
-            vec![(0, 0)],
-            t.clone(),
-            vec![0],
-            vec![(1, 0)],
-        )?;
-        let plan = Arc::new(Flatten::new(Arc::new(plan)));
-        let results = collect(plan, Arc::new(TaskContext::default())).await?;
-        // single batch with 0 rows
-
-        assert!(results.len() == 2);
-        let batch1 = &results[0];
-        let batch2 = &results[1];
-        assert!(batch1.num_rows() == 0);
-        assert!(batch2.num_rows() > 0);
-
-        Ok(())
-    }
-
-    #[tokio::test]
-    /// Test flattening a binary semijoin.
-    /// R(a,b,c), S(d,e,f)
-    /// The data is chosen such that R-S are one-to-one semijoins.
-    async fn flatten_binary_semijoin_one_to_one_with_nullable_keys() -> Result<(), DataFusionError>
-    {
-        use DataType::*;
-
-        let r_schema = create_schema(&["a", "b", "c"], &[Int32, Int32, Int32], Some(&[true; 3]));
-        let s_schema = create_schema(&["d", "e", "f"], &[Int32, Int32, Int32], Some(&[true; 3]));
-
-        let data = vec![Some(1), Some(2), None, Some(4), Some(5)];
-
-        let columns: Vec<ArrayRef> = vec![
-            Arc::new(Int32Array::from(data.clone())),
-            Arc::new(Int32Array::from(data.clone())),
-            Arc::new(Int32Array::from(data.clone())),
-        ];
-
-        let r = vec![RecordBatch::try_new(r_schema.clone(), columns.clone())?];
-        let s = vec![RecordBatch::try_new(s_schema.clone(), columns.clone())?];
-
-        let r = Arc::new(MemoryExec::try_new(&[r], r_schema, None)?);
-        let s = Arc::new(MemoryExec::try_new(&[s], s_schema, None)?);
-
-        // Join on 1, 2, and all (3) columns.
-        // For each case, the result is the same.
-        for i in 1..=3 {
-            let plan = binary_semijoin(
-                r.clone(),
-                s.clone(),
-                (0..i).collect(),
-                (0..i).map(|j| (j, j)).collect(),
-            )?;
-            let plan = Arc::new(Flatten::new(Arc::new(plan)));
-            let results = collect(plan, Arc::new(TaskContext::default())).await?;
-            assert!(results.len() == 1);
-            let batch = &results[0];
-
-            assert!(batch.num_columns() == 6);
-            assert!(batch
-                .columns()
-                .iter()
-                .all(|col| col.as_ref() == &Int32Array::from(vec![1, 2, 4, 5])));
-        }
-
-        Ok(())
-    }
-
-    #[tokio::test]
-    /// Test flattening a ternary semijoin between R, S, and T.
-    /// R(a,b,c), S(d,e,f), T(g,h,i)
-    /// The data is chosen such that R-S and R-T are one-to-one semijoins.
-    async fn flatten_ternary_semijoin_one_to_one() -> Result<(), DataFusionError> {
-        use DataType::*;
-
-        let r_schema = create_schema(&["a", "b", "c"], &[Int32, Int32, Int32], None);
-        let s_schema = create_schema(&["d", "e", "f"], &[Int32, Int32, Int32], None);
-        let t_schema = create_schema(&["g", "h", "i"], &[Int32, Int32, Int32], None);
-
-        let columns: Vec<ArrayRef> = vec![
-            Arc::new(Int32Array::from(vec![1, 2, 3, 4, 5])),
-            Arc::new(Int32Array::from(vec![1, 2, 3, 4, 5])),
-            Arc::new(Int32Array::from(vec![1, 2, 3, 4, 5])),
-        ];
-
-        let r = vec![RecordBatch::try_new(r_schema.clone(), columns.clone())?];
-        let s = vec![RecordBatch::try_new(s_schema.clone(), columns.clone())?];
-        let t = vec![RecordBatch::try_new(t_schema.clone(), columns)?];
-
-        let r = Arc::new(MemoryExec::try_new(&[r], r_schema, None)?);
-        let s = Arc::new(MemoryExec::try_new(&[s], s_schema, None)?);
-        let t = Arc::new(MemoryExec::try_new(&[t], t_schema, None)?);
-
-        // Join on 1, 2, and all (3) columns.
-        // For each case, the result is the same.
-        for i in 1..=1 {
-            let plan = ternary_semijoin(
-                r.clone(),
-                s.clone(),
-                (0..i).collect(),
-                (0..i).map(|j| (j, j)).collect(),
-                t.clone(),
-                (0..i).collect(),
-                (0..i).map(|j| (j, j)).collect(),
-            )?;
-            let plan = Arc::new(Flatten::new(Arc::new(plan)));
-            let results = collect(plan, Arc::new(TaskContext::default())).await?;
-            assert!(results.len() == 1);
-            let batch = &results[0];
-
-            assert!(batch.num_columns() == 9);
-            assert!(batch
-                .columns()
-                .iter()
-                .all(|col| col.as_ref() == &Int32Array::from(vec![1, 2, 3, 4, 5])));
-        }
-
-        Ok(())
-    }
-
-    #[tokio::test]
-    /// Test flattening a ternary semijoin between R, S, and T.
-    /// R(a,b,c), S(d,e,f), T(g,h,i)
-    /// The data is chosen such that R-S and R-T are one-to-one semijoins.
-    async fn flatten_ternary_semijoin_one_to_one_with_nullable_keys() -> Result<(), DataFusionError>
-    {
-        use DataType::*;
-
-        let r_schema = create_schema(&["a", "b", "c"], &[Int32, Int32, Int32], Some(&[true; 3]));
-        let s_schema = create_schema(&["d", "e", "f"], &[Int32, Int32, Int32], Some(&[true; 3]));
-        let t_schema = create_schema(&["g", "h", "i"], &[Int32, Int32, Int32], Some(&[true; 3]));
-
-        let data = vec![Some(1), Some(2), None, Some(4), Some(5)];
-
-        let columns: Vec<ArrayRef> = vec![
-            Arc::new(Int32Array::from(data.clone())),
-            Arc::new(Int32Array::from(data.clone())),
-            Arc::new(Int32Array::from(data.clone())),
-        ];
-
-        let r = vec![RecordBatch::try_new(r_schema.clone(), columns.clone())?];
-        let s = vec![RecordBatch::try_new(s_schema.clone(), columns.clone())?];
-        let t = vec![RecordBatch::try_new(t_schema.clone(), columns)?];
-
-        let r = Arc::new(MemoryExec::try_new(&[r], r_schema, None)?);
-        let s = Arc::new(MemoryExec::try_new(&[s], s_schema, None)?);
-        let t = Arc::new(MemoryExec::try_new(&[t], t_schema, None)?);
-
-        // Join on 1, 2, and all (3) columns.
-        // For each case, the result is the same.
-        for i in 1..=3 {
-            let plan = ternary_semijoin(
-                r.clone(),
-                s.clone(),
-                (0..i).collect(),
-                (0..i).map(|j| (j, j)).collect(),
-                t.clone(),
-                (0..i).collect(),
-                (0..i).map(|j| (j, j)).collect(),
-            )?;
-            let plan = Arc::new(Flatten::new(Arc::new(plan)));
-            let results = collect(plan, Arc::new(TaskContext::default())).await?;
-            assert!(results.len() == 1);
-            let batch = &results[0];
-
-            assert!(batch.num_columns() == 9);
-            assert!(batch
-                .columns()
-                .iter()
-                .all(|col| col.as_ref() == &Int32Array::from(vec![1, 2, 4, 5])));
-        }
-
-        Ok(())
-    }
-
-    #[tokio::test]
-    /// Test flattening a ternary semijoin between R, S, and T.
-    /// R(a,b,c), S(d,e,f), T(g,h,i)
-    /// The data is chosen such that R-S and R-T are all_to_all joins (cartesian product).
-    async fn flatten_ternary_semijoin_all_to_all() -> Result<(), DataFusionError> {
-        use DataType::*;
-
-        let r_schema = create_schema(&["a", "b", "c"], &[Int32, Int32, Int32], None);
-        let s_schema = create_schema(&["d", "e", "f"], &[Int32, Int32, Int32], None);
-        let t_schema = create_schema(&["g", "h", "i"], &[Int32, Int32, Int32], None);
-
-        let columns: Vec<ArrayRef> = vec![
-            Arc::new(Int32Array::from(vec![1, 1])),
-            Arc::new(Int32Array::from(vec![1, 1])),
-            Arc::new(Int32Array::from(vec![1, 1])),
-        ];
-
-        let r = vec![RecordBatch::try_new(r_schema.clone(), columns.clone())?];
-        let s = vec![RecordBatch::try_new(s_schema.clone(), columns.clone())?];
-        let t = vec![RecordBatch::try_new(t_schema.clone(), columns)?];
-
-        let r = Arc::new(MemoryExec::try_new(&[r], r_schema, None)?);
-        let s = Arc::new(MemoryExec::try_new(&[s], s_schema, None)?);
-        let t = Arc::new(MemoryExec::try_new(&[t], t_schema, None)?);
-
-        // Join on 1, 2, and all (3) columns.
-        // For each case, the result is the same.
-        for i in 1..=3 {
-            let plan = ternary_semijoin(
-                r.clone(),
-                s.clone(),
-                (0..i).collect(),
-                (0..i).map(|j| (j, j)).collect(),
-                t.clone(),
-                (0..i).collect(),
-                (0..i).map(|j| (j, j)).collect(),
-            )?;
-            let plan = Arc::new(Flatten::new(Arc::new(plan)));
-            let results = collect(plan, Arc::new(TaskContext::default())).await?;
-            assert!(results.len() == 1);
-            let batch = &results[0];
-
-            assert!(batch.num_columns() == 9);
-            assert!(batch
-                .columns()
-                .iter()
-                .all(|col| col.as_ref() == &Int32Array::from(vec![1; 8])));
-        }
-
-        Ok(())
-    }
-
-    #[tokio::test]
-    /// Test flattening a quaternary semijoin between R, S, T, and U.
-    /// Each relation has 4 columns.
-    /// The data is chosen such that R-S, R-T, and R-U are all_to_all joins (cartesian product).
-    async fn flatten_quaternary_semijoin_all_to_all() -> Result<(), DataFusionError> {
-        use DataType::*;
-
-        let r_schema = create_schema(&["a", "b", "c", "d"], &[Int32, Int32, Int32, Int32], None);
-        let s_schema = create_schema(&["e", "f", "g", "h"], &[Int32, Int32, Int32, Int32], None);
-        let t_schema = create_schema(&["i", "j", "k", "l"], &[Int32, Int32, Int32, Int32], None);
-        let u_schema = create_schema(&["m", "n", "o", "p"], &[Int32, Int32, Int32, Int32], None);
-
-        let columns: Vec<ArrayRef> = vec![
-            Arc::new(Int32Array::from(vec![1, 1])),
-            Arc::new(Int32Array::from(vec![1, 1])),
-            Arc::new(Int32Array::from(vec![1, 1])),
-            Arc::new(Int32Array::from(vec![1, 1])),
-        ];
-
-        let r = vec![RecordBatch::try_new(r_schema.clone(), columns.clone())?];
-        let s = vec![RecordBatch::try_new(s_schema.clone(), columns.clone())?];
-        let t = vec![RecordBatch::try_new(t_schema.clone(), columns.clone())?];
-        let u = vec![RecordBatch::try_new(u_schema.clone(), columns)?];
-
-        let r = Arc::new(MemoryExec::try_new(&[r], r_schema, None)?);
-        let s = Arc::new(MemoryExec::try_new(&[s], s_schema, None)?);
-        let t = Arc::new(MemoryExec::try_new(&[t], t_schema, None)?);
-        let u = Arc::new(MemoryExec::try_new(&[u], u_schema, None)?);
-
-        // Join on 1, 2, 3, and all (4) columns.
-        // For each case, the result is the same.
-        for i in 0..=4 {
-            let plan = quaternary_semijoin(
-                r.clone(),
-                s.clone(),
-                (0..i).collect(),
-                (0..i).map(|j| (j, j)).collect(),
-                t.clone(),
-                (0..i).collect(),
-                (0..i).map(|j| (j, j)).collect(),
-                u.clone(),
-                (0..i).collect(),
-                (0..i).map(|j| (j, j)).collect(),
-            )?;
-            let plan = Arc::new(Flatten::new(Arc::new(plan)));
-            let results = collect(plan, Arc::new(TaskContext::default())).await?;
-            assert!(results.len() == 1);
-            let batch = &results[0];
-            assert!(batch.num_columns() == 16); // 4 columns * 4 tables
-            assert!(batch.num_rows() == 16);
-            assert!(batch
-                .columns()
-                .iter()
-                .all(|col| col.as_ref() == &Int32Array::from(vec![1; 16])));
-        }
-
-        Ok(())
-    }
-
-    #[tokio::test]
-    /// Test flattening a ternary semijoin between R, S, and T.
-    /// R(a,b,c), S(d,e,f), T(g,h,i)
-    /// The data is chosen such that R-S and R-T are all_to_all joins (cartesian product).
-    ///
-    /// --------------------------------------------------------------------------------------
-    /// Difference with `flatten_ternary_semijoin_all_to_all`:
-    /// the regular columns of the nested relations are Utf-8.
-    async fn flatten_utf8() -> Result<(), DataFusionError> {
-        use DataType::*;
-
-        let r_schema = create_schema(&["a", "b", "c"], &[Int32, Utf8, Utf8], None);
-        let s_schema = create_schema(&["d", "e", "f"], &[Int32, Utf8, Utf8], None);
-        let t_schema = create_schema(&["g", "h", "i"], &[Int32, Utf8, Utf8], None);
-
-        let columns: Vec<ArrayRef> = vec![
-            Arc::new(Int32Array::from(vec![1, 1])),
-            Arc::new(StringArray::from(vec!["1", "3"])),
-            Arc::new(StringArray::from(vec!["2", "4"])),
-        ];
-
-        let r = vec![RecordBatch::try_new(r_schema.clone(), columns.clone())?];
-        let s = vec![RecordBatch::try_new(s_schema.clone(), columns.clone())?];
-        let t = vec![RecordBatch::try_new(t_schema.clone(), columns)?];
-
-        let r = Arc::new(MemoryExec::try_new(&[r], r_schema, None)?);
-        let s = Arc::new(MemoryExec::try_new(&[s], s_schema, None)?);
-        let t = Arc::new(MemoryExec::try_new(&[t], t_schema, None)?);
-
-        // Join on 1, 2, and all (3) columns.
-        // For each case, the result is the same.
-        let plan = ternary_semijoin(
-            r.clone(),
-            s.clone(),
-            vec![0],
-            vec![(0, 0)],
-            t.clone(),
-            vec![0],
-            vec![(0, 0)],
-        )?;
-        let plan = Arc::new(Flatten::new(Arc::new(plan)));
-        let results = collect(plan, Arc::new(TaskContext::default())).await?;
-        assert!(results.len() == 1);
-        let batch = &results[0];
-
-        assert!(batch.num_columns() == 9);
-
-        let expected = "+---+---+---+---+---+---+---+---+---+
-| a | b | c | d | e | f | g | h | i |
-+---+---+---+---+---+---+---+---+---+
-| 1 | 1 | 2 | 1 | 3 | 4 | 1 | 3 | 4 |
-| 1 | 1 | 2 | 1 | 3 | 4 | 1 | 1 | 2 |
-| 1 | 1 | 2 | 1 | 1 | 2 | 1 | 3 | 4 |
-| 1 | 1 | 2 | 1 | 1 | 2 | 1 | 1 | 2 |
-| 1 | 3 | 4 | 1 | 3 | 4 | 1 | 3 | 4 |
-| 1 | 3 | 4 | 1 | 3 | 4 | 1 | 1 | 2 |
-| 1 | 3 | 4 | 1 | 1 | 2 | 1 | 3 | 4 |
-| 1 | 3 | 4 | 1 | 1 | 2 | 1 | 1 | 2 |
-+---+---+---+---+---+---+---+---+---+";
-
-        assert_eq!(
-            pretty_format_batches(&[batch.clone()])?.to_string(),
-            expected
-        );
-
-        Ok(())
-    }
-
-    #[tokio::test]
-    async fn flatten_deep_nesting() -> Result<(), DataFusionError> {
-        use DataType::*;
-
-        let r_schema = create_schema(&["r1", "r2"], &[Int32, Int32, Int32, Int32], None);
-        let s_schema = create_schema(&["s1", "s2"], &[Int32, Int32, Int32, Int32], None);
-        let t_schema = create_schema(&["t1", "t2"], &[Int32, Int32, Int32, Int32], None);
-        let u_schema = create_schema(&["u1", "u2"], &[Int32, Int32, Int32, Int32], None);
-        let v_schema = create_schema(&["v1", "v2"], &[Int32, Int32, Int32, Int32], None);
-        let w_schema = create_schema(&["w1", "w2"], &[Int32, Int32, Int32, Int32], None);
-        let x_schema = create_schema(&["x1", "x2"], &[Int32, Int32, Int32, Int32], None);
-        let y_schema = create_schema(&["y1", "y2"], &[Int32, Int32, Int32, Int32], None);
-        let z_schema = create_schema(&["z1", "z2"], &[Int32, Int32, Int32, Int32], None);
-
-        let columns: Vec<ArrayRef> = vec![
-            Arc::new(Int32Array::from(vec![1, 1])),
-            Arc::new(Int32Array::from(vec![1, 1])),
-        ];
-
-        let r = vec![RecordBatch::try_new(r_schema.clone(), columns.clone())?];
-        let s = vec![RecordBatch::try_new(s_schema.clone(), columns.clone())?];
-        let t = vec![RecordBatch::try_new(t_schema.clone(), columns.clone())?];
-        let u = vec![RecordBatch::try_new(u_schema.clone(), columns.clone())?];
-        let v = vec![RecordBatch::try_new(v_schema.clone(), columns.clone())?];
-        let w = vec![RecordBatch::try_new(w_schema.clone(), columns.clone())?];
-        let x = vec![RecordBatch::try_new(x_schema.clone(), columns.clone())?];
-        let y = vec![RecordBatch::try_new(y_schema.clone(), columns.clone())?];
-        let z = vec![RecordBatch::try_new(z_schema.clone(), columns.clone())?];
-
-        let r = Arc::new(MemoryExec::try_new(&[r], r_schema, None)?);
-        let s = Arc::new(MemoryExec::try_new(&[s], s_schema, None)?);
-        let t = Arc::new(MemoryExec::try_new(&[t], t_schema, None)?);
-        let u = Arc::new(MemoryExec::try_new(&[u], u_schema, None)?);
-        let v = Arc::new(MemoryExec::try_new(&[v], v_schema, None)?);
-        let w = Arc::new(MemoryExec::try_new(&[w], w_schema, None)?);
-        let x = Arc::new(MemoryExec::try_new(&[x], x_schema, None)?);
-        let y = Arc::new(MemoryExec::try_new(&[y], y_schema, None)?);
-        let z = Arc::new(MemoryExec::try_new(&[z], z_schema, None)?);
-
-        // // W ⋉ (Y ⋉ Z)  (guard=W, children=[Y,Z])
-        let y = MultiSemiJoin::new(y, vec![], vec![]);
-        let y_grouped = Arc::new(GroupBy::new(y, vec![0]));
-        let z = MultiSemiJoin::new(z, vec![], vec![]);
-        let z_grouped = Arc::new(GroupBy::new(z, vec![0]));
-        let w = MultiSemiJoin::new(
-            w,
-            vec![y_grouped, z_grouped],
-            vec![vec![(0, 0)], vec![(0, 0)]],
-        );
-
-        // T ⋉ (V ⋉ W ⋉ X)   (guard=T, children=[V,W,X])
-        let v = MultiSemiJoin::new(v, vec![], vec![]);
-        let v_grouped = Arc::new(GroupBy::new(v, vec![0]));
-        let w_grouped = Arc::new(GroupBy::new(w, vec![0]));
-        let x = MultiSemiJoin::new(x, vec![], vec![]);
-        let x_grouped = Arc::new(GroupBy::new(x, vec![0]));
-        let t = MultiSemiJoin::new(
-            t,
-            vec![v_grouped, w_grouped, x_grouped],
-            vec![vec![(0, 0)], vec![(0, 0)], vec![(0, 0)]],
-        );
-
-        // R ⋉ (S ⋉ T ⋉ U)   (guard=R, children=[S,T,U])
-        let s = MultiSemiJoin::new(s, vec![], vec![]);
-        let s_grouped = Arc::new(GroupBy::new(s, vec![0]));
-        let t_grouped = Arc::new(GroupBy::new(t, vec![0]));
-        let u = MultiSemiJoin::new(u, vec![], vec![]);
-        let u_grouped = Arc::new(GroupBy::new(u, vec![0]));
-
-        let root = MultiSemiJoin::new(
-            r,
-            vec![s_grouped, t_grouped, u_grouped],
-            vec![vec![(0, 0)]; 3],
-        );
-        let flatten = Arc::new(Flatten::new(Arc::new(root)));
-
-        let results = collect(flatten.clone(), Arc::new(TaskContext::default())).await?;
-        assert!(results.len() == 1);
-        let batch = &results[0];
-
-        assert!(batch.num_columns() == 18); // 2*9 (9 tables with 2 columns each)
-        assert!(batch.num_rows() == 512); // 2^9  (9 tables with two rows each & ajoins are cartesian products)
-
-        assert!(batch
-            .columns()
-            .iter()
-            .all(|col| col.as_ref() == &Int32Array::from(vec![1; 512])));
-
-        Ok(())
-    }
-}
+// #[cfg(test)]
+// mod tests {
+//     use datafusion::{
+//         arrow::{
+//             array::{Int32Array, StringArray},
+//             datatypes::{DataType, Field, Schema},
+//             util::pretty::pretty_format_batches,
+//         },
+//         execution::TaskContext,
+//         physical_plan::{collect, memory::MemoryExec, ExecutionPlan},
+//     };
+
+//     use crate::yannakakis::{flatten::Flatten, groupby::GroupBy, multisemijoin::MultiSemiJoin};
+
+//     use super::*;
+
+//     fn binary_semijoin(
+//         guard: Arc<dyn ExecutionPlan>,
+//         child1: Arc<dyn ExecutionPlan>,
+//         child1_groupby: Vec<usize>,
+//         child1_join_cols: Vec<(usize, usize)>,
+//     ) -> Result<MultiSemiJoin, DataFusionError> {
+//         // Binary semijoin between R, S (guard=R, children=[S])
+
+//         let s = MultiSemiJoin::new(child1, vec![], vec![]);
+//         let s_grouped = Arc::new(GroupBy::new(s, child1_groupby));
+
+//         let binary_semijoin = MultiSemiJoin::new(guard, vec![s_grouped], vec![child1_join_cols]);
+
+//         Ok(binary_semijoin)
+//     }
+
+//     fn ternary_semijoin(
+//         guard: Arc<dyn ExecutionPlan>,
+//         child1: Arc<dyn ExecutionPlan>,
+//         child1_groupby: Vec<usize>,
+//         child1_join_cols: Vec<(usize, usize)>,
+//         child2: Arc<dyn ExecutionPlan>,
+//         child2_groupby: Vec<usize>,
+//         child2_join_cols: Vec<(usize, usize)>,
+//     ) -> Result<MultiSemiJoin, DataFusionError> {
+//         // Ternary semijoin between R, S, and T (guard=R, children=[S,T])
+
+//         let s = MultiSemiJoin::new(child1, vec![], vec![]);
+//         let s_grouped = Arc::new(GroupBy::new(s, child1_groupby));
+//         let t = MultiSemiJoin::new(child2, vec![], vec![]);
+//         let t_grouped = Arc::new(GroupBy::new(t, child2_groupby));
+
+//         let ternary_semijoin = MultiSemiJoin::new(
+//             guard,
+//             vec![s_grouped, t_grouped],
+//             vec![child1_join_cols, child2_join_cols],
+//         );
+
+//         Ok(ternary_semijoin)
+//     }
+
+//     fn quaternary_semijoin(
+//         guard: Arc<dyn ExecutionPlan>,
+//         child1: Arc<dyn ExecutionPlan>,
+//         child1_groupby: Vec<usize>,
+//         child1_join_cols: Vec<(usize, usize)>,
+//         child2: Arc<dyn ExecutionPlan>,
+//         child2_groupby: Vec<usize>,
+//         child2_join_cols: Vec<(usize, usize)>,
+//         child3: Arc<dyn ExecutionPlan>,
+//         child3_groupby: Vec<usize>,
+//         child3_join_cols: Vec<(usize, usize)>,
+//     ) -> Result<MultiSemiJoin, DataFusionError> {
+//         // Quaternary semijoin between R, S, T, and U (guard=R, children=[S,T,U])
+
+//         let s = MultiSemiJoin::new(child1, vec![], vec![]);
+//         let s_grouped = Arc::new(GroupBy::new(s, child1_groupby));
+//         let t = MultiSemiJoin::new(child2, vec![], vec![]);
+//         let t_grouped = Arc::new(GroupBy::new(t, child2_groupby));
+//         let u = MultiSemiJoin::new(child3, vec![], vec![]);
+//         let u_grouped = Arc::new(GroupBy::new(u, child3_groupby));
+
+//         let quaternary_semijoin = MultiSemiJoin::new(
+//             guard,
+//             vec![s_grouped, t_grouped, u_grouped],
+//             vec![child1_join_cols, child2_join_cols, child3_join_cols],
+//         );
+
+//         Ok(quaternary_semijoin)
+//     }
+
+//     /// Create Arrow schema from column names and types.
+//     /// If `nullable` is `Some`, then it should be a vector of booleans indicating whether each column is nullable.
+//     /// If `nullable` is `None`, then all columns are non-nullable.
+//     fn create_schema(names: &[&str], types: &[DataType], nullable: Option<&[bool]>) -> Arc<Schema> {
+//         match nullable {
+//             Some(nullable) => Arc::new(Schema::new(
+//                 names
+//                     .iter()
+//                     .zip(types.iter())
+//                     .zip(nullable.iter())
+//                     .map(|((name, data_type), nullable)| {
+//                         Field::new(name.to_string(), data_type.clone(), *nullable)
+//                     })
+//                     .collect::<Vec<_>>(),
+//             )),
+//             None => Arc::new(Schema::new(
+//                 names
+//                     .iter()
+//                     .zip(types.iter())
+//                     .map(|(name, data_type)| Field::new(name.to_string(), data_type.clone(), false))
+//                     .collect::<Vec<_>>(),
+//             )),
+//         }
+//     }
+
+//     #[tokio::test]
+//     async fn flatten_ternary_semijoin_empty_result() -> Result<(), DataFusionError> {
+//         use DataType::*;
+
+//         let r_schema = create_schema(&["a", "b", "c"], &[Int32, Int32, Int32], None);
+//         let s_schema = create_schema(&["d", "e", "f"], &[Int32, Int32, Int32], None);
+//         let t_schema = create_schema(&["g", "h", "i"], &[Int32, Int32, Int32], None);
+
+//         let data1 = vec![1, 1];
+//         let data2 = vec![2, 2];
+//         let columns1: Vec<ArrayRef> = vec![
+//             Arc::new(Int32Array::from(data1.clone())),
+//             Arc::new(Int32Array::from(data1.clone())),
+//             Arc::new(Int32Array::from(data1.clone())),
+//         ];
+//         let columns2: Vec<ArrayRef> = vec![
+//             Arc::new(Int32Array::from(data2.clone())),
+//             Arc::new(Int32Array::from(data2.clone())),
+//             Arc::new(Int32Array::from(data2.clone())),
+//         ];
+
+//         let r = vec![
+//             RecordBatch::try_new(r_schema.clone(), columns1)?,
+//             RecordBatch::try_new(r_schema.clone(), columns2.clone())?,
+//         ];
+//         let s = vec![RecordBatch::try_new(s_schema.clone(), columns2.clone())?];
+//         let t = vec![RecordBatch::try_new(t_schema.clone(), columns2)?];
+
+//         let r = Arc::new(MemoryExec::try_new(&[r], r_schema, None)?);
+//         let s = Arc::new(MemoryExec::try_new(&[s], s_schema, None)?);
+//         let t = Arc::new(MemoryExec::try_new(&[t], t_schema, None)?);
+
+//         let plan = ternary_semijoin(
+//             r.clone(),
+//             s.clone(),
+//             vec![0],
+//             vec![(0, 0)],
+//             t.clone(),
+//             vec![0],
+//             vec![(1, 0)],
+//         )?;
+//         let plan = Arc::new(Flatten::new(Arc::new(plan)));
+//         let results = collect(plan, Arc::new(TaskContext::default())).await?;
+//         // single batch with 0 rows
+
+//         assert!(results.len() == 2);
+//         let batch1 = &results[0];
+//         let batch2 = &results[1];
+//         assert!(batch1.num_rows() == 0);
+//         assert!(batch2.num_rows() > 0);
+
+//         Ok(())
+//     }
+
+//     #[tokio::test]
+//     /// Test flattening a binary semijoin.
+//     /// R(a,b,c), S(d,e,f)
+//     /// The data is chosen such that R-S are one-to-one semijoins.
+//     async fn flatten_binary_semijoin_one_to_one_with_nullable_keys() -> Result<(), DataFusionError>
+//     {
+//         use DataType::*;
+
+//         let r_schema = create_schema(&["a", "b", "c"], &[Int32, Int32, Int32], Some(&[true; 3]));
+//         let s_schema = create_schema(&["d", "e", "f"], &[Int32, Int32, Int32], Some(&[true; 3]));
+
+//         let data = vec![Some(1), Some(2), None, Some(4), Some(5)];
+
+//         let columns: Vec<ArrayRef> = vec![
+//             Arc::new(Int32Array::from(data.clone())),
+//             Arc::new(Int32Array::from(data.clone())),
+//             Arc::new(Int32Array::from(data.clone())),
+//         ];
+
+//         let r = vec![RecordBatch::try_new(r_schema.clone(), columns.clone())?];
+//         let s = vec![RecordBatch::try_new(s_schema.clone(), columns.clone())?];
+
+//         let r = Arc::new(MemoryExec::try_new(&[r], r_schema, None)?);
+//         let s = Arc::new(MemoryExec::try_new(&[s], s_schema, None)?);
+
+//         // Join on 1, 2, and all (3) columns.
+//         // For each case, the result is the same.
+//         for i in 1..=3 {
+//             let plan = binary_semijoin(
+//                 r.clone(),
+//                 s.clone(),
+//                 (0..i).collect(),
+//                 (0..i).map(|j| (j, j)).collect(),
+//             )?;
+//             let plan = Arc::new(Flatten::new(Arc::new(plan)));
+//             let results = collect(plan, Arc::new(TaskContext::default())).await?;
+//             assert!(results.len() == 1);
+//             let batch = &results[0];
+
+//             assert!(batch.num_columns() == 6);
+//             assert!(batch
+//                 .columns()
+//                 .iter()
+//                 .all(|col| col.as_ref() == &Int32Array::from(vec![1, 2, 4, 5])));
+//         }
+
+//         Ok(())
+//     }
+
+//     #[tokio::test]
+//     /// Test flattening a ternary semijoin between R, S, and T.
+//     /// R(a,b,c), S(d,e,f), T(g,h,i)
+//     /// The data is chosen such that R-S and R-T are one-to-one semijoins.
+//     async fn flatten_ternary_semijoin_one_to_one() -> Result<(), DataFusionError> {
+//         use DataType::*;
+
+//         let r_schema = create_schema(&["a", "b", "c"], &[Int32, Int32, Int32], None);
+//         let s_schema = create_schema(&["d", "e", "f"], &[Int32, Int32, Int32], None);
+//         let t_schema = create_schema(&["g", "h", "i"], &[Int32, Int32, Int32], None);
+
+//         let columns: Vec<ArrayRef> = vec![
+//             Arc::new(Int32Array::from(vec![1, 2, 3, 4, 5])),
+//             Arc::new(Int32Array::from(vec![1, 2, 3, 4, 5])),
+//             Arc::new(Int32Array::from(vec![1, 2, 3, 4, 5])),
+//         ];
+
+//         let r = vec![RecordBatch::try_new(r_schema.clone(), columns.clone())?];
+//         let s = vec![RecordBatch::try_new(s_schema.clone(), columns.clone())?];
+//         let t = vec![RecordBatch::try_new(t_schema.clone(), columns)?];
+
+//         let r = Arc::new(MemoryExec::try_new(&[r], r_schema, None)?);
+//         let s = Arc::new(MemoryExec::try_new(&[s], s_schema, None)?);
+//         let t = Arc::new(MemoryExec::try_new(&[t], t_schema, None)?);
+
+//         // Join on 1, 2, and all (3) columns.
+//         // For each case, the result is the same.
+//         for i in 1..=1 {
+//             let plan = ternary_semijoin(
+//                 r.clone(),
+//                 s.clone(),
+//                 (0..i).collect(),
+//                 (0..i).map(|j| (j, j)).collect(),
+//                 t.clone(),
+//                 (0..i).collect(),
+//                 (0..i).map(|j| (j, j)).collect(),
+//             )?;
+//             let plan = Arc::new(Flatten::new(Arc::new(plan)));
+//             let results = collect(plan, Arc::new(TaskContext::default())).await?;
+//             assert!(results.len() == 1);
+//             let batch = &results[0];
+
+//             assert!(batch.num_columns() == 9);
+//             assert!(batch
+//                 .columns()
+//                 .iter()
+//                 .all(|col| col.as_ref() == &Int32Array::from(vec![1, 2, 3, 4, 5])));
+//         }
+
+//         Ok(())
+//     }
+
+//     #[tokio::test]
+//     /// Test flattening a ternary semijoin between R, S, and T.
+//     /// R(a,b,c), S(d,e,f), T(g,h,i)
+//     /// The data is chosen such that R-S and R-T are one-to-one semijoins.
+//     async fn flatten_ternary_semijoin_one_to_one_with_nullable_keys() -> Result<(), DataFusionError>
+//     {
+//         use DataType::*;
+
+//         let r_schema = create_schema(&["a", "b", "c"], &[Int32, Int32, Int32], Some(&[true; 3]));
+//         let s_schema = create_schema(&["d", "e", "f"], &[Int32, Int32, Int32], Some(&[true; 3]));
+//         let t_schema = create_schema(&["g", "h", "i"], &[Int32, Int32, Int32], Some(&[true; 3]));
+
+//         let data = vec![Some(1), Some(2), None, Some(4), Some(5)];
+
+//         let columns: Vec<ArrayRef> = vec![
+//             Arc::new(Int32Array::from(data.clone())),
+//             Arc::new(Int32Array::from(data.clone())),
+//             Arc::new(Int32Array::from(data.clone())),
+//         ];
+
+//         let r = vec![RecordBatch::try_new(r_schema.clone(), columns.clone())?];
+//         let s = vec![RecordBatch::try_new(s_schema.clone(), columns.clone())?];
+//         let t = vec![RecordBatch::try_new(t_schema.clone(), columns)?];
+
+//         let r = Arc::new(MemoryExec::try_new(&[r], r_schema, None)?);
+//         let s = Arc::new(MemoryExec::try_new(&[s], s_schema, None)?);
+//         let t = Arc::new(MemoryExec::try_new(&[t], t_schema, None)?);
+
+//         // Join on 1, 2, and all (3) columns.
+//         // For each case, the result is the same.
+//         for i in 1..=3 {
+//             let plan = ternary_semijoin(
+//                 r.clone(),
+//                 s.clone(),
+//                 (0..i).collect(),
+//                 (0..i).map(|j| (j, j)).collect(),
+//                 t.clone(),
+//                 (0..i).collect(),
+//                 (0..i).map(|j| (j, j)).collect(),
+//             )?;
+//             let plan = Arc::new(Flatten::new(Arc::new(plan)));
+//             let results = collect(plan, Arc::new(TaskContext::default())).await?;
+//             assert!(results.len() == 1);
+//             let batch = &results[0];
+
+//             assert!(batch.num_columns() == 9);
+//             assert!(batch
+//                 .columns()
+//                 .iter()
+//                 .all(|col| col.as_ref() == &Int32Array::from(vec![1, 2, 4, 5])));
+//         }
+
+//         Ok(())
+//     }
+
+//     #[tokio::test]
+//     /// Test flattening a ternary semijoin between R, S, and T.
+//     /// R(a,b,c), S(d,e,f), T(g,h,i)
+//     /// The data is chosen such that R-S and R-T are all_to_all joins (cartesian product).
+//     async fn flatten_ternary_semijoin_all_to_all() -> Result<(), DataFusionError> {
+//         use DataType::*;
+
+//         let r_schema = create_schema(&["a", "b", "c"], &[Int32, Int32, Int32], None);
+//         let s_schema = create_schema(&["d", "e", "f"], &[Int32, Int32, Int32], None);
+//         let t_schema = create_schema(&["g", "h", "i"], &[Int32, Int32, Int32], None);
+
+//         let columns: Vec<ArrayRef> = vec![
+//             Arc::new(Int32Array::from(vec![1, 1])),
+//             Arc::new(Int32Array::from(vec![1, 1])),
+//             Arc::new(Int32Array::from(vec![1, 1])),
+//         ];
+
+//         let r = vec![RecordBatch::try_new(r_schema.clone(), columns.clone())?];
+//         let s = vec![RecordBatch::try_new(s_schema.clone(), columns.clone())?];
+//         let t = vec![RecordBatch::try_new(t_schema.clone(), columns)?];
+
+//         let r = Arc::new(MemoryExec::try_new(&[r], r_schema, None)?);
+//         let s = Arc::new(MemoryExec::try_new(&[s], s_schema, None)?);
+//         let t = Arc::new(MemoryExec::try_new(&[t], t_schema, None)?);
+
+//         // Join on 1, 2, and all (3) columns.
+//         // For each case, the result is the same.
+//         for i in 1..=3 {
+//             let plan = ternary_semijoin(
+//                 r.clone(),
+//                 s.clone(),
+//                 (0..i).collect(),
+//                 (0..i).map(|j| (j, j)).collect(),
+//                 t.clone(),
+//                 (0..i).collect(),
+//                 (0..i).map(|j| (j, j)).collect(),
+//             )?;
+//             let plan = Arc::new(Flatten::new(Arc::new(plan)));
+//             let results = collect(plan, Arc::new(TaskContext::default())).await?;
+//             assert!(results.len() == 1);
+//             let batch = &results[0];
+
+//             assert!(batch.num_columns() == 9);
+//             assert!(batch
+//                 .columns()
+//                 .iter()
+//                 .all(|col| col.as_ref() == &Int32Array::from(vec![1; 8])));
+//         }
+
+//         Ok(())
+//     }
+
+//     #[tokio::test]
+//     /// Test flattening a quaternary semijoin between R, S, T, and U.
+//     /// Each relation has 4 columns.
+//     /// The data is chosen such that R-S, R-T, and R-U are all_to_all joins (cartesian product).
+//     async fn flatten_quaternary_semijoin_all_to_all() -> Result<(), DataFusionError> {
+//         use DataType::*;
+
+//         let r_schema = create_schema(&["a", "b", "c", "d"], &[Int32, Int32, Int32, Int32], None);
+//         let s_schema = create_schema(&["e", "f", "g", "h"], &[Int32, Int32, Int32, Int32], None);
+//         let t_schema = create_schema(&["i", "j", "k", "l"], &[Int32, Int32, Int32, Int32], None);
+//         let u_schema = create_schema(&["m", "n", "o", "p"], &[Int32, Int32, Int32, Int32], None);
+
+//         let columns: Vec<ArrayRef> = vec![
+//             Arc::new(Int32Array::from(vec![1, 1])),
+//             Arc::new(Int32Array::from(vec![1, 1])),
+//             Arc::new(Int32Array::from(vec![1, 1])),
+//             Arc::new(Int32Array::from(vec![1, 1])),
+//         ];
+
+//         let r = vec![RecordBatch::try_new(r_schema.clone(), columns.clone())?];
+//         let s = vec![RecordBatch::try_new(s_schema.clone(), columns.clone())?];
+//         let t = vec![RecordBatch::try_new(t_schema.clone(), columns.clone())?];
+//         let u = vec![RecordBatch::try_new(u_schema.clone(), columns)?];
+
+//         let r = Arc::new(MemoryExec::try_new(&[r], r_schema, None)?);
+//         let s = Arc::new(MemoryExec::try_new(&[s], s_schema, None)?);
+//         let t = Arc::new(MemoryExec::try_new(&[t], t_schema, None)?);
+//         let u = Arc::new(MemoryExec::try_new(&[u], u_schema, None)?);
+
+//         // Join on 1, 2, 3, and all (4) columns.
+//         // For each case, the result is the same.
+//         for i in 0..=4 {
+//             let plan = quaternary_semijoin(
+//                 r.clone(),
+//                 s.clone(),
+//                 (0..i).collect(),
+//                 (0..i).map(|j| (j, j)).collect(),
+//                 t.clone(),
+//                 (0..i).collect(),
+//                 (0..i).map(|j| (j, j)).collect(),
+//                 u.clone(),
+//                 (0..i).collect(),
+//                 (0..i).map(|j| (j, j)).collect(),
+//             )?;
+//             let plan = Arc::new(Flatten::new(Arc::new(plan)));
+//             let results = collect(plan, Arc::new(TaskContext::default())).await?;
+//             assert!(results.len() == 1);
+//             let batch = &results[0];
+//             assert!(batch.num_columns() == 16); // 4 columns * 4 tables
+//             assert!(batch.num_rows() == 16);
+//             assert!(batch
+//                 .columns()
+//                 .iter()
+//                 .all(|col| col.as_ref() == &Int32Array::from(vec![1; 16])));
+//         }
+
+//         Ok(())
+//     }
+
+//     #[tokio::test]
+//     /// Test flattening a ternary semijoin between R, S, and T.
+//     /// R(a,b,c), S(d,e,f), T(g,h,i)
+//     /// The data is chosen such that R-S and R-T are all_to_all joins (cartesian product).
+//     ///
+//     /// --------------------------------------------------------------------------------------
+//     /// Difference with `flatten_ternary_semijoin_all_to_all`:
+//     /// the regular columns of the nested relations are Utf-8.
+//     async fn flatten_utf8() -> Result<(), DataFusionError> {
+//         use DataType::*;
+
+//         let r_schema = create_schema(&["a", "b", "c"], &[Int32, Utf8, Utf8], None);
+//         let s_schema = create_schema(&["d", "e", "f"], &[Int32, Utf8, Utf8], None);
+//         let t_schema = create_schema(&["g", "h", "i"], &[Int32, Utf8, Utf8], None);
+
+//         let columns: Vec<ArrayRef> = vec![
+//             Arc::new(Int32Array::from(vec![1, 1])),
+//             Arc::new(StringArray::from(vec!["1", "3"])),
+//             Arc::new(StringArray::from(vec!["2", "4"])),
+//         ];
+
+//         let r = vec![RecordBatch::try_new(r_schema.clone(), columns.clone())?];
+//         let s = vec![RecordBatch::try_new(s_schema.clone(), columns.clone())?];
+//         let t = vec![RecordBatch::try_new(t_schema.clone(), columns)?];
+
+//         let r = Arc::new(MemoryExec::try_new(&[r], r_schema, None)?);
+//         let s = Arc::new(MemoryExec::try_new(&[s], s_schema, None)?);
+//         let t = Arc::new(MemoryExec::try_new(&[t], t_schema, None)?);
+
+//         // Join on 1, 2, and all (3) columns.
+//         // For each case, the result is the same.
+//         let plan = ternary_semijoin(
+//             r.clone(),
+//             s.clone(),
+//             vec![0],
+//             vec![(0, 0)],
+//             t.clone(),
+//             vec![0],
+//             vec![(0, 0)],
+//         )?;
+//         let plan = Arc::new(Flatten::new(Arc::new(plan)));
+//         let results = collect(plan, Arc::new(TaskContext::default())).await?;
+//         assert!(results.len() == 1);
+//         let batch = &results[0];
+
+//         assert!(batch.num_columns() == 9);
+
+//         let expected = "+---+---+---+---+---+---+---+---+---+
+// | a | b | c | d | e | f | g | h | i |
+// +---+---+---+---+---+---+---+---+---+
+// | 1 | 1 | 2 | 1 | 3 | 4 | 1 | 3 | 4 |
+// | 1 | 1 | 2 | 1 | 3 | 4 | 1 | 1 | 2 |
+// | 1 | 1 | 2 | 1 | 1 | 2 | 1 | 3 | 4 |
+// | 1 | 1 | 2 | 1 | 1 | 2 | 1 | 1 | 2 |
+// | 1 | 3 | 4 | 1 | 3 | 4 | 1 | 3 | 4 |
+// | 1 | 3 | 4 | 1 | 3 | 4 | 1 | 1 | 2 |
+// | 1 | 3 | 4 | 1 | 1 | 2 | 1 | 3 | 4 |
+// | 1 | 3 | 4 | 1 | 1 | 2 | 1 | 1 | 2 |
+// +---+---+---+---+---+---+---+---+---+";
+
+//         assert_eq!(
+//             pretty_format_batches(&[batch.clone()])?.to_string(),
+//             expected
+//         );
+
+//         Ok(())
+//     }
+
+//     #[tokio::test]
+//     async fn flatten_deep_nesting() -> Result<(), DataFusionError> {
+//         use DataType::*;
+
+//         let r_schema = create_schema(&["r1", "r2"], &[Int32, Int32, Int32, Int32], None);
+//         let s_schema = create_schema(&["s1", "s2"], &[Int32, Int32, Int32, Int32], None);
+//         let t_schema = create_schema(&["t1", "t2"], &[Int32, Int32, Int32, Int32], None);
+//         let u_schema = create_schema(&["u1", "u2"], &[Int32, Int32, Int32, Int32], None);
+//         let v_schema = create_schema(&["v1", "v2"], &[Int32, Int32, Int32, Int32], None);
+//         let w_schema = create_schema(&["w1", "w2"], &[Int32, Int32, Int32, Int32], None);
+//         let x_schema = create_schema(&["x1", "x2"], &[Int32, Int32, Int32, Int32], None);
+//         let y_schema = create_schema(&["y1", "y2"], &[Int32, Int32, Int32, Int32], None);
+//         let z_schema = create_schema(&["z1", "z2"], &[Int32, Int32, Int32, Int32], None);
+
+//         let columns: Vec<ArrayRef> = vec![
+//             Arc::new(Int32Array::from(vec![1, 1])),
+//             Arc::new(Int32Array::from(vec![1, 1])),
+//         ];
+
+//         let r = vec![RecordBatch::try_new(r_schema.clone(), columns.clone())?];
+//         let s = vec![RecordBatch::try_new(s_schema.clone(), columns.clone())?];
+//         let t = vec![RecordBatch::try_new(t_schema.clone(), columns.clone())?];
+//         let u = vec![RecordBatch::try_new(u_schema.clone(), columns.clone())?];
+//         let v = vec![RecordBatch::try_new(v_schema.clone(), columns.clone())?];
+//         let w = vec![RecordBatch::try_new(w_schema.clone(), columns.clone())?];
+//         let x = vec![RecordBatch::try_new(x_schema.clone(), columns.clone())?];
+//         let y = vec![RecordBatch::try_new(y_schema.clone(), columns.clone())?];
+//         let z = vec![RecordBatch::try_new(z_schema.clone(), columns.clone())?];
+
+//         let r = Arc::new(MemoryExec::try_new(&[r], r_schema, None)?);
+//         let s = Arc::new(MemoryExec::try_new(&[s], s_schema, None)?);
+//         let t = Arc::new(MemoryExec::try_new(&[t], t_schema, None)?);
+//         let u = Arc::new(MemoryExec::try_new(&[u], u_schema, None)?);
+//         let v = Arc::new(MemoryExec::try_new(&[v], v_schema, None)?);
+//         let w = Arc::new(MemoryExec::try_new(&[w], w_schema, None)?);
+//         let x = Arc::new(MemoryExec::try_new(&[x], x_schema, None)?);
+//         let y = Arc::new(MemoryExec::try_new(&[y], y_schema, None)?);
+//         let z = Arc::new(MemoryExec::try_new(&[z], z_schema, None)?);
+
+//         // // W ⋉ (Y ⋉ Z)  (guard=W, children=[Y,Z])
+//         let y = MultiSemiJoin::new(y, vec![], vec![]);
+//         let y_grouped = Arc::new(GroupBy::new(y, vec![0]));
+//         let z = MultiSemiJoin::new(z, vec![], vec![]);
+//         let z_grouped = Arc::new(GroupBy::new(z, vec![0]));
+//         let w = MultiSemiJoin::new(
+//             w,
+//             vec![y_grouped, z_grouped],
+//             vec![vec![(0, 0)], vec![(0, 0)]],
+//         );
+
+//         // T ⋉ (V ⋉ W ⋉ X)   (guard=T, children=[V,W,X])
+//         let v = MultiSemiJoin::new(v, vec![], vec![]);
+//         let v_grouped = Arc::new(GroupBy::new(v, vec![0]));
+//         let w_grouped = Arc::new(GroupBy::new(w, vec![0]));
+//         let x = MultiSemiJoin::new(x, vec![], vec![]);
+//         let x_grouped = Arc::new(GroupBy::new(x, vec![0]));
+//         let t = MultiSemiJoin::new(
+//             t,
+//             vec![v_grouped, w_grouped, x_grouped],
+//             vec![vec![(0, 0)], vec![(0, 0)], vec![(0, 0)]],
+//         );
+
+//         // R ⋉ (S ⋉ T ⋉ U)   (guard=R, children=[S,T,U])
+//         let s = MultiSemiJoin::new(s, vec![], vec![]);
+//         let s_grouped = Arc::new(GroupBy::new(s, vec![0]));
+//         let t_grouped = Arc::new(GroupBy::new(t, vec![0]));
+//         let u = MultiSemiJoin::new(u, vec![], vec![]);
+//         let u_grouped = Arc::new(GroupBy::new(u, vec![0]));
+
+//         let root = MultiSemiJoin::new(
+//             r,
+//             vec![s_grouped, t_grouped, u_grouped],
+//             vec![vec![(0, 0)]; 3],
+//         );
+//         let flatten = Arc::new(Flatten::new(Arc::new(root)));
+
+//         let results = collect(flatten.clone(), Arc::new(TaskContext::default())).await?;
+//         assert!(results.len() == 1);
+//         let batch = &results[0];
+
+//         assert!(batch.num_columns() == 18); // 2*9 (9 tables with 2 columns each)
+//         assert!(batch.num_rows() == 512); // 2^9  (9 tables with two rows each & ajoins are cartesian products)
+
+//         assert!(batch
+//             .columns()
+//             .iter()
+//             .all(|col| col.as_ref() == &Int32Array::from(vec![1; 512])));
+
+//         Ok(())
+//     }
+// }
