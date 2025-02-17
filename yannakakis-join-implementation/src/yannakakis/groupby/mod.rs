@@ -92,43 +92,43 @@ impl GroupBy {
         &self.schema
     }
 
-    /// Get groupby input.
-    pub fn child(&self) -> &Arc<dyn MultiSemiJoinWrapper> {
-        &self.child
-    }
+    // /// Get groupby input.
+    // pub fn child(&self) -> &Arc<dyn MultiSemiJoinWrapper> {
+    //     &self.child
+    // }
 
-    pub fn metrics(&self) -> MetricsSet {
-        self.metrics.clone_inner()
-    }
+    // pub fn metrics(&self) -> MetricsSet {
+    //     self.metrics.clone_inner()
+    // }
 
-    /// Get a JSON representation of the GroupBy node and all its descendants ([MultiSemiJoin] & [GroupBy]), including their metrics.
-    /// The JSON representation is a string, without newlines, and is appended to `output`.
-    pub fn as_json(&self, output: &mut String) -> Result<(), std::fmt::Error> {
-        use std::fmt::Write;
+    // /// Get a JSON representation of the GroupBy node and all its descendants ([MultiSemiJoin] & [GroupBy]), including their metrics.
+    // /// The JSON representation is a string, without newlines, and is appended to `output`.
+    // pub fn as_json(&self, output: &mut String) -> Result<(), std::fmt::Error> {
+    //     use std::fmt::Write;
 
-        write!(output, "{{ \"operator\": \"GROUPBY\"")?;
-        write_metrics_as_json(&Some(self.metrics()), output)?;
+    //     write!(output, "{{ \"operator\": \"GROUPBY\"")?;
+    //     write_metrics_as_json(&Some(self.metrics()), output)?;
 
-        write!(output, ", \"children\": [")?;
-        self.child.as_json(output)?;
+    //     write!(output, ", \"children\": [")?;
+    //     self.child.as_json(output)?;
 
-        write!(output, "]}}")?;
+    //     write!(output, "]}}")?;
 
-        Ok(())
-    }
+    //     Ok(())
+    // }
 
-    /// Collect metrics from this GroupBy node and all its descendants as a pretty-printed string.
-    /// The string is appended to `output_buffer` with an indentation of `indent` spaces.
-    pub fn collect_metrics(&self, output_buffer: &mut String, indent: usize) {
-        use std::fmt::Write;
+    // /// Collect metrics from this GroupBy node and all its descendants as a pretty-printed string.
+    // /// The string is appended to `output_buffer` with an indentation of `indent` spaces.
+    // pub fn collect_metrics(&self, output_buffer: &mut String, indent: usize) {
+    //     use std::fmt::Write;
 
-        (0..indent).for_each(|_| output_buffer.push(' '));
+    //     (0..indent).for_each(|_| output_buffer.push(' '));
 
-        writeln!(output_buffer, "[GROUPBY] {}", self.metrics())
-            .expect("Failed to write groupby metrics to string.");
+    //     writeln!(output_buffer, "[GROUPBY] {}", self.metrics())
+    //         .expect("Failed to write groupby metrics to string.");
 
-        self.child.collect_metrics(output_buffer, indent + 4);
-    }
+    //     self.child.collect_metrics(output_buffer, indent + 4);
+    // }
 
     // /// Compute the result of the groupby operation.
     // /// This is guaranteed to be linear in the size of the input MultiSemijoin relation.
@@ -202,13 +202,12 @@ impl GroupBy {
     //     Ok(result)
     // }
 
-    pub fn group_on(&self) -> &[usize] {
-        &self.group_on
-    }
+    // pub fn group_on(&self) -> &[usize] {
+    //     &self.group_on
+    // }
 }
 
-
-impl GroupByWrapper for GroupBy{
+impl GroupByWrapper for GroupBy {
     fn schema(&self) -> &NestedSchemaRef {
         &self.schema
     }
@@ -285,8 +284,49 @@ impl GroupByWrapper for GroupBy{
 
         Ok(result)
     }
-}
 
+    /// Get groupby input.
+    fn child(&self) -> &Arc<dyn MultiSemiJoinWrapper> {
+        &self.child
+    }
+
+    fn metrics(&self) -> MetricsSet {
+        self.metrics.clone_inner()
+    }
+
+    /// Get a JSON representation of the GroupBy node and all its descendants ([MultiSemiJoin] & [GroupBy]), including their metrics.
+    /// The JSON representation is a string, without newlines, and is appended to `output`.
+    fn as_json(&self, output: &mut String) -> Result<(), std::fmt::Error> {
+        use std::fmt::Write;
+
+        write!(output, "{{ \"operator\": \"GROUPBY\"")?;
+        write_metrics_as_json(&Some(self.metrics()), output)?;
+
+        write!(output, ", \"children\": [")?;
+        self.child.as_json(output)?;
+
+        write!(output, "]}}")?;
+
+        Ok(())
+    }
+
+    /// Collect metrics from this GroupBy node and all its descendants as a pretty-printed string.
+    /// The string is appended to `output_buffer` with an indentation of `indent` spaces.
+    fn collect_metrics(&self, output_buffer: &mut String, indent: usize) {
+        use std::fmt::Write;
+
+        (0..indent).for_each(|_| output_buffer.push(' '));
+
+        writeln!(output_buffer, "[GROUPBY] {}", self.metrics())
+            .expect("Failed to write groupby metrics to string.");
+
+        self.child.collect_metrics(output_buffer, indent + 4);
+    }
+
+    fn group_on(&self) -> &[usize] {
+        &self.group_on
+    }
+}
 
 /// The [GroupBy] operator creates a new [GroupedRel] object that has a single nested column.
 /// This function creates the [NestedRel] that provides the data for this single nested column.

@@ -4,9 +4,9 @@
 
 use std::{fmt::write, ops::Mul, sync::Arc};
 
-use datafusion::{error::DataFusionError, execution::TaskContext, physical_plan::{DisplayAs, DisplayFormatType, ExecutionPlan}};
+use datafusion::{error::DataFusionError, execution::TaskContext, physical_plan::{metrics::MetricsSet, DisplayAs, DisplayFormatType, ExecutionPlan}};
 
-use super::{data::{GroupedRelRef, NestedSchemaRef}, groupby::GroupBy, multisemijoin::{self, MultiSemiJoin, SendableSemiJoinResultBatchStream}};
+use super::{data::{GroupedRelRef, NestedSchemaRef}, groupby::GroupBy, multisemijoin::{self, MultiSemiJoin, SendableSemiJoinResultBatchStream}, sel};
 // // use datafusion::physical_plan::Partitioning;
 
 use std::fmt::Debug;
@@ -16,7 +16,7 @@ pub trait MultiSemiJoinWrapper: Debug + Send + Sync {
     fn as_json(&self, output: &mut String) -> Result<(), std::fmt::Error>;
     fn collect_metrics(&self, output_buffer: &mut String, indent: usize);
     fn guard(&self) -> &Arc<dyn ExecutionPlan>;
-    fn children(&self) -> &[Arc<GroupBy>];
+    fn children(&self) -> &[Arc<GroupByWrapperEnum>];
     fn semijoin_keys(&self) -> &Vec<Vec<usize>>;
     fn partitioned(&self) -> bool;
     fn set_partitioned(&mut self, partitioned: bool);
@@ -44,7 +44,7 @@ impl RepartitionMultiSemiJoin {
     //create new repartitionexec operator, also creating the necessary multisemijoin operator(s)
     pub fn new(
         guard: Arc<dyn ExecutionPlan>,
-        children: Vec<Arc<GroupBy>>,
+        children: Vec<Arc<GroupByWrapperEnum>>,
         equijoin_keys: Vec<Vec<(usize, usize)>>,
     ) -> Self {
         Self {
@@ -88,7 +88,7 @@ impl MultiSemiJoinWrapper for RepartitionMultiSemiJoin {
         self.child.guard()
     }
     
-    fn children(&self) -> &[Arc<GroupBy>] {
+    fn children(&self) -> &[Arc<GroupByWrapperEnum>] {
         self.child.children()
     }
     fn semijoin_keys(&self) -> &Vec<Vec<usize>> {
@@ -110,14 +110,31 @@ impl MultiSemiJoinWrapper for RepartitionMultiSemiJoin {
     fn set_id(&mut self, id: usize) {
         self.child.set_id(id)
     }
+
+
 }
 
 
 
-pub trait GroupByWrapper: Debug + Send + Sync {
+#[derive(Debug)]
+pub enum GroupByWrapperEnum {
+    RepartitionGroupBy(RepartitionGroupBy),
+    Groupby(GroupBy),
+}
+
+
+
+pub trait GroupByWrapper: Debug + Send + Sync{
     fn schema(&self) -> &NestedSchemaRef;
     async fn materialize(&self,context: Arc<TaskContext>,) -> Result<GroupedRelRef, DataFusionError>;
+    fn child(&self) -> &Arc<dyn MultiSemiJoinWrapper>;
+    fn metrics(&self) -> MetricsSet;
+    fn as_json(&self, output: &mut String) -> Result<(), std::fmt::Error>;
+    fn collect_metrics(&self, output_buffer: &mut String, indent: usize);
+    fn group_on(&self) -> &[usize];
 }
+
+
 
 
 #[derive(Debug)]
@@ -148,6 +165,78 @@ impl GroupByWrapper for RepartitionGroupBy {
 
     async fn materialize(&self, context: Arc<TaskContext>) -> Result<GroupedRelRef, DataFusionError> {
         self.child.materialize(context).await
+    }
+    
+    fn child(&self) -> &Arc<dyn MultiSemiJoinWrapper> {
+        self.child.child()
+    }
+    
+    fn metrics(&self) -> MetricsSet {
+        self.child.metrics()
+    }
+
+    fn as_json(&self, output: &mut String) -> Result<(), std::fmt::Error> {
+        self.child.as_json(output)
+    }
+
+    fn collect_metrics(&self, output_buffer: &mut String, indent: usize) {
+        self.child.collect_metrics(output_buffer, indent)
+    }
+
+    fn group_on(&self) -> &[usize] {
+        self.child.group_on()
+    }
+}
+
+impl GroupByWrapper for GroupByWrapperEnum{
+    fn schema(&self) -> &NestedSchemaRef {
+        match self {
+            GroupByWrapperEnum::RepartitionGroupBy(repartition) => repartition.schema(),
+            GroupByWrapperEnum::Groupby(groupby) => groupby.schema(),
+        }
+    }
+
+    async fn materialize(&self, context: Arc<TaskContext>) -> Result<GroupedRelRef, DataFusionError> {
+        println!("GroupByWrapperEnum materialize");
+        match self {
+            GroupByWrapperEnum::RepartitionGroupBy(repartition) => repartition.materialize(context).await,
+            GroupByWrapperEnum::Groupby(groupby) => groupby.materialize(context).await,
+        }
+    }
+    
+    fn child(&self) -> &Arc<dyn MultiSemiJoinWrapper> {
+        match self {
+            GroupByWrapperEnum::RepartitionGroupBy(repartition) => repartition.child().child(),
+            GroupByWrapperEnum::Groupby(groupby) => groupby.child(),
+        }
+    }
+    
+    fn metrics(&self) -> MetricsSet {
+        match self {
+            GroupByWrapperEnum::RepartitionGroupBy(repartition) => repartition.metrics(),
+            GroupByWrapperEnum::Groupby(groupby) => groupby.metrics(),
+        }
+    }
+    
+    fn as_json(&self, output: &mut String) -> Result<(), std::fmt::Error> {
+        match self {
+            GroupByWrapperEnum::RepartitionGroupBy(repartition) => repartition.as_json(output),
+            GroupByWrapperEnum::Groupby(groupby) => groupby.as_json(output),
+        }
+    }
+
+    fn collect_metrics(&self, output_buffer: &mut String, indent: usize) {
+        match self {
+            GroupByWrapperEnum::RepartitionGroupBy(repartition) => repartition.collect_metrics(output_buffer, indent),
+            GroupByWrapperEnum::Groupby(groupby) => groupby.collect_metrics(output_buffer, indent),
+        }
+    }
+
+    fn group_on(&self) -> &[usize] {
+        match self {
+            GroupByWrapperEnum::RepartitionGroupBy(repartition) => repartition.group_on(),
+            GroupByWrapperEnum::Groupby(groupby) => groupby.group_on(),
+        }
     }
 }
 

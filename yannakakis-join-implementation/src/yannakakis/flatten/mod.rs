@@ -28,6 +28,7 @@ use std::sync::Arc;
 use crate::take::weighted_u32::take_weighted;
 use crate::yannakakis::data::Idx;
 use crate::yannakakis::multisemijoin::SendableSemiJoinResultBatchStream;
+use crate::yannakakis::repartitionshredded::GroupByWrapper;
 use crate::yannakakis::util::write_metrics_as_json;
 
 use super::data::Weight;

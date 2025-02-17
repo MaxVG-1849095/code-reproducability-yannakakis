@@ -7,8 +7,9 @@ use datafusion::arrow::{
     datatypes::{FieldRef, Schema, SchemaRef},
 };
 
-use crate::yannakakis::multisemijoin::{MultiSemiJoin};
+use crate::yannakakis::{multisemijoin::MultiSemiJoin, repartitionshredded::GroupByWrapper};
 use super::repartitionshredded::MultiSemiJoinWrapper;
+use super::repartitionshredded::GroupByWrapperEnum;
 
 #[derive(Debug, Clone)]
 pub(super) enum FieldType {

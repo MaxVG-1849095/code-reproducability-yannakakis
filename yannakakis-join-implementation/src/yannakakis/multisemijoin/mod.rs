@@ -34,6 +34,7 @@ use super::groupby::GroupBy;
 use super::kernel::take_nested_column_inplace;
 use super::repartitionshredded::GroupByWrapper;
 use super::repartitionshredded::MultiSemiJoinWrapper;
+use super::repartitionshredded::GroupByWrapperEnum;
 use super::sel::Sel;
 use super::util::once_async::OnceAsync;
 use super::util::once_async::OnceFut;
@@ -48,7 +49,7 @@ pub struct MultiSemiJoin {
     guard: Arc<dyn ExecutionPlan>,
 
     /// The non-empty vector of child nodes.
-    children: Vec<Arc<GroupBy>>, // Arc because shared between multiple partitions
+    children: Vec<Arc<GroupByWrapperEnum>>, // Arc because shared between multiple partitions
 
     /// For each child, a vector [ A,B ] indicating the indices of the guard columns that form a lookup key in the GroupBy child.
     /// Is of the same length as `children`.
@@ -75,7 +76,7 @@ pub struct MultiSemiJoin {
 impl MultiSemiJoin {
     pub fn new(
         guard: Arc<dyn ExecutionPlan>,
-        children: Vec<Arc<GroupBy>>,
+        children: Vec<Arc<GroupByWrapperEnum>>,
         equijoin_keys: Vec<Vec<(usize, usize)>>,
     ) -> Self {
         // Check that children and equijoin_keys have the same length
@@ -210,7 +211,7 @@ impl MultiSemiJoin {
     }
 
     
-    pub fn children(&self) -> &[Arc<GroupBy>] {
+    pub fn children(&self) -> &[Arc<GroupByWrapperEnum>] {
         &self.children
     }
     
@@ -233,7 +234,7 @@ impl MultiSemiJoinWrapper for MultiSemiJoin{
         context: Arc<TaskContext>,
     ) -> Result<SendableSemiJoinResultBatchStream, DataFusionError> {
         async fn materialize_child(
-            child: Arc<GroupBy>,
+            child: Arc<GroupByWrapperEnum>,
             context: Arc<TaskContext>,
         ) -> Result<GroupedRelRef, DataFusionError> {
             child.materialize(context).await
@@ -332,7 +333,7 @@ impl MultiSemiJoinWrapper for MultiSemiJoin{
     fn guard(&self) -> &Arc<dyn ExecutionPlan> {
         &self.guard
     }
-    fn children(&self) -> &[Arc<GroupBy>] {
+    fn children(&self) -> &[Arc<GroupByWrapperEnum>] {
         &self.children
     }
 

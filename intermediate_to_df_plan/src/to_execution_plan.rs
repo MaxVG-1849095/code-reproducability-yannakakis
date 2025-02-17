@@ -25,7 +25,7 @@ use datafusion::{
 };
 use regex::Regex;
 use yannakakis_join_implementation::yannakakis::{
-    flatten::Flatten, groupby::GroupBy, multisemijoin::MultiSemiJoin, repartitionshredded::{self, MultiSemiJoinWrapper, RepartitionMultiSemiJoin},
+    flatten::Flatten, groupby::GroupBy, multisemijoin::MultiSemiJoin, repartitionshredded::{self, GroupByWrapperEnum, MultiSemiJoinWrapper, RepartitionMultiSemiJoin},
 };
 
 use crate::{
@@ -77,12 +77,12 @@ impl ToPhysicalNode for intermediate_plan::YannakakisNode {
             node: &intermediate_plan::GroupByNode,
             catalog: &Catalog,
             alternative_flatten: bool,
-        ) -> Result<(DFSchema, GroupBy), DataFusionError> {
+        ) -> Result<(DFSchema, Arc<GroupByWrapperEnum>), DataFusionError> {
             let (child_schema, child) =
                 multisemijoin_to_plan(&node.child, catalog, alternative_flatten).await?;
             let group_on = node.group_on.clone();
 
-            Ok((child_schema, GroupBy::new(child.into(), group_on)))
+            Ok((child_schema, Arc::new(yannakakis_join_implementation::yannakakis::repartitionshredded::GroupByWrapperEnum::Groupby(GroupBy::new(child.into(), group_on))))) //wrapped into an enom object 
         }
 
         #[async_recursion]
@@ -104,7 +104,7 @@ impl ToPhysicalNode for intermediate_plan::YannakakisNode {
                 let (child_schema, child) =
                     groupby_to_plan(child, catalog, alternative_flatten).await?;
                 schema.merge(&child_schema);
-                children.push(Arc::new(child));
+                children.push(child);
             }
             let mut msj: Box<dyn MultiSemiJoinWrapper>;
             if node.partitioned{
