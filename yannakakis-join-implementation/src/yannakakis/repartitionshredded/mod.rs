@@ -2,11 +2,11 @@
 
 
 
-use std::{fmt::write, sync::Arc};
+use std::{fmt::write, ops::Mul, sync::Arc};
 
 use datafusion::{error::DataFusionError, execution::TaskContext, physical_plan::{DisplayAs, DisplayFormatType, ExecutionPlan}};
 
-use super::{data::NestedSchemaRef, groupby::GroupBy, multisemijoin::{self, MultiSemiJoin, SendableSemiJoinResultBatchStream}};
+use super::{data::{GroupedRelRef, NestedSchemaRef}, groupby::GroupBy, multisemijoin::{self, MultiSemiJoin, SendableSemiJoinResultBatchStream}};
 // // use datafusion::physical_plan::Partitioning;
 
 use std::fmt::Debug;
@@ -25,15 +25,10 @@ pub trait MultiSemiJoinWrapper: Debug + Send + Sync {
 }
 
 
-
-
-
-
-
 //repartitionexec operator to be placed on top of a multisemijoin
 #[derive(Debug)]
 pub struct RepartitionMultiSemiJoin {
-    //child operator to be repartitioned
+    //child operator to be repartitioned, to be converted to a vector of multisemijoin operators
     child: MultiSemiJoin,
     
     //amount of partitions
@@ -62,6 +57,7 @@ impl RepartitionMultiSemiJoin {
         &self.child
     }
 
+    // execute function for repartitionexec operator, it is supposed to execute the child operator(s) and repartition the data it receives
     pub fn execute(&self, partition: usize, context: Arc<TaskContext>) -> Result<SendableSemiJoinResultBatchStream, DataFusionError> {
         let child_stream = self.child.execute(partition, context)?;
         Ok(child_stream)
@@ -117,6 +113,43 @@ impl MultiSemiJoinWrapper for RepartitionMultiSemiJoin {
 }
 
 
+
+pub trait GroupByWrapper: Debug + Send + Sync {
+    fn schema(&self) -> &NestedSchemaRef;
+    async fn materialize(&self,context: Arc<TaskContext>,) -> Result<GroupedRelRef, DataFusionError>;
+}
+
+
+#[derive(Debug)]
+pub struct RepartitionGroupBy {
+    child: GroupBy,
+    partitions: usize,
+}
+
+impl RepartitionGroupBy {
+    pub fn new(child: Arc<dyn MultiSemiJoinWrapper>, group_on: Vec<usize>) -> Self{
+        let child = GroupBy::new(child, group_on);
+        Self {
+            child,
+            partitions: 0,
+        }
+    }
+
+    pub fn child(&self) -> &GroupBy {
+        &self.child
+    }
+
+}
+
+impl GroupByWrapper for RepartitionGroupBy {
+    fn schema(&self) -> &NestedSchemaRef {
+        self.child.schema()
+    }
+
+    async fn materialize(&self, context: Arc<TaskContext>) -> Result<GroupedRelRef, DataFusionError> {
+        self.child.materialize(context).await
+    }
+}
 
 
 // #[cfg(test)]

@@ -32,6 +32,7 @@ use super::data::NestedSchemaRef;
 use super::data::SemiJoinResultBatch;
 use super::groupby::GroupBy;
 use super::kernel::take_nested_column_inplace;
+use super::repartitionshredded::GroupByWrapper;
 use super::repartitionshredded::MultiSemiJoinWrapper;
 use super::sel::Sel;
 use super::util::once_async::OnceAsync;
@@ -143,65 +144,65 @@ impl MultiSemiJoin {
         }
     }
 
-    pub fn execute(
-        &self,
-        partition: usize,
-        context: Arc<TaskContext>,
-    ) -> Result<SendableSemiJoinResultBatchStream, DataFusionError> {
-        async fn materialize_child(
-            child: Arc<GroupBy>,
-            context: Arc<TaskContext>,
-        ) -> Result<GroupedRelRef, DataFusionError> {
-            child.materialize(context).await
-        }
+    // pub fn execute(
+    //     &self,
+    //     partition: usize,
+    //     context: Arc<TaskContext>,
+    // ) -> Result<SendableSemiJoinResultBatchStream, DataFusionError> {
+    //     async fn materialize_child(
+    //         child: Arc<GroupBy>,
+    //         context: Arc<TaskContext>,
+    //     ) -> Result<GroupedRelRef, DataFusionError> {
+    //         child.materialize(context).await
+    //     }
 
-        let materialized_children_futs = self
-            .once_futs
-            .iter()
-            .zip(self.children.iter())
-            .map(|(onceasync, child)| {
-                onceasync.once(|| materialize_child(child.clone(), context.clone()))
-            })
-            .collect();
+    //     let materialized_children_futs = self
+    //         .once_futs
+    //         .iter()
+    //         .zip(self.children.iter())
+    //         .map(|(onceasync, child)| {
+    //             onceasync.once(|| materialize_child(child.clone(), context.clone()))
+    //         })
+    //         .collect();
         
-        //start timer to measure time of guard stream execute
-        let guard_time_start = std::time::Instant::now();
+    //     //start timer to measure time of guard stream execute
+    //     let guard_time_start = std::time::Instant::now();
         
-        let guard_stream : Pin<Box<dyn RecordBatchStream + Send>>;
-        //remake guard stream depending on partitioned, this can be used to only calculate values of partitions that are attributed to this msj
-        //for now there is only 1 msj for all partitions so we need to calculate all partitions
-        if self.partitioned {
-            let mut streams   = Vec::new();
-            println!("Partitioned MultiSemiJoin with {} partitions", self.guard.output_partitioning().partition_count());
-            for i in 0..self.guard.output_partitioning().partition_count(){
-                streams.push(self.guard.execute(i, context.clone())?);
-            }
+    //     let guard_stream : Pin<Box<dyn RecordBatchStream + Send>>;
+    //     //remake guard stream depending on partitioned, this can be used to only calculate values of partitions that are attributed to this msj
+    //     //for now there is only 1 msj for all partitions so we need to calculate all partitions
+    //     if self.partitioned {
+    //         let mut streams   = Vec::new();
+    //         println!("Partitioned MultiSemiJoin with {} partitions", self.guard.output_partitioning().partition_count());
+    //         for i in 0..self.guard.output_partitioning().partition_count(){
+    //             streams.push(self.guard.execute(i, context.clone())?);
+    //         }
 
-            guard_stream = combine_streams(self.guard.schema(), streams);
-        }
-        else{
-            guard_stream = self.guard.execute(partition, context)?;
-        }
+    //         guard_stream = combine_streams(self.guard.schema(), streams);
+    //     }
+    //     else{
+    //         guard_stream = self.guard.execute(partition, context)?;
+    //     }
 
-        let guard_time = guard_time_start.elapsed();
-        println!("node {} guard_time: {}", self.id,guard_time.as_nanos());
+    //     let guard_time = guard_time_start.elapsed();
+    //     println!("node {} guard_time: {}", self.id,guard_time.as_nanos());
 
 
-        let schema = self.schema.clone();
-        let semijoin_keys = self.semijoin_keys.clone();
-        let semijoin_metrics = SemiJoinMetrics::new(partition, &self.metrics);
-        let hashes_buffer = Vec::new();
+    //     let schema = self.schema.clone();
+    //     let semijoin_keys = self.semijoin_keys.clone();
+    //     let semijoin_metrics = SemiJoinMetrics::new(partition, &self.metrics);
+    //     let hashes_buffer = Vec::new();
 
-        Ok(Box::pin(MultiSemiJoinStream {
-            schema,
-            guard_stream,
-            materialized_children_futs,
-            semijoin_keys,
-            semijoin_metrics,
-            hashes_buffer,
-            guard_batch_cache: None,
-        }))
-    }
+    //     Ok(Box::pin(MultiSemiJoinStream {
+    //         schema,
+    //         guard_stream,
+    //         materialized_children_futs,
+    //         semijoin_keys,
+    //         semijoin_metrics,
+    //         hashes_buffer,
+    //         guard_batch_cache: None,
+    //     }))
+    // }
 
     /// The output schema of the [NestedRel] produced by this [MultiSemiJoin]
     pub fn schema(&self) -> &NestedSchemaRef {
@@ -221,14 +222,6 @@ impl MultiSemiJoin {
     pub fn metrics(&self) -> MetricsSet {
         self.metrics.clone_inner()
     }
-
-    
-
-    
-
-    
-
-    
 }
 
 

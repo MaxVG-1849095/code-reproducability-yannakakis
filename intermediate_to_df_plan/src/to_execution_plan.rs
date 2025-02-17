@@ -118,7 +118,7 @@ impl ToPhysicalNode for intermediate_plan::YannakakisNode {
             msj.set_id(node.id);
             Ok((
                 schema,
-                msj as Box<dyn MultiSemiJoinWrapper>,
+                msj,
             ))
         }
 
