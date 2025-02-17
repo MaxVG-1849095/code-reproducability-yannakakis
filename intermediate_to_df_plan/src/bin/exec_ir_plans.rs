@@ -9,7 +9,7 @@ use std::{
 
 use clap::Parser;
 use datafusion::{
-    arrow::util::pretty::pretty_format_batches, physical_plan::{display::DisplayableExecutionPlan, displayable}, prelude::{SessionConfig, SessionContext}
+    physical_plan::display::DisplayableExecutionPlan, prelude::{SessionConfig, SessionContext}
 };
 use intermediate_to_df_plan::{
     time_execution, to_execution_plan,

@@ -32,7 +32,7 @@ use crate::yannakakis::repartitionshredded::GroupByWrapper;
 use crate::yannakakis::util::write_metrics_as_json;
 
 use super::data::Weight;
-use super::multisemijoin::MultiSemiJoin;
+// use super::multisemijoin::MultiSemiJoin;
 use super::repartitionshredded::MultiSemiJoinWrapper;
 use super::schema::YannakakisSchema;
 

@@ -17,7 +17,7 @@ use datafusion::physical_plan::metrics::MetricsSet;
 
 use crate::yannakakis::util::write_metrics_as_json;
 
-use super::multisemijoin::MultiSemiJoin;
+// use super::multisemijoin::MultiSemiJoin;
 
 use super::data::GroupedRelRef;
 use super::data::Idx;
@@ -28,7 +28,7 @@ use super::data::NonSingularNestedColumn;
 use super::data::SemiJoinResultBatch;
 use super::data::SingularNestedColumn;
 use super::data::Weight;
-use super::multisemijoin::MultiSemiJoinStream;
+// use super::multisemijoin::MultiSemiJoinStream;
 use super::repartitionshredded::GroupByWrapper;
 use super::repartitionshredded::MultiSemiJoinWrapper;
 
@@ -51,6 +51,8 @@ pub struct GroupBy {
 
     /// Groupby execution metrics
     metrics: ExecutionPlanMetricsSet,
+
+    partitioned: bool,
 }
 
 impl GroupBy {
@@ -83,6 +85,7 @@ impl GroupBy {
             nest_on,
             schema,
             metrics: ExecutionPlanMetricsSet::new(),
+            partitioned:false,
         }
     }
 
@@ -205,6 +208,7 @@ impl GroupBy {
     // pub fn group_on(&self) -> &[usize] {
     //     &self.group_on
     // }
+
 }
 
 impl GroupByWrapper for GroupBy {
@@ -218,7 +222,7 @@ impl GroupByWrapper for GroupBy {
         &self,
         context: Arc<TaskContext>,
     ) -> Result<GroupedRelRef, DataFusionError> {
-        println!("GroupByWrapper::materialize");
+        println!("Groupby materialize");
         // Init metrics and start timer
         let metrics = GroupByMetrics::new(0, &self.metrics);
         let materialize_timer = metrics.materialize_total_time.timer();
@@ -325,6 +329,14 @@ impl GroupByWrapper for GroupBy {
 
     fn group_on(&self) -> &[usize] {
         &self.group_on
+    }
+    
+    fn partitioned(&self) -> bool {
+        self.partitioned
+    }
+    
+    fn set_partitioned(&mut self, partitioned: bool) {
+        self.partitioned = partitioned;
     }
 }
 

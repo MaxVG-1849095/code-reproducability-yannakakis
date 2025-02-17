@@ -30,7 +30,7 @@ use super::data::NestedColumn;
 use super::data::NestedSchema;
 use super::data::NestedSchemaRef;
 use super::data::SemiJoinResultBatch;
-use super::groupby::GroupBy;
+// use super::groupby::GroupBy;
 use super::kernel::take_nested_column_inplace;
 use super::repartitionshredded::GroupByWrapper;
 use super::repartitionshredded::MultiSemiJoinWrapper;

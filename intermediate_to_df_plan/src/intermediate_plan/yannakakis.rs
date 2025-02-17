@@ -40,10 +40,8 @@ impl MultiSemiJoinNode {
 pub struct GroupByNode {
     pub group_on: Vec<usize>,
     pub child: MultiSemiJoinNode,
+    pub partitioned: bool,
+    pub id: usize, // for debugging
 }
 
-#[derive(Serialize, Deserialize, Debug)]
-pub struct RepartitionShreddedNode{
-    pub child: MultiSemiJoinNode,
-    pub partitions: usize,
-}
+

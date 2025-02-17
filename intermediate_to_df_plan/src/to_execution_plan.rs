@@ -25,7 +25,7 @@ use datafusion::{
 };
 use regex::Regex;
 use yannakakis_join_implementation::yannakakis::{
-    flatten::Flatten, groupby::GroupBy, multisemijoin::MultiSemiJoin, repartitionshredded::{self, GroupByWrapperEnum, MultiSemiJoinWrapper, RepartitionMultiSemiJoin},
+    flatten::Flatten, groupby::GroupBy, multisemijoin::MultiSemiJoin, repartitionshredded::{GroupByWrapper, GroupByWrapperEnum, MultiSemiJoinWrapper, RepartitionGroupBy, RepartitionMultiSemiJoin},
 };
 
 use crate::{
@@ -82,7 +82,17 @@ impl ToPhysicalNode for intermediate_plan::YannakakisNode {
                 multisemijoin_to_plan(&node.child, catalog, alternative_flatten).await?;
             let group_on = node.group_on.clone();
 
-            Ok((child_schema, Arc::new(yannakakis_join_implementation::yannakakis::repartitionshredded::GroupByWrapperEnum::Groupby(GroupBy::new(child.into(), group_on))))) //wrapped into an enom object 
+            let mut grpby: GroupByWrapperEnum;
+
+            if node.partitioned{
+                grpby = GroupByWrapperEnum::RepartitionGroupBy(RepartitionGroupBy::new(child.into(), group_on));
+                grpby.set_partitioned(node.partitioned);
+            }
+            else{
+                grpby = GroupByWrapperEnum::Groupby(GroupBy::new(child.into(), group_on));
+            }
+
+            Ok((child_schema, Arc::new(grpby))) //wrapped into an enom object 
         }
 
         #[async_recursion]
@@ -545,7 +555,7 @@ impl ToPhysicalNode for intermediate_plan::RepartitionExecNode {
             .await?;
 
         let num_partitions = self.num_partitions;
-        let schema = input.schema();
+        // let schema = input.schema();
 
         //unknown partitioning for now
         // let partitioning = Partitioning::UnknownPartitioning(num_partitions);
