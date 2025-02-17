@@ -222,22 +222,7 @@ impl MultiSemiJoin {
         self.metrics.clone_inner()
     }
 
-    //getter and setter for partitioned & id (setter for ease of use, don't want to change every creation of a MultiSemiJoin :))
-    pub fn partitioned(&self) -> bool {
-        self.partitioned
-    }
-
-    pub fn set_partitioned(&mut self, partitioned: bool) {
-        self.partitioned = partitioned;
-    }
-
-    pub fn id(&self) -> usize {
-        self.id
-    }
-
-    pub fn set_id(&mut self, id: usize) {
-        self.id = id;
-    }
+    
 
     
 
@@ -360,6 +345,23 @@ impl MultiSemiJoinWrapper for MultiSemiJoin{
 
     fn semijoin_keys(&self) -> &Vec<Vec<usize>> {
         &self.semijoin_keys
+    }
+
+    //getter and setter for partitioned & id (setter for ease of use, don't want to change every creation of a MultiSemiJoin :))
+    fn partitioned(&self) -> bool {
+        self.partitioned
+    }
+
+    fn set_partitioned(&mut self, partitioned: bool) {
+        self.partitioned = partitioned;
+    }
+
+    fn id(&self) -> usize {
+        self.id
+    }
+
+    fn set_id(&mut self, id: usize) {
+        self.id = id;
     }
 }
 

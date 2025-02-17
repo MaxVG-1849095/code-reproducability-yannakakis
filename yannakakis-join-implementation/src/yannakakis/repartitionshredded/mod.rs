@@ -18,6 +18,10 @@ pub trait MultiSemiJoinWrapper: Debug + Send + Sync {
     fn guard(&self) -> &Arc<dyn ExecutionPlan>;
     fn children(&self) -> &[Arc<GroupBy>];
     fn semijoin_keys(&self) -> &Vec<Vec<usize>>;
+    fn partitioned(&self) -> bool;
+    fn set_partitioned(&mut self, partitioned: bool);
+    fn id(&self) -> usize;
+    fn set_id(&mut self, id: usize);
 }
 
 
@@ -42,9 +46,14 @@ pub struct RepartitionMultiSemiJoin {
 
 
 impl RepartitionMultiSemiJoin {
-    pub fn new(child: MultiSemiJoin) -> Self {
+    //create new repartitionexec operator, also creating the necessary multisemijoin operator(s)
+    pub fn new(
+        guard: Arc<dyn ExecutionPlan>,
+        children: Vec<Arc<GroupBy>>,
+        equijoin_keys: Vec<Vec<(usize, usize)>>,
+    ) -> Self {
         Self {
-            child,
+            child: MultiSemiJoin::new(guard, children, equijoin_keys),
             partitions: 0,
         }
     }
@@ -58,10 +67,12 @@ impl RepartitionMultiSemiJoin {
         Ok(child_stream)
 
     }
+
 }
 
 impl MultiSemiJoinWrapper for RepartitionMultiSemiJoin {
     fn execute(&self, partition: usize, context: Arc<TaskContext>) -> Result<SendableSemiJoinResultBatchStream, DataFusionError> {
+        println!("RepartitionMultiSemiJoin execute");
         self.execute(partition, context)
     }
     
@@ -86,6 +97,22 @@ impl MultiSemiJoinWrapper for RepartitionMultiSemiJoin {
     }
     fn semijoin_keys(&self) -> &Vec<Vec<usize>> {
         self.child.semijoin_keys()
+    }
+    
+    fn partitioned(&self) -> bool {
+        self.child.partitioned()
+    }
+    
+    fn set_partitioned(&mut self, partitioned: bool) {
+        self.child.set_partitioned(partitioned)
+    }
+    
+    fn id(&self) -> usize {
+        self.child.id()
+    }
+    
+    fn set_id(&mut self, id: usize) {
+        self.child.set_id(id)
     }
 }
 
