@@ -1,0 +1,81 @@
+{
+    "root": {
+        "name": "PROJECTION",
+        "estimated_cardinality": null,
+        "children": [
+            {
+                "name": "YANNAKAKIS",
+                "root": {
+                    "name": "MULTISEMIJOIN",
+                    "partitioned": false,
+                    "id": 1,
+                    "equijoin_keys": [
+                        [
+                            [
+                                0,
+                                0
+                            ]
+                        ]
+                    ],
+                    "guard": {
+                        "name": "SEQUENTIALSCAN",
+                        "children": [],
+                        "relation": "title",
+                        "opt_filter": "id>=2 AND id<=2525793 AND id IS NOT NULL",
+                        "projection": [
+                            {
+                                "table_name": "t",
+                                "field_name": "id"
+                            },
+                            {
+                                "table_name": "t",
+                                "field_name": "title"
+                            }
+                        ]
+                    },
+                    "children": [
+                        {
+                            "name": "GROUPBY",
+                            "group_on": [
+                                0
+                            ],
+                            "child": {
+                                "name": "MULTISEMIJOIN",
+                                "equijoin_keys": [],
+                                "partitioned":false,
+                                "id": 2,
+                                "guard": {
+                                    "name": "SEQUENTIALSCAN",
+                                    "children": [],
+                                    "relation": "movie_info_idx",
+                                    "opt_filter": null,
+                                    "projection": [
+                                        {
+                                            "table_name": "mi_idx",
+                                            "field_name": "movie_id"
+                                        }
+                                    ]
+                                },
+                                "children": []
+                            }
+                        }
+                    ]
+                }
+            }
+        ],
+        "on": [
+            {
+                "table_name": "t",
+                "field_name": "id"
+            },
+            {
+                "table_name": "t",
+                "field_name": "title"
+            }
+        ]
+    },
+    "aliases": {
+        "mi_idx": "movie_info_idx",
+        "t": "title"
+    }
+}
