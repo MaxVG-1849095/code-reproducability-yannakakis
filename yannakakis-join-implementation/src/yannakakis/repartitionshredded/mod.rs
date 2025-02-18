@@ -2,9 +2,9 @@
 
 
 
-use std::sync::Arc;
+use std::{pin::Pin, sync::Arc};
 
-use datafusion::{error::DataFusionError, execution::TaskContext, physical_plan::{metrics::MetricsSet, ExecutionPlan}};
+use datafusion::{error::DataFusionError, execution::{RecordBatchStream, TaskContext}, physical_plan::{metrics::MetricsSet, stream::RecordBatchStreamAdapter, ExecutionPlan}};
 
 use super::{data::{GroupedRelRef, NestedSchemaRef}, groupby::GroupBy, multisemijoin::{MultiSemiJoin, SendableSemiJoinResultBatchStream}};
 // // use datafusion::physical_plan::Partitioning;
@@ -64,11 +64,20 @@ impl RepartitionMultiSemiJoin {
 
     }
 
+    //function to combine an array of recordbatchstreams into one TODO: make this for msjstreams
+fn combine_streams(schema: Arc<datafusion::arrow::datatypes::Schema>, streams: Vec<Pin<Box<dyn RecordBatchStream + Send>>>) -> Pin<Box<dyn RecordBatchStream + Send>> {
+    //combine all streams (becomes selectall object so no recordbatch)
+    let streams_combined = futures::stream::select_all(streams); 
+    //turn it into a recordbatchstream and return
+    Box::pin(RecordBatchStreamAdapter::new(schema, streams_combined)) 
+}
+
+
 }
 
 impl MultiSemiJoinWrapper for RepartitionMultiSemiJoin {
     fn execute(&self, partition: usize, context: Arc<TaskContext>) -> Result<SendableSemiJoinResultBatchStream, DataFusionError> {
-        println!("RepartitionMultiSemiJoin execute");
+        // println!("RepartitionMultiSemiJoin execute");
         self.execute(partition, context)
     }
     

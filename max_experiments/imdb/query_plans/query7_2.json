@@ -1,0 +1,89 @@
+{
+    "execution_time": 0.160878,
+    "root": {
+        "name": "AGGREGATE",
+        "execution_time": 0.00023,
+        "actual_rows": 1,
+        "estimated_cardinality": null,
+        "children": [
+            {
+                "name": "YANNAKAKIS",
+                "root": {
+                    "name": "MULTISEMIJOIN",
+                    "partitioned": true,
+                    "id": 0,
+                    "equijoin_keys": [
+                        [
+                            [
+                                0,
+                                0
+                            ]
+                        ]
+                    ],
+                    "guard": {
+                        "name": "REPARTITION",
+                        "num_partitions": 4,
+                        "partitioning": "unknown",
+                        "children": [
+                            {
+                                "name": "SEQUENTIALSCAN",
+                                "execution_time": 0.028519,
+                                "actual_rows": 2525792,
+                                "estimated_cardinality": 2528312,
+                                "children": [],
+                                "relation": "title",
+                                "opt_filter": "id>=2 AND id<=2525793 AND id IS NOT NULL",
+                                "projection": [
+                                    {
+                                        "table_name": "t",
+                                        "field_name": "id"
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    "children": [
+                        {
+                            "name": "GROUPBY",
+                            "partitioned": false,
+                            "id": 0,
+                            "group_on": [
+                                0
+                            ],
+                            "child": {
+                                "name": "MULTISEMIJOIN",
+                                "partitioned": false,
+                                "id": 0,
+                                "equijoin_keys": [],
+                                "guard": {
+                                    "name": "SEQUENTIALSCAN",
+                                    "execution_time": 0.009365,
+                                    "actual_rows": 1380035,
+                                    "estimated_cardinality": 1380035,
+                                    "children": [],
+                                    "relation": "movie_info_idx",
+                                    "opt_filter": null,
+                                    "projection": [
+                                        {
+                                            "table_name": "mi_idx",
+                                            "field_name": "movie_id"
+                                        }
+                                    ]
+                                },
+                                "children": []
+                            }
+                        }
+                    ]
+                }
+            }
+        ],
+        "group_by": null,
+        "aggregate": [
+            "count_star()"
+        ]
+    },
+    "aliases": {
+        "t": "title",
+        "mi_idx": "movie_info_idx"
+    }
+}

@@ -176,7 +176,12 @@ async fn exec_plan(
 
         println!("{}", pretty_format_batches(&results)?.to_string());
         //print amount of rows
-        println!("Rows: {} of target 2751", results[0].num_rows());
+        // println!("Rows: {} of target 2751", results[0].num_rows());
+        // let mut resultsCount = 0;
+        // for batch in results {
+        //     resultsCount += batch.num_rows();
+        // }
+        // println!("Rows: {} of target 2751", resultsCount);
         println!("Execution time: {:?}", duration);
         durations.push(duration);
 

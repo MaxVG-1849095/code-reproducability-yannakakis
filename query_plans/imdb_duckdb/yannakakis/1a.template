@@ -1,0 +1,47 @@
+{
+    "semijoin_plan": {
+        "guard": "t",
+        "children": [
+            {
+                "guard": "mi_idx",
+                "children": [],
+                "partitioned": false,
+                "id": 0
+            }
+        ],
+        "partitioned": false,
+        "id": 0
+    },
+    "replacements": {
+        "t": {
+            "name": "SEQUENTIALSCAN",
+            "execution_time": 0.028519,
+            "actual_rows": 2525792,
+            "estimated_cardinality": 2528312,
+            "children": [],
+            "relation": "title",
+            "opt_filter": "id>=2 AND id<=2525793 AND id IS NOT NULL",
+            "projection": [
+                {
+                    "table_name": "t",
+                    "field_name": "id"
+                }
+            ]
+        },
+        "mi_idx": {
+            "name": "SEQUENTIALSCAN",
+            "execution_time": 0.009365,
+            "actual_rows": 1380035,
+            "estimated_cardinality": 1380035,
+            "children": [],
+            "relation": "movie_info_idx",
+            "opt_filter": null,
+            "projection": [
+                {
+                    "table_name": "mi_idx",
+                    "field_name": "movie_id"
+                }
+            ]
+        }
+    }
+}
