@@ -152,6 +152,8 @@ def generate_semijoin_node(node, replacements):
         # convert child to semijoin node and add groupby on top of it.
         groupby = {
             "name": "GROUPBY",
+            "partitioned": False,
+            "id": 0,
             "group_on": [],
             "child": generate_semijoin_node(child, replacements),
         }
@@ -159,11 +161,11 @@ def generate_semijoin_node(node, replacements):
 
     return {
         "name": "MULTISEMIJOIN",
+        "partitioned": False,
+        "id": 0,
         "equijoin_keys": [[] for _ in range(len(children))],
         "guard": guard,
         "children": children,
-        "partitioned": False,
-        "id": 0,
     }
 
 
