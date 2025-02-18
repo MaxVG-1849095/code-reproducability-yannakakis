@@ -59,8 +59,17 @@ impl RepartitionMultiSemiJoin {
 
     // execute function for repartitionexec operator, it is supposed to execute the child operator(s) and repartition the data it receives
     pub fn execute(&self, partition: usize, context: Arc<TaskContext>) -> Result<SendableSemiJoinResultBatchStream, DataFusionError> {
-        let child_stream = self.child.execute(partition, context)?;
-        Ok(child_stream)
+
+        let guard_partitions = self.child.guard_partition_count();
+
+        if(guard_partitions == 1){ //if there is only one partition, no need to do anything special
+            let child_stream = self.child.execute(partition, context)?;
+            return Ok(child_stream)
+        }
+        else{ //if there are multiple partitions, we need to combine the streams of the different partitions (or eventually repartition them into a specified amount)
+            let child_stream = self.child.execute(partition, context)?;
+            return Ok(child_stream)
+        }
 
     }
 

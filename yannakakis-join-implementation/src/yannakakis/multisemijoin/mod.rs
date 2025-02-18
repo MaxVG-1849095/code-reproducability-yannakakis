@@ -70,6 +70,8 @@ pub struct MultiSemiJoin {
     /// Wether or not the input is partitioned
     partitioned: bool,
 
+    guard_partition_count: usize,
+
     id: usize, // for debugging
 }
 
@@ -132,6 +134,8 @@ impl MultiSemiJoin {
 
         let once_futs = (0..children.len()).map(|_| Default::default()).collect();
 
+        let guard_partitions = guard.output_partitioning().partition_count();
+
         MultiSemiJoin {
             guard,
             children,
@@ -141,6 +145,7 @@ impl MultiSemiJoin {
             // once_fut: Default::default(),
             once_futs,
             partitioned: false,
+            guard_partition_count: guard_partitions,
             id: 0,
         }
     }
@@ -222,6 +227,10 @@ impl MultiSemiJoin {
 
     pub fn metrics(&self) -> MetricsSet {
         self.metrics.clone_inner()
+    }
+
+    pub fn guard_partition_count(&self) -> usize {
+        self.guard_partition_count
     }
 }
 
