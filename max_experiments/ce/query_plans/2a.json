@@ -1,8 +1,8 @@
 {
-    "execution_time": 1.52552,
+    "execution_time": 0.422528,
     "root": {
         "name": "AGGREGATE",
-        "execution_time": 0.003806,
+        "execution_time": 1e-05,
         "actual_rows": 1,
         "estimated_cardinality": null,
         "children": [
@@ -16,26 +16,20 @@
                                 0,
                                 0
                             ]
-                        ],
-                        [
-                            [
-                                0,
-                                0
-                            ]
                         ]
                     ],
                     "guard": {
                         "name": "SEQUENTIALSCAN",
-                        "execution_time": 0.014761,
-                        "actual_rows": 5739908,
-                        "estimated_cardinality": 5740837,
+                        "execution_time": 0.00555,
+                        "actual_rows": 569410,
+                        "estimated_cardinality": 569410,
                         "children": [],
-                        "relation": "dblp25",
-                        "opt_filter": "s<=3340551 AND s IS NOT NULL",
+                        "relation": "yago1",
+                        "opt_filter": null,
                         "projection": [
                             {
-                                "table_name": "dblp25",
-                                "field_name": "s"
+                                "table_name": "yago1",
+                                "field_name": "d"
                             }
                         ]
                     },
@@ -50,22 +44,26 @@
                                 "equijoin_keys": [
                                     [
                                         [
-                                            0,
+                                            1,
                                             0
                                         ]
                                     ]
                                 ],
                                 "guard": {
                                     "name": "SEQUENTIALSCAN",
-                                    "execution_time": 0.011991,
-                                    "actual_rows": 4268191,
-                                    "estimated_cardinality": 5475762,
+                                    "execution_time": 0.125467,
+                                    "actual_rows": 8331121,
+                                    "estimated_cardinality": 8331273,
                                     "children": [],
-                                    "relation": "dblp20",
-                                    "opt_filter": "s>=1206438 AND s<=3340551 AND s IS NOT NULL",
+                                    "relation": "yago0",
+                                    "opt_filter": "s<=4532126 AND s IS NOT NULL",
                                     "projection": [
                                         {
-                                            "table_name": "dblp20",
+                                            "table_name": "yago0",
+                                            "field_name": "d"
+                                        },
+                                        {
+                                            "table_name": "yago0",
                                             "field_name": "s"
                                         }
                                     ]
@@ -81,22 +79,26 @@
                                             "equijoin_keys": [
                                                 [
                                                     [
-                                                        0,
+                                                        1,
                                                         0
                                                     ]
                                                 ]
                                             ],
                                             "guard": {
                                                 "name": "SEQUENTIALSCAN",
-                                                "execution_time": 0.005475,
-                                                "actual_rows": 2134108,
-                                                "estimated_cardinality": 2141839,
+                                                "execution_time": 0.032278,
+                                                "actual_rows": 2124368,
+                                                "estimated_cardinality": 2124368,
                                                 "children": [],
-                                                "relation": "dblp5",
-                                                "opt_filter": "s>=1206438 AND s<=3340551 AND s IS NOT NULL",
+                                                "relation": "yago2",
+                                                "opt_filter": null,
                                                 "projection": [
                                                     {
-                                                        "table_name": "dblp5",
+                                                        "table_name": "yago2_2",
+                                                        "field_name": "d"
+                                                    },
+                                                    {
+                                                        "table_name": "yago2_2",
                                                         "field_name": "s"
                                                     }
                                                 ]
@@ -112,23 +114,27 @@
                                                         "equijoin_keys": [
                                                             [
                                                                 [
-                                                                    0,
+                                                                    1,
                                                                     0
                                                                 ]
                                                             ]
                                                         ],
                                                         "guard": {
                                                             "name": "SEQUENTIALSCAN",
-                                                            "execution_time": 0.00593,
-                                                            "actual_rows": 2134108,
-                                                            "estimated_cardinality": 2134666,
+                                                            "execution_time": 0.036981,
+                                                            "actual_rows": 1657512,
+                                                            "estimated_cardinality": 2124368,
                                                             "children": [],
-                                                            "relation": "dblp8",
-                                                            "opt_filter": "s>=1206438 AND s<=3340551 AND s IS NOT NULL",
+                                                            "relation": "yago2",
+                                                            "opt_filter": "d<=1846662 AND d IS NOT NULL",
                                                             "projection": [
                                                                 {
-                                                                    "table_name": "dblp8",
+                                                                    "table_name": "yago2_3",
                                                                     "field_name": "s"
+                                                                },
+                                                                {
+                                                                    "table_name": "yago2_3",
+                                                                    "field_name": "d"
                                                                 }
                                                             ]
                                                         },
@@ -140,23 +146,65 @@
                                                                 ],
                                                                 "child": {
                                                                     "name": "MULTISEMIJOIN",
-                                                                    "equijoin_keys": [],
+                                                                    "equijoin_keys": [
+                                                                        [
+                                                                            [
+                                                                                1,
+                                                                                0
+                                                                            ]
+                                                                        ]
+                                                                    ],
                                                                     "guard": {
                                                                         "name": "SEQUENTIALSCAN",
-                                                                        "execution_time": 0.002949,
-                                                                        "actual_rows": 1967297,
-                                                                        "estimated_cardinality": 1967297,
+                                                                        "execution_time": 0.001984,
+                                                                        "actual_rows": 95086,
+                                                                        "estimated_cardinality": 95092,
                                                                         "children": [],
-                                                                        "relation": "dblp17",
-                                                                        "opt_filter": null,
+                                                                        "relation": "yago5",
+                                                                        "opt_filter": "d>=173 AND d<=4314880 AND d IS NOT NULL",
                                                                         "projection": [
                                                                             {
-                                                                                "table_name": "dblp17",
+                                                                                "table_name": "yago5",
                                                                                 "field_name": "s"
+                                                                            },
+                                                                            {
+                                                                                "table_name": "yago5",
+                                                                                "field_name": "d"
                                                                             }
                                                                         ]
                                                                     },
-                                                                    "children": [],
+                                                                    "children": [
+                                                                        {
+                                                                            "name": "GROUPBY",
+                                                                            "group_on": [
+                                                                                0
+                                                                            ],
+                                                                            "child": {
+                                                                                "name": "MULTISEMIJOIN",
+                                                                                "equijoin_keys": [],
+                                                                                "guard": {
+                                                                                    "name": "SEQUENTIALSCAN",
+                                                                                    "execution_time": 0.000854,
+                                                                                    "actual_rows": 55535,
+                                                                                    "estimated_cardinality": 55535,
+                                                                                    "children": [],
+                                                                                    "relation": "yago17",
+                                                                                    "opt_filter": null,
+                                                                                    "projection": [
+                                                                                        {
+                                                                                            "table_name": "yago17",
+                                                                                            "field_name": "s"
+                                                                                        }
+                                                                                    ]
+                                                                                },
+                                                                                "children": [],
+                                                                                "partitioned": false,
+                                                                                "id": 0
+                                                                            },
+                                                                            "partitioned": false,
+                                                                            "id": 0
+                                                                        }
+                                                                    ],
                                                                     "partitioned": false,
                                                                     "id": 0
                                                                 },
@@ -183,36 +231,6 @@
                             },
                             "partitioned": false,
                             "id": 0
-                        },
-                        {
-                            "name": "GROUPBY",
-                            "group_on": [
-                                0
-                            ],
-                            "child": {
-                                "name": "MULTISEMIJOIN",
-                                "equijoin_keys": [],
-                                "guard": {
-                                    "name": "SEQUENTIALSCAN",
-                                    "execution_time": 0.017029,
-                                    "actual_rows": 5785403,
-                                    "estimated_cardinality": 5786368,
-                                    "children": [],
-                                    "relation": "dblp1",
-                                    "opt_filter": "s>=1206438 AND s<=3340551 AND s IS NOT NULL",
-                                    "projection": [
-                                        {
-                                            "table_name": "dblp1",
-                                            "field_name": "s"
-                                        }
-                                    ]
-                                },
-                                "children": [],
-                                "partitioned": false,
-                                "id": 0
-                            },
-                            "partitioned": false,
-                            "id": 0
                         }
                     ],
                     "partitioned": false,
@@ -226,11 +244,11 @@
         ]
     },
     "aliases": {
-        "dblp20": "dblp20",
-        "dblp8": "dblp8",
-        "dblp25": "dblp25",
-        "dblp17": "dblp17",
-        "dblp1": "dblp1",
-        "dblp5": "dblp5"
+        "yago2_3": "yago2",
+        "yago2_2": "yago2",
+        "yago5": "yago5",
+        "yago0": "yago0",
+        "yago1": "yago1",
+        "yago17": "yago17"
     }
 }
