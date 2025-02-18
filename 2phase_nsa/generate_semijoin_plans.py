@@ -53,7 +53,7 @@ def rewrite_plan(infile: str, outfile: str | None):
 
 def rewrite_plans_in_dir(indir: str, outdir: str):
     for query_dir in os.listdir(indir):
-        query_dir_full = os.path.join(indir, query_dir)
+        query_dir_full = os.th.join(indir, query_dir)
         if not os.path.isdir(query_dir_full):
             continue
 
