@@ -47,6 +47,7 @@ impl RepartitionMultiSemiJoin {
         children: Vec<Arc<GroupByWrapperEnum>>,
         equijoin_keys: Vec<Vec<(usize, usize)>>,
     ) -> Self {
+        println!("RepartitionMultiSemiJoin new");
         Self {
             child: MultiSemiJoin::new(guard, children, equijoin_keys),
             partitions: 0,
@@ -59,6 +60,9 @@ impl RepartitionMultiSemiJoin {
 
     // execute function for repartitionexec operator, it is supposed to execute the child operator(s) and repartition the data it receives
     pub fn execute(&self, partition: usize, context: Arc<TaskContext>) -> Result<SendableSemiJoinResultBatchStream, DataFusionError> {
+
+        // println!("RepartitionMultiSemiJoin execute on partition {}", partition);
+        println!("RepartitionMultiSemiJoin execute with id {} on partition {}", self.id(), partition);
 
         let guard_partitions = self.child.guard_partition_count();
 
@@ -144,7 +148,7 @@ pub enum GroupByWrapperEnum {
 
 pub trait GroupByWrapper: Debug + Send + Sync{
     fn schema(&self) -> &NestedSchemaRef;
-    async fn materialize(&self,context: Arc<TaskContext>,) -> Result<GroupedRelRef, DataFusionError>;
+    async fn materialize(&self,context: Arc<TaskContext>, partition: usize) -> Result<GroupedRelRef, DataFusionError>;
     fn child(&self) -> &Arc<dyn MultiSemiJoinWrapper>;
     fn metrics(&self) -> MetricsSet;
     fn as_json(&self, output: &mut String) -> Result<(), std::fmt::Error>;
@@ -166,6 +170,7 @@ pub struct RepartitionGroupBy {
 impl RepartitionGroupBy {
     pub fn new(child: Arc<dyn MultiSemiJoinWrapper>, group_on: Vec<usize>) -> Self{
         let child = GroupBy::new(child, group_on);
+        println!("RepartitionGroupBy new");
         Self {
             child,
             partitions: 0,
@@ -183,9 +188,9 @@ impl GroupByWrapper for RepartitionGroupBy {
         self.child.schema()
     }
 
-    async fn materialize(&self, context: Arc<TaskContext>) -> Result<GroupedRelRef, DataFusionError> {
-        println!("RepartitionGroupBy materialize");
-        self.child.materialize(context).await
+    async fn materialize(&self, context: Arc<TaskContext>, partition: usize) -> Result<GroupedRelRef, DataFusionError> {
+        println!("RepartitionGroupBy materialize on partition {}", partition);
+        self.child.materialize(context, partition).await
     }
     
     fn child(&self) -> &Arc<dyn MultiSemiJoinWrapper> {
@@ -225,10 +230,10 @@ impl GroupByWrapper for GroupByWrapperEnum{
         }
     }
 
-    async fn materialize(&self, context: Arc<TaskContext>) -> Result<GroupedRelRef, DataFusionError> {
+    async fn materialize(&self, context: Arc<TaskContext>, partition: usize) -> Result<GroupedRelRef, DataFusionError> {
         match self {
-            GroupByWrapperEnum::RepartitionGroupBy(repartition) => repartition.materialize(context).await,
-            GroupByWrapperEnum::Groupby(groupby) => groupby.materialize(context).await,
+            GroupByWrapperEnum::RepartitionGroupBy(repartition) => repartition.materialize(context, partition).await,
+            GroupByWrapperEnum::Groupby(groupby) => groupby.materialize(context, partition).await,
         }
     }
     

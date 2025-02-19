@@ -245,8 +245,9 @@ impl MultiSemiJoinWrapper for MultiSemiJoin{
         async fn materialize_child(
             child: Arc<GroupByWrapperEnum>,
             context: Arc<TaskContext>,
+            partition: usize,
         ) -> Result<GroupedRelRef, DataFusionError> {
-            child.materialize(context).await
+            child.materialize(context, partition).await
         }
 
         let materialized_children_futs = self
@@ -254,7 +255,7 @@ impl MultiSemiJoinWrapper for MultiSemiJoin{
             .iter()
             .zip(self.children.iter())
             .map(|(onceasync, child)| {
-                onceasync.once(|| materialize_child(child.clone(), context.clone()))
+                onceasync.once(|| materialize_child(child.clone(), context.clone(), partition))
             })
             .collect();
         if self.id == 1{

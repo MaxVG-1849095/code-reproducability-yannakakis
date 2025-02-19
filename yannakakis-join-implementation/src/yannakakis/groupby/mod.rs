@@ -221,6 +221,7 @@ impl GroupByWrapper for GroupBy {
     async fn materialize(
         &self,
         context: Arc<TaskContext>,
+        partition: usize
     ) -> Result<GroupedRelRef, DataFusionError> {
         println!("Groupby materialize");
         // Init metrics and start timer
@@ -230,7 +231,7 @@ impl GroupByWrapper for GroupBy {
         let collect_timer = metrics.semijoin_collect_time.timer();
 
         // Execute child node
-        let semijoin_stream = self.child.execute(0, context)?;
+        let semijoin_stream = self.child.execute(partition, context)?;
 
         // While collecting all batches from the semijoin stream:
         //      - Store all batches in a Vec
@@ -700,7 +701,7 @@ mod tests {
         assert_eq!(groupby.schema().as_ref(), &expected_schema);
 
         let context: Arc<TaskContext> = Arc::new(TaskContext::default());
-        let groupby_state_ref = groupby.materialize(context).await?;
+        let groupby_state_ref = groupby.materialize(context, 0).await?;
         let groupby_state = groupby_state_ref
             .as_any()
             .downcast_ref::<NoneNonSingularGroupedRel>()
@@ -746,7 +747,7 @@ mod tests {
         assert_eq!(groupby.schema().as_ref(), &expected_schema);
 
         let context: Arc<TaskContext> = Arc::new(TaskContext::default());
-        let groupby_state_ref = groupby.materialize(context).await?;
+        let groupby_state_ref = groupby.materialize(context, 0).await?;
         let groupby_state = groupby_state_ref
             .as_any()
             .downcast_ref::<DefaultSingularGroupedRel>()
@@ -767,7 +768,7 @@ mod tests {
         // GroupBy on column "a" (a=1 for all rows)
         let groupby = GroupBy::new(Arc::new(semijoin) as Arc<dyn MultiSemiJoinWrapper>, vec![0]);
         let context: Arc<TaskContext> = Arc::new(TaskContext::default());
-        let groupby_state_ref = groupby.materialize(context).await?;
+        let groupby_state_ref = groupby.materialize(context, 0).await?;
         let groupby_state = groupby_state_ref
             .as_any()
             .downcast_ref::<OneKeyNonSingularGroupedRel<UInt8Type>>()
@@ -831,7 +832,7 @@ mod tests {
         // GroupBy on column "a" (a=1 for all rows)
         let groupby = GroupBy::new(Arc::new(semijoin) as Arc<dyn MultiSemiJoinWrapper>, vec![0]);
         let context: Arc<TaskContext> = Arc::new(TaskContext::default());
-        let groupby_state_ref = groupby.materialize(context).await?;
+        let groupby_state_ref = groupby.materialize(context, 0).await?;
         let groupby_state = groupby_state_ref
             .as_any()
             .downcast_ref::<OneKeyNullableNonSingularGroupedRel<UInt8Type>>()
@@ -870,7 +871,7 @@ mod tests {
         // GroupBy on column "a" (a=1 for all rows)
         let groupby = GroupBy::new(Arc::new(semijoin) as Arc<dyn MultiSemiJoinWrapper>, vec![1]);
         let context: Arc<TaskContext> = Arc::new(TaskContext::default());
-        let groupby_state_ref = groupby.materialize(context).await?;
+        let groupby_state_ref = groupby.materialize(context, 0).await?;
         let groupby_state = groupby_state_ref
             .as_any()
             .downcast_ref::<OneKeyNonSingularGroupedRel<UInt8Type>>()
@@ -893,7 +894,7 @@ mod tests {
         // GroupBy on columns "a" and "b" (all (a,b) tuples are distinct)
         let groupby = GroupBy::new(Arc::new(semijoin) as Arc<dyn MultiSemiJoinWrapper>, vec![0, 1]);
         let context: Arc<TaskContext> = Arc::new(TaskContext::default());
-        let groupby_state_ref = groupby.materialize(context).await?;
+        let groupby_state_ref = groupby.materialize(context, 0).await?;
         let groupby_state = groupby_state_ref
             .as_any()
             .downcast_ref::<DoubleKeyNonSingularGroupedRel<UInt8Type, UInt8Type>>()
@@ -918,7 +919,7 @@ mod tests {
         // GroupBy on columns a,b,c (all (a,b,c) tuples are distinct)
         let groupby = GroupBy::new(Arc::new(semijoin) as Arc<dyn MultiSemiJoinWrapper>, vec![0, 1, 2]);
         let context: Arc<TaskContext> = Arc::new(TaskContext::default());
-        let groupby_state_ref = groupby.materialize(context).await?;
+        let groupby_state_ref = groupby.materialize(context, 0).await?;
         let groupby_state = groupby_state_ref
             .as_any()
             .downcast_ref::<DefaultSingularGroupedRel>()
@@ -955,7 +956,7 @@ mod tests {
         // GroupBy on column "a" (a=1 for all rows)
         let groupby = GroupBy::new(Arc::new(semijoin) as Arc<dyn MultiSemiJoinWrapper>, vec![0]);
         let context: Arc<TaskContext> = Arc::new(TaskContext::default());
-        let groupby_state_ref = groupby.materialize(context).await?;
+        let groupby_state_ref = groupby.materialize(context, 0).await?;
         let groupby_state = groupby_state_ref
             .as_any()
             .downcast_ref::<OneKeyNonSingularGroupedRel<UInt8Type>>()
