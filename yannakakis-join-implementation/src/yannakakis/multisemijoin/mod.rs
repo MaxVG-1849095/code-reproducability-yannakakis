@@ -4,6 +4,7 @@ use std::pin::Pin;
 use std::sync::Arc;
 use std::task::Poll;
 
+use datafusion::arrow::datatypes::Schema;
 use datafusion::execution::RecordBatchStream;
 use datafusion::physical_plan::metrics::MetricsSet;
 use datafusion::physical_plan::stream::RecordBatchStreamAdapter;
@@ -255,6 +256,7 @@ impl MultiSemiJoinWrapper for MultiSemiJoin{
             .iter()
             .zip(self.children.iter())
             .map(|(onceasync, child)| {
+                println!("materialize child for partition {}", partition);
                 onceasync.once(|| materialize_child(child.clone(), context.clone(), partition))
             })
             .collect();
@@ -393,6 +395,7 @@ async fn collect_guard_stream(
 
 pub type SendableSemiJoinResultBatchStream = Pin<Box<MultiSemiJoinStream>>;
 
+
 /// A [`Stream`] of [SemiJoinResultBatch] that does the actual work
 pub struct MultiSemiJoinStream {
     schema: NestedSchemaRef,
@@ -412,6 +415,68 @@ pub struct MultiSemiJoinStream {
     /// the poll_next function will return Poll:Pending and the current guard batch and selection vector will be lost.
     /// To avoid this, we cache them and use it in the next poll_next call.
     guard_batch_cache: Option<RecordBatch>,
+}
+
+impl MultiSemiJoinStream{
+    pub fn new(
+        schema: NestedSchemaRef,
+        guard_stream: SendableRecordBatchStream,
+        materialized_children_futs: Vec<OnceFut<GroupedRelRef>>,
+        semijoin_keys: Vec<Vec<usize>>,
+        semijoin_metrics: SemiJoinMetrics,
+        hashes_buffer: Vec<u64>,
+        guard_batch_cache: Option<RecordBatch>,
+    ) -> Self {
+        MultiSemiJoinStream {
+            schema,
+            guard_stream,
+            materialized_children_futs,
+            semijoin_keys,
+            semijoin_metrics,
+            hashes_buffer,
+            guard_batch_cache,
+        }
+    }
+
+    pub fn example_from_self(&self) -> Self {
+        MultiSemiJoinStream {
+            schema: self.schema.clone(),
+            guard_stream: Box::pin(RecordBatchStreamAdapter::new(Arc::new(Schema::new(Vec::<datafusion::arrow::datatypes::Field>::new())), futures::stream::empty())),
+            materialized_children_futs: self.materialized_children_futs.clone(),
+            semijoin_keys: self.semijoin_keys.clone(),
+            semijoin_metrics: self.semijoin_metrics.clone(),
+            hashes_buffer: self.hashes_buffer.clone(),
+            guard_batch_cache: self.guard_batch_cache.clone(),
+        }
+    }
+
+    pub fn schema(&self) -> &NestedSchemaRef {
+        &self.schema
+    }
+
+    pub fn guard_stream(&self) -> &SendableRecordBatchStream {
+        &self.guard_stream
+    }
+
+    pub fn materialized_children_futs(&self) -> &Vec<OnceFut<GroupedRelRef>> {
+        &self.materialized_children_futs
+    }
+
+    pub fn semijoin_keys(&self) -> &Vec<Vec<usize>> {
+        &self.semijoin_keys
+    }
+
+    pub fn semijoin_metrics(&self) -> &SemiJoinMetrics {
+        &self.semijoin_metrics
+    }
+
+    pub fn hashes_buffer(&self) -> &Vec<u64> {
+        &self.hashes_buffer
+    }
+
+    pub fn guard_batch_cache(&self) -> &Option<RecordBatch> {
+        &self.guard_batch_cache
+    }
 }
 
 impl Stream for MultiSemiJoinStream {
