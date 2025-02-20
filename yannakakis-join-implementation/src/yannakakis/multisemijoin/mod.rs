@@ -251,18 +251,20 @@ impl MultiSemiJoinWrapper for MultiSemiJoin{
             child.materialize(context, partition).await
         }
 
+        println!("msj with id {} execute on partition {}", self.id, partition);
+
         let materialized_children_futs = self
             .once_futs
             .iter()
             .zip(self.children.iter())
             .map(|(onceasync, child)| {
                 println!("materialize child for partition {}", partition);
-                onceasync.once(|| materialize_child(child.clone(), context.clone(), partition))
+                onceasync.once(|| materialize_child(child.clone(), context.clone(), 0))
             })
             .collect();
-        if self.id == 1{
-            println!("msj execute on partition {}", partition);
-        }
+        // if self.id == 1{
+        //     println!("msj execute on partition {}", partition);
+        // }
         
         //start timer to measure time of guard stream execute
         let guard_time_start = std::time::Instant::now();

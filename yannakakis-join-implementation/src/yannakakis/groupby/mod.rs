@@ -231,7 +231,7 @@ impl GroupByWrapper for GroupBy {
         let collect_timer = metrics.semijoin_collect_time.timer();
 
         // Execute child node
-        let semijoin_stream = self.child.execute(partition, context)?;
+        let semijoin_stream = self.child.execute(0, context)?;
 
         // While collecting all batches from the semijoin stream:
         //      - Store all batches in a Vec

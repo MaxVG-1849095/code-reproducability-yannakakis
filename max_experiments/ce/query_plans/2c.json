@@ -18,6 +18,8 @@
                             ]
                         ]
                     ],
+                    "partitioned": true,
+                    "id": 0,
                     "guard": {
                         "name": "SEQUENTIALSCAN",
                         "execution_time": 0.048533,
@@ -39,9 +41,13 @@
                             "group_on": [
                                 0
                             ],
+                            "partitioned": true,
+                            "id": 0,
                             "child": {
                                 "name": "MULTISEMIJOIN",
                                 "equijoin_keys": [],
+                                "partitioned": true,
+                                "id": 1,
                                 "guard": {
                                     "name": "REPARTITION",
                                     "num_partitions": 4,
@@ -64,16 +70,10 @@
                                         }
                                     ]
                                 },
-                                "children": [],
-                                "partitioned": false,
-                                "id": 1
-                            },
-                            "partitioned": false,
-                            "id": 0
+                                "children": []
+                            }
                         }
-                    ],
-                    "partitioned": false,
-                    "id": 0
+                    ]
                 }
             }
         ],

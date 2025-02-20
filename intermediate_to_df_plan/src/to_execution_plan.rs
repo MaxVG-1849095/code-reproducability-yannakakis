@@ -557,9 +557,10 @@ impl ToPhysicalNode for intermediate_plan::RepartitionExecNode {
         let num_partitions = self.num_partitions;
         // let schema = input.schema();
 
-        let partitioning = Partitioning::RoundRobinBatch(num_partitions); //TODO: change to hash partitioning on join key, this way we can repartition correctly
+        let partitioning = Partitioning::RoundRobinBatch(num_partitions); 
 
-        // let partitioning = Partitioning::Hash(vec![], num_partitions);
+        // let column_expr = Arc::new(Column::new("id", 0));//TODO: change to hash partitioning on join key, this way we can repartition correctly
+        // let partitioning = Partitioning::Hash(vec![column_expr], num_partitions);
 
         let repartition = datafusion::physical_plan::repartition::RepartitionExec::try_new(
             input,

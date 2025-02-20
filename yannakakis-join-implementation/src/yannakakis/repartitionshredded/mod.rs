@@ -72,7 +72,7 @@ impl RepartitionMultiSemiJoin {
         context: Arc<TaskContext>,
     ) -> Result<SendableSemiJoinResultBatchStream, DataFusionError> {
         // println!("RepartitionMultiSemiJoin execute on partition {}", partition);
-        // println!("RepartitionMultiSemiJoin execute with id {} on partition {}", self.id(), partition);
+        println!("RepartitionMultiSemiJoin execute with id {} on partition {}", self.id(), partition);
 
         let guard_partitions = self.child.guard_partition_count();
 
@@ -82,7 +82,7 @@ impl RepartitionMultiSemiJoin {
             return Ok(child_stream);
         } else {
             //if there are multiple partitions, we need to combine the streams of the different partitions (or eventually repartition them into a specified amount)
-            let child_stream = self.child.execute(partition, context)?;
+            let child_stream = self.child.execute(partition, context)?; // ! had to change to 0 for now, should be partition
             // let mut child_streams = Vec::new();
             // for part in 0..guard_partitions {
             //     let child_stream = self.child.execute(part, context)?;
@@ -103,7 +103,7 @@ impl RepartitionMultiSemiJoin {
 //     //combine all guard_streams
 //     let mut guard_streams = Vec::new();
 //     for stream in streams {
-//         guard_streams.push(stream.guard_stream());
+//         guard_streams.push(*stream.guard_stream());
 //     }
 //     let guard_streams_combined = combine_streams(schema.clone(), guard_streams);
 //     let schema = mock_obj.schema();
@@ -238,7 +238,7 @@ impl GroupByWrapper for RepartitionGroupBy {
         partition: usize,
     ) -> Result<GroupedRelRef, DataFusionError> {
         println!("RepartitionGroupBy materialize on partition {}", partition);
-        self.child.materialize(context, partition).await
+        self.child.materialize(context, partition).await // ! had to change to 0 for now, should be partition
     }
 
     fn child(&self) -> &Arc<dyn MultiSemiJoinWrapper> {
