@@ -81,6 +81,7 @@ impl MultiSemiJoin {
         guard: Arc<dyn ExecutionPlan>,
         children: Vec<Arc<GroupByWrapperEnum>>,
         equijoin_keys: Vec<Vec<(usize, usize)>>,
+        id:usize,
     ) -> Self {
         // Check that children and equijoin_keys have the same length
         assert_eq!(
@@ -147,7 +148,7 @@ impl MultiSemiJoin {
             once_futs,
             partitioned: false,
             guard_partition_count: guard_partitions,
-            id: 0,
+            id: id,
         }
     }
 
@@ -364,16 +365,8 @@ impl MultiSemiJoinWrapper for MultiSemiJoin{
         self.partitioned
     }
 
-    fn set_partitioned(&mut self, partitioned: bool) {
-        self.partitioned = partitioned;
-    }
-
     fn id(&self) -> usize {
         self.id
-    }
-
-    fn set_id(&mut self, id: usize) {
-        self.id = id;
     }
 }
 
@@ -401,7 +394,7 @@ pub type SendableSemiJoinResultBatchStream = Pin<Box<MultiSemiJoinStream>>;
 /// A [`Stream`] of [SemiJoinResultBatch] that does the actual work
 pub struct MultiSemiJoinStream {
     schema: NestedSchemaRef,
-    guard_stream: SendableRecordBatchStream,
+    pub guard_stream: SendableRecordBatchStream,
     // materialized_children_fut: OnceFut<Vec<GroupedRelRef>>,
     materialized_children_futs: Vec<OnceFut<GroupedRelRef>>,
     semijoin_keys: Vec<Vec<usize>>,
@@ -818,7 +811,7 @@ mod tests {
 
     /// Groupby R(a,b,c) on `groupby_cols`
     fn example_child(group_columns: Vec<usize>) -> Result<Arc<GroupBy>, DataFusionError> {
-        let leaf = MultiSemiJoin::new(example_guard()?, vec![], vec![]); //TODO: fix this
+        let leaf = MultiSemiJoin::new(example_guard()?, vec![], vec![], 0); //TODO: fix this
         let groupby = GroupBy::new(Arc::new(leaf), group_columns);
         Ok(Arc::new(groupby))
     }
@@ -839,8 +832,8 @@ mod tests {
         let child_ab = GroupByWrapperEnum::Groupby(Arc::try_unwrap(example_child(vec![0, 1]).unwrap()).unwrap());
 
 
-        let _semijoin = MultiSemiJoin::new(guard.clone(), vec![child_a.into()], vec![vec![(0, 0)]]);
-        let _semijoin = MultiSemiJoin::new(guard.clone(), vec![child_ab.into()], vec![vec![(0, 0), (1, 1)]]);
+        let _semijoin = MultiSemiJoin::new(guard.clone(), vec![child_a.into()], vec![vec![(0, 0)]], 0);
+        let _semijoin = MultiSemiJoin::new(guard.clone(), vec![child_ab.into()], vec![vec![(0, 0), (1, 1)]], 0);
     }
 
     /// MultiSemiJoin::new with invalid equijoin keys.
@@ -856,7 +849,7 @@ mod tests {
         // let child = example_child(vec![0]).unwrap();
         let child = GroupByWrapperEnum::Groupby(Arc::try_unwrap(example_child(vec![0]).unwrap()).unwrap());
 
-        let _semijoin = MultiSemiJoin::new(guard, vec![child.into()], vec![vec![(1, 0)]]);
+        let _semijoin = MultiSemiJoin::new(guard, vec![child.into()], vec![vec![(1, 0)]], 0);
     }
 
     /// MultiSemiJoin::new with invalid equijoin keys.
@@ -872,7 +865,7 @@ mod tests {
         // let child = example_child(vec![0]).unwrap();
         let child = GroupByWrapperEnum::Groupby(Arc::try_unwrap(example_child(vec![0]).unwrap()).unwrap());
 
-        let _semijoin = MultiSemiJoin::new(guard, vec![child.into()], vec![vec![(0, 1)]]);
+        let _semijoin = MultiSemiJoin::new(guard, vec![child.into()], vec![vec![(0, 1)]], 0);
     }
 
     /// Test unary multisemijoin (leaf node)
@@ -882,7 +875,7 @@ mod tests {
         // Schema of guard: {a: u8, b: i8, c: u8}
         let guard = example_guard().unwrap();
 
-        let semijoin = MultiSemiJoin::new(guard, vec![], vec![]);
+        let semijoin = MultiSemiJoin::new(guard, vec![], vec![], 0);
         let result = semijoin.execute(0, Arc::new(TaskContext::default()))?;
 
         let batches = result
@@ -909,7 +902,7 @@ mod tests {
         // let child_a = example_child(vec![0])?;
         let child_a = GroupByWrapperEnum::Groupby(Arc::try_unwrap(example_child(vec![0]).unwrap()).unwrap());
 
-        let semijoin = MultiSemiJoin::new(guard.clone(), vec![child_a.into()], vec![vec![(0, 0)]]);
+        let semijoin = MultiSemiJoin::new(guard.clone(), vec![child_a.into()], vec![vec![(0, 0)]], 0);
         let result = semijoin.execute(0, Arc::new(TaskContext::default()))?;
 
         let batches = result
@@ -952,7 +945,7 @@ mod tests {
         // let child_a = example_child(vec![0, 1])?;
         let child_a = GroupByWrapperEnum::Groupby(Arc::try_unwrap(example_child(vec![0, 1]).unwrap()).unwrap());
 
-        let semijoin = MultiSemiJoin::new(guard.clone(), vec![child_a.into()], vec![vec![(0, 0), (1, 1)]]);
+        let semijoin = MultiSemiJoin::new(guard.clone(), vec![child_a.into()], vec![vec![(0, 0), (1, 1)]],0);
         let result = semijoin.execute(0, Arc::new(TaskContext::default()))?;
 
         let batches = result
@@ -1023,7 +1016,7 @@ mod tests {
         let batch = example_batch();
         let schema = batch.schema();
         let memoryexec = Arc::new(MemoryExec::try_new(&[vec![batch]], schema, None).unwrap());
-        let input: Arc<dyn MultiSemiJoinWrapper> = Arc::new(MultiSemiJoin::new(memoryexec.clone(), vec![], vec![]));
+        let input: Arc<dyn MultiSemiJoinWrapper> = Arc::new(MultiSemiJoin::new(memoryexec.clone(), vec![], vec![], 0));
 
         // GroupBy on columns "a", "b", "c", "d"
         let groupby = Arc::new(GroupBy::new(input, vec![0, 1, 2, 3]));
@@ -1032,6 +1025,7 @@ mod tests {
             memoryexec,
             vec![GroupByWrapperEnum::Groupby(Arc::try_unwrap(groupby).unwrap()).into()],
             vec![vec![(0, 0), (1, 1), (2, 2), (3, 3)]],
+            0,
         );
         let result = semijoin.execute(0, Arc::new(TaskContext::default()))?;
 
@@ -1080,7 +1074,7 @@ mod tests {
         // let child_a = example_child(vec![])?;
         let child_a = GroupByWrapperEnum::Groupby(Arc::try_unwrap(example_child(vec![]).unwrap()).unwrap());
 
-        let semijoin = MultiSemiJoin::new(guard.clone(), vec![child_a.into()], vec![vec![]]);
+        let semijoin = MultiSemiJoin::new(guard.clone(), vec![child_a.into()], vec![vec![]], 0);
         let result = semijoin.execute(0, Arc::new(TaskContext::default()))?;
 
         let batches = result

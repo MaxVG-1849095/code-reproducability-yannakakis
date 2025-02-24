@@ -650,7 +650,7 @@ mod tests {
         let batch = example_batch()?;
         let schema = batch.schema();
         let memoryexec = MemoryExec::try_new(&[vec![batch]], schema, None).unwrap();
-        Ok(MultiSemiJoin::new(Arc::new(memoryexec), vec![], vec![]))
+        Ok(MultiSemiJoin::new(Arc::new(memoryexec), vec![], vec![], 0))
     }
 
     /// Test groupby::new() with valid group_columns
@@ -827,7 +827,7 @@ mod tests {
         let batch =
             RecordBatch::try_new(schema.clone(), vec![Arc::new(a), Arc::new(b), Arc::new(c)])?;
         let memoryexec = MemoryExec::try_new(&[vec![batch.clone()]], schema, None)?;
-        let semijoin = MultiSemiJoin::new(Arc::new(memoryexec), vec![], vec![]);
+        let semijoin = MultiSemiJoin::new(Arc::new(memoryexec), vec![], vec![], 0);
 
         // GroupBy on column "a" (a=1 for all rows)
         let groupby = GroupBy::new(Arc::new(semijoin) as Arc<dyn MultiSemiJoinWrapper>, vec![0]);
@@ -951,7 +951,7 @@ mod tests {
         let schema = batches[0].schema();
 
         let memoryexec = MemoryExec::try_new(&[batches], schema, None)?;
-        let semijoin = MultiSemiJoin::new(Arc::new(memoryexec), vec![], vec![]);
+        let semijoin = MultiSemiJoin::new(Arc::new(memoryexec), vec![], vec![], 0);
 
         // GroupBy on column "a" (a=1 for all rows)
         let groupby = GroupBy::new(Arc::new(semijoin) as Arc<dyn MultiSemiJoinWrapper>, vec![0]);
