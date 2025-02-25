@@ -1,5 +1,6 @@
 // Implementation of the repartitionexec operator for shredded records, implemented to partition data calculated via multisemijoin
 
+use std::task::{Context, Poll};
 use std::{pin::Pin, sync::Arc};
 
 use datafusion::execution::memory_pool::MemoryReservation;
@@ -11,9 +12,14 @@ use datafusion::{
         ExecutionPlan,
     },
 };
-use futures::{StreamExt, TryStreamExt};
+use futures::stream::TryFlatten;
+use futures::{FutureExt, Stream, StreamExt, TryStreamExt};
+use rand::prelude::Distribution;
+
+use crate::yannakakis::multisemijoin::MultiSemiJoinStreamAdapter;
 
 use super::data::SemiJoinResultBatch;
+use super::multisemijoin::MultiSemiJoinBatchStream;
 use super::{
     data::{GroupedRelRef, NestedBatch, NestedSchemaRef},
     groupby::GroupBy,
@@ -55,6 +61,7 @@ struct RepartitionExecState {
 
 impl RepartitionExecState {
     fn new(input: Arc<dyn ExecutionPlan>, context: Arc<TaskContext>) -> Self {
+        eprintln!("RepartitionExecState new");
         let num_input_partitions = input.output_partitioning().partition_count();
         let (input_channels, output_channels) = {
             //only the preserve_order = false route has been implemented for now
@@ -89,11 +96,13 @@ impl RepartitionExecState {
         // goal is to launch 1 task per input partition, these tasks gather input via a helper function and send it to the output channel
         // each task has its own waiter, which is used to wait for the task to finish
         let mut spawned_tasks = Vec::with_capacity(num_input_partitions);
+        eprintln!("{}", num_input_partitions);
         for i in 0..num_input_partitions {
             let spawned_task = SpawnedTask::spawn(async move {
-                println!("SpawnedTask {}", i);
+                eprintln!("SpawnedTask {}", i);
             });
             spawned_tasks.push(spawned_task);
+
         }
 
         Self {
@@ -134,7 +143,8 @@ impl RepartitionExecState {
                 let size = batch.get_array_memory_size();
                 reservation.lock().try_grow(size)?;
 
-                if input_channel.send(Some(Ok(batch))).await.is_err() { //if send is unsuccessful, shrink
+                if input_channel.send(Some(Ok(batch))).await.is_err() {
+                    //if send is unsuccessful, shrink
                     reservation.lock().shrink(size);
                 }
             }
@@ -213,31 +223,78 @@ impl RepartitionMultiSemiJoin {
     }
 
     // execute function for repartitionexec operator, it is supposed to execute the child operator(s) and repartition the data it receives
-    pub fn execute(
+    pub fn execute_impl(
         &self,
         partition: usize,
         context: Arc<TaskContext>,
     ) -> Result<SendableSemiJoinResultBatchStream, DataFusionError> {
         let rep_state = Arc::clone(&self.state);
         let schema = self.child.schema().clone();
-
+        let input = Arc::clone(&self.guard());
+        let guard_clone = self.child.guard().clone();
         let contextclone = context.clone();
-        // println!("RepartitionMultiSemiJoin execute on partition {}", partition);
-        // println!(
-        //     "RepartitionMultiSemiJoin execute with id {} on partition {}",
-        //     self.id(),
-        //     partition
-        // );
 
         println!("repartitionmsj execute");
 
+        let stream = futures::stream::once(async move {
+            let num_input_partitions = input.output_partitioning().partition_count();    
+            //this is where the stream object to be returned should be created
+            let state = rep_state
+                .get_or_init(|| async move {
+                    //create or initialize the state object
+                    Mutex::new(RepartitionExecState::new(
+                        guard_clone,
+                        contextclone,
+                    ))
+                })
+                .await;
+            
+            // let state = state.lock();
+            //test block
+            println!("repartitionmsj test block");
+
+            let(mut output_channel, reservation, abort_helper) = {
+                let mut state = state.lock();
+
+                let(_input_channel, output_channel, reservation) = state
+                .channels
+                .remove(&partition)
+                .expect("partition not used yet");
+
+            (output_channel, reservation, state.abort_helper.clone())
+            };
+            Ok::<Pin<Box<dyn MultiSemiJoinBatchStream + Send>>, DataFusionError>(Box::pin(MsjRepartitionStream {
+                num_input_partitions,
+                num_input_partitions_processed: 0,
+                input: output_channel.swap_remove(0),
+                schema,
+                reservation,
+            }) as SendableSemiJoinResultBatchStream)
+            
+        })
+        .try_flatten();
+        // Ok(Box::pin(stream))
+
+        let stream = MultiSemiJoinStreamAdapter::new(self.child.schema().clone(), stream);
+
+        Ok(Box::pin(stream))
+
+        // let child_stream = self.child.execute(partition, context)?;
+        // return Ok(child_stream);
+        // }
+    }
+
+    pub fn statetest(&self, context: Arc<TaskContext>) -> futures::stream::Once<impl std::future::Future<Output = String>> {
+        let rep_state = Arc::clone(&self.state);
+        let contextclone = context.clone();
+        let childguard = self.child.guard().clone();
         let stream = futures::stream::once(async move {
             //this is where the stream object to be returned should be created
             let state = rep_state
                 .get_or_init(|| async move {
                     //create or initialize the state object
                     Mutex::new(RepartitionExecState::new(
-                        self.child.guard().clone(),
+                        childguard,
                         contextclone,
                     ))
                 })
@@ -245,18 +302,15 @@ impl RepartitionMultiSemiJoin {
 
             let state = state.lock();
 
-            println!("repartitionmsj test block");
-            println!("{}", state.debugTester);
+            eprintln!("repartitionmsj test block");
+            eprintln!("{}", state.debugTester);
 
             // let child_stream = self.child.execute(partition, contextclone)?;
             // child_stream
-            true
+            state.debugTester.clone()
         });
-        // Ok(Box::pin(stream))
 
-            let child_stream = self.child.execute(partition, context)?;
-            return Ok(child_stream);
-        // }
+        stream
     }
 }
 
@@ -267,7 +321,7 @@ impl MultiSemiJoinWrapper for RepartitionMultiSemiJoin {
         context: Arc<TaskContext>,
     ) -> Result<SendableSemiJoinResultBatchStream, DataFusionError> {
         // println!("RepartitionMultiSemiJoin execute");
-        self.execute(partition, context)
+        self.execute_impl(partition, context)
     }
 
     fn schema(&self) -> &NestedSchemaRef {
@@ -299,6 +353,68 @@ impl MultiSemiJoinWrapper for RepartitionMultiSemiJoin {
 
     fn id(&self) -> usize {
         self.child.id()
+    }
+}
+
+struct MsjRepartitionStream {
+    //total number of input partitions that will be sending batches to this output channel
+    num_input_partitions: usize,
+
+    //channels that have finished sending to this output channel
+    num_input_partitions_processed: usize,
+
+    //input channel for each partition
+    input: DistributionReceiver<MaybeNestedBatch>,
+
+    //schema
+    schema: NestedSchemaRef,
+
+    reservation: SharedMemoryReservation,
+}
+
+impl Stream for MsjRepartitionStream {
+    type Item = Result<SemiJoinResultBatch, DataFusionError>;
+
+
+    //poll next function taken from repartition stream
+    fn poll_next(mut self: Pin<&mut Self>, 
+        cx: &mut Context) -> Poll<Option<Self::Item>> {
+            loop {
+                match self.input.recv().poll_unpin(cx) { //look at state for poll_unpin
+                    Poll::Ready(Some(Some(v))) => { //if resultbatch gotten
+                        if let Ok(batch) = &v {
+                            self.reservation
+                                .lock()
+                                .shrink(batch.get_array_memory_size());
+                        }
+    
+                        return Poll::Ready(Some(v));
+                    }
+                    Poll::Ready(Some(None)) => { //if no resultbatch is none
+                        self.num_input_partitions_processed += 1;
+    
+                        if self.num_input_partitions == self.num_input_partitions_processed {
+                            // all input partitions have finished sending batches
+                            return Poll::Ready(None);
+                        } else {
+                            // other partitions still have data to send
+                            continue;
+                        }
+                    }
+                    Poll::Ready(None) => { //if no result
+                        return Poll::Ready(None);
+                    }
+                    Poll::Pending => { //if pending
+                        return Poll::Pending;
+                    }
+                }
+            }
+    }
+}
+
+impl MultiSemiJoinBatchStream for MsjRepartitionStream {
+    fn schema(&self) -> &NestedSchemaRef {
+        &self.schema
     }
 }
 
@@ -551,4 +667,24 @@ mod tests {
 
     //     Ok(())
     // }
+
+
+    #[tokio::test]
+    async fn test_state_creation() -> Result<(), Box<dyn Error>> {
+        let guard = example_guard().unwrap();
+        let repartition = RepartitionMultiSemiJoin::new(guard, vec![], vec![], 0);
+
+        let context = Arc::new(TaskContext::default());
+
+        let state = repartition.statetest(context);
+
+        let word: Vec<String> = state.collect().await;
+
+        // let state = state.lock();
+
+        assert_eq!(word[0], "Test");
+
+
+        Ok(())
+    }
 }
