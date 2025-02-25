@@ -60,9 +60,9 @@ struct RepartitionExecState {
 }
 
 impl RepartitionExecState {
-    fn new(input: Arc<dyn ExecutionPlan>, context: Arc<TaskContext>) -> Self {
+    fn new(input: Arc<MultiSemiJoin>, context: Arc<TaskContext>) -> Self {
         eprintln!("RepartitionExecState new");
-        let num_input_partitions = input.output_partitioning().partition_count();
+        let num_input_partitions = input.guard_partition_count();
         let (input_channels, output_channels) = {
             //only the preserve_order = false route has been implemented for now
             let (input_channels, output_channels) = channels(num_input_partitions);
@@ -98,59 +98,26 @@ impl RepartitionExecState {
         let mut spawned_tasks = Vec::with_capacity(num_input_partitions);
         eprintln!("{}", num_input_partitions);
         for i in 0..num_input_partitions {
-            let spawned_task = SpawnedTask::spawn(async move {
-                eprintln!("SpawnedTask {}", i);
-            });
-            spawned_tasks.push(spawned_task);
+            let input_task = SpawnedTask::spawn(RepartitionMultiSemiJoin::pull_from_input(
+                Arc::clone(&input),
+                i,
+                channels.clone(),
+                Arc::clone(&context),
+            ));
 
+            let wait_for_task = SpawnedTask::spawn(RepartitionMultiSemiJoin::wait_for_task(input_task));
+            spawned_tasks.push(wait_for_task);
         }
 
         Self {
             channels: channels,
             debugTester: "Test".to_string(),
-            abort_helper: Arc::new(Vec::new()),
+            abort_helper: Arc::new(spawned_tasks),
         }
     }
 
     pub fn debug_tester() {
         println!("RepartitionExecState debugTester");
-    }
-
-    //pull data from the input, feeding it to the output channels
-    async fn pull_from_input(
-        input: Arc<MultiSemiJoin>,
-        partition: usize,
-        mut output_channnels: HashMap<
-            usize,
-            (
-                DistributionSender<MaybeNestedBatch>,
-                SharedMemoryReservation,
-            ),
-        >,
-        context: Arc<TaskContext>,
-    ) -> Result<(), DataFusionError> {
-        let mut input_stream = input.execute(partition, context)?;
-
-        loop {
-            let batch = input_stream.next().await; //as long as there is a next in the input stream
-            let batch = match batch {
-                //if it is a batch, proceed otherwise break
-                Some(batch) => batch?,
-                None => break,
-            };
-
-            if let Some((input_channel, reservation)) = output_channnels.get_mut(&partition) {
-                let size = batch.get_array_memory_size();
-                reservation.lock().try_grow(size)?;
-
-                if input_channel.send(Some(Ok(batch))).await.is_err() {
-                    //if send is unsuccessful, shrink
-                    reservation.lock().shrink(size);
-                }
-            }
-        }
-
-        Ok(()) //success
     }
 }
 
@@ -228,11 +195,13 @@ impl RepartitionMultiSemiJoin {
         partition: usize,
         context: Arc<TaskContext>,
     ) -> Result<SendableSemiJoinResultBatchStream, DataFusionError> {
+        //clone all necessary variables to be used in the async block
         let rep_state = Arc::clone(&self.state);
         let schema = self.child.schema().clone();
         let input = Arc::clone(&self.guard());
         let guard_clone = self.child.guard().clone();
         let contextclone = context.clone();
+        let child = Arc::clone(&self.child);
 
         println!("repartitionmsj execute");
 
@@ -243,7 +212,7 @@ impl RepartitionMultiSemiJoin {
                 .get_or_init(|| async move {
                     //create or initialize the state object
                     Mutex::new(RepartitionExecState::new(
-                        guard_clone,
+                        child,
                         contextclone,
                     ))
                 })
@@ -288,13 +257,14 @@ impl RepartitionMultiSemiJoin {
         let rep_state = Arc::clone(&self.state);
         let contextclone = context.clone();
         let childguard = self.child.guard().clone();
+        let child = Arc::clone(&self.child);
         let stream = futures::stream::once(async move {
             //this is where the stream object to be returned should be created
             let state = rep_state
                 .get_or_init(|| async move {
                     //create or initialize the state object
                     Mutex::new(RepartitionExecState::new(
-                        childguard,
+                        child,
                         contextclone,
                     ))
                 })
@@ -311,6 +281,51 @@ impl RepartitionMultiSemiJoin {
         });
 
         stream
+    }
+
+    //function to pull data from an input plan and feed it to output channels
+    //pull data from the input, feeding it to the output channels
+    async fn pull_from_input(
+        input: Arc<MultiSemiJoin>,
+        partition: usize,
+        mut output_channnels: HashMap<
+            usize,
+            (
+                DistributionSender<MaybeNestedBatch>,
+                SharedMemoryReservation,
+            ),
+        >,
+        context: Arc<TaskContext>,
+    ) -> Result<(), DataFusionError> {
+        let mut input_stream = input.execute(partition, context)?;
+
+        loop {
+            let batch = input_stream.next().await; //as long as there is a next in the input stream
+            let batch = match batch {
+                //if it is a batch, proceed otherwise break
+                Some(batch) => batch?,
+                None => break,
+            };
+
+            if let Some((input_channel, reservation)) = output_channnels.get_mut(&partition) {
+                let size = batch.get_array_memory_size();
+                reservation.lock().try_grow(size)?;
+
+                if input_channel.send(Some(Ok(batch))).await.is_err() {
+                    //if send is unsuccessful, shrink
+                    reservation.lock().shrink(size);
+                }
+            }
+        }
+
+        Ok(()) //success
+    }
+
+    //function to wait for a given input task
+    async fn wait_for_task(
+        input_task: SpawnedTask<Result<(), DataFusionError>>,
+    ){
+        input_task.join().await;
     }
 }
 
