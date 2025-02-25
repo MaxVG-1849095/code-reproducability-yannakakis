@@ -2,17 +2,150 @@
 
 use std::{pin::Pin, sync::Arc};
 
-use datafusion::{error::DataFusionError, execution::{ RecordBatchStream, TaskContext}, physical_plan::{metrics::MetricsSet, stream::RecordBatchStreamAdapter, ExecutionPlan}
+use datafusion::execution::memory_pool::MemoryReservation;
+use datafusion::{
+    error::DataFusionError,
+    execution::{memory_pool::MemoryConsumer, RecordBatchStream, TaskContext},
+    physical_plan::{
+        metrics::MetricsSet, repartition::RepartitionExec, stream::RecordBatchStreamAdapter,
+        ExecutionPlan,
+    },
 };
+use futures::{StreamExt, TryStreamExt};
+
+use super::data::SemiJoinResultBatch;
 use super::{
-    data::{GroupedRelRef, NestedSchemaRef},
+    data::{GroupedRelRef, NestedBatch, NestedSchemaRef},
     groupby::GroupBy,
     multisemijoin::{MultiSemiJoin, SendableSemiJoinResultBatchStream},
 };
-
+use distributor_channels::{channels, DistributionReceiver, DistributionSender};
+use hashbrown::HashMap;
+use parking_lot::Mutex;
+use spawned_task::SpawnedTask;
 // // use datafusion::physical_plan::Partitioning;
 
 use std::fmt::Debug;
+
+mod distributor_channels;
+mod spawned_task;
+
+type MaybeNestedBatch = Option<Result<SemiJoinResultBatch, DataFusionError>>;
+type InputPartitionsToCurentPartitionSender = Vec<DistributionSender<MaybeNestedBatch>>;
+type InputPartitionsToCurrentPartitionReceiver = Vec<DistributionReceiver<MaybeNestedBatch>>;
+type SharedMemoryReservation = Arc<Mutex<MemoryReservation>>;
+
+//state of repartition to store channels for each partition, alongside the abort helper
+#[derive(Debug)]
+struct RepartitionExecState {
+    //channel for sending batches from input to output, key = partition number, value are channels
+    channels: HashMap<
+        usize,
+        (
+            InputPartitionsToCurentPartitionSender,
+            InputPartitionsToCurrentPartitionReceiver,
+            SharedMemoryReservation,
+        ),
+    >,
+
+    debugTester: String,
+
+    abort_helper: Arc<Vec<SpawnedTask<()>>>,
+}
+
+impl RepartitionExecState {
+    fn new(input: Arc<dyn ExecutionPlan>, context: Arc<TaskContext>) -> Self {
+        let num_input_partitions = input.output_partitioning().partition_count();
+        let (input_channels, output_channels) = {
+            //only the preserve_order = false route has been implemented for now
+            let (input_channels, output_channels) = channels(num_input_partitions);
+            let input_channels = input_channels
+                .into_iter()
+                .map(|item| vec![item; num_input_partitions])
+                .collect::<Vec<_>>(); //turn into 2D vector
+            let output_channels = output_channels
+                .into_iter()
+                .map(|item| vec![item])
+                .collect::<Vec<_>>(); //turn into 2D vector
+
+            (input_channels, output_channels)
+        };
+
+        let mut channels = HashMap::with_capacity(input_channels.len()); // init hashmap with amount of partitions
+        for (partition, (input_channel, output_channel)) in
+            input_channels.into_iter().zip(output_channels).enumerate()
+        {
+            let reservation = Arc::new(Mutex::new(
+                MemoryConsumer::new(format!("{}[{partition}]", "RepartitionExec"))
+                    .register(context.memory_pool()),
+            ));
+            channels.insert(partition, (input_channel, output_channel, reservation));
+        }
+
+        //TODO: add metrics
+
+        //TODO: add spawned_tasks
+
+        // goal is to launch 1 task per input partition, these tasks gather input via a helper function and send it to the output channel
+        // each task has its own waiter, which is used to wait for the task to finish
+        let mut spawned_tasks = Vec::with_capacity(num_input_partitions);
+        for i in 0..num_input_partitions {
+            let spawned_task = SpawnedTask::spawn(async move {
+                println!("SpawnedTask {}", i);
+            });
+            spawned_tasks.push(spawned_task);
+        }
+
+        Self {
+            channels: channels,
+            debugTester: "Test".to_string(),
+            abort_helper: Arc::new(Vec::new()),
+        }
+    }
+
+    pub fn debug_tester() {
+        println!("RepartitionExecState debugTester");
+    }
+
+    //pull data from the input, feeding it to the output channels
+    async fn pull_from_input(
+        input: Arc<MultiSemiJoin>,
+        partition: usize,
+        mut output_channnels: HashMap<
+            usize,
+            (
+                DistributionSender<MaybeNestedBatch>,
+                SharedMemoryReservation,
+            ),
+        >,
+        context: Arc<TaskContext>,
+    ) -> Result<(), DataFusionError> {
+        let mut input_stream = input.execute(partition, context)?;
+
+        loop {
+            let batch = input_stream.next().await; //as long as there is a next in the input stream
+            let batch = match batch {
+                //if it is a batch, proceed otherwise break
+                Some(batch) => batch?,
+                None => break,
+            };
+
+            if let Some((input_channel, reservation)) = output_channnels.get_mut(&partition) {
+                let size = batch.get_array_memory_size();
+                reservation.lock().try_grow(size)?;
+
+                if input_channel.send(Some(Ok(batch))).await.is_err() { //if send is unsuccessful, shrink
+                    reservation.lock().shrink(size);
+                }
+            }
+        }
+
+        Ok(()) //success
+    }
+}
+
+type LazyRepState = Arc<tokio::sync::OnceCell<Mutex<RepartitionExecState>>>; // oncecell to make sure we only initialize once, mutex to make sure we can (correctly) access it from multiple threads
+
 pub trait MultiSemiJoinWrapper: Debug + Send + Sync {
     fn schema(&self) -> &NestedSchemaRef;
     fn execute(
@@ -32,6 +165,8 @@ pub trait MultiSemiJoinWrapper: Debug + Send + Sync {
 //repartitionexec operator to be placed on top of a multisemijoin
 #[derive(Debug)]
 pub struct RepartitionMultiSemiJoin {
+    //state for te repartitionexec operator, containing the channels for each partition and the abort helper
+    state: LazyRepState,
     //child operator to be repartitioned, to be converted to a vector of multisemijoin operators
     child: Arc<MultiSemiJoin>,
     //amount of input partitions
@@ -42,7 +177,7 @@ pub struct RepartitionMultiSemiJoin {
 }
 
 impl RepartitionMultiSemiJoin {
-    //create new repartitionexec operator, also creating the necessary multisemijoin operator(s)
+    //create new repartitionexec operator, also creating the necessary multisemijoin operator
     pub fn new(
         guard: Arc<dyn ExecutionPlan>,
         children: Vec<Arc<GroupByWrapperEnum>>,
@@ -52,9 +187,25 @@ impl RepartitionMultiSemiJoin {
         // println!("RepartitionMultiSemiJoin new");
         let guardpartitions = guard.output_partitioning().partition_count();
         Self {
+            state: Default::default(),
             child: Arc::new(MultiSemiJoin::new(guard, children, equijoin_keys, id)),
             partitions: guardpartitions,
         }
+    }
+
+    //try to make new repartitionexec
+    pub fn try_new(
+        guard: Arc<dyn ExecutionPlan>,
+        children: Vec<Arc<GroupByWrapperEnum>>,
+        equijoin_keys: Vec<Vec<(usize, usize)>>,
+        id: usize,
+    ) -> Result<Self, DataFusionError> {
+        let guardpartitions = guard.output_partitioning().partition_count();
+        Ok(Self {
+            state: Default::default(), //for now, just add a default value, it will be created later on in the execute function (get_or_init)
+            child: Arc::new(MultiSemiJoin::new(guard, children, equijoin_keys, id)),
+            partitions: guardpartitions,
+        })
     }
 
     pub fn child(&self) -> &Arc<MultiSemiJoin> {
@@ -67,24 +218,47 @@ impl RepartitionMultiSemiJoin {
         partition: usize,
         context: Arc<TaskContext>,
     ) -> Result<SendableSemiJoinResultBatchStream, DataFusionError> {
+        let rep_state = Arc::clone(&self.state);
+        let schema = self.child.schema().clone();
+
+        let contextclone = context.clone();
         // println!("RepartitionMultiSemiJoin execute on partition {}", partition);
-        println!("RepartitionMultiSemiJoin execute with id {} on partition {}", self.id(), partition);
+        // println!(
+        //     "RepartitionMultiSemiJoin execute with id {} on partition {}",
+        //     self.id(),
+        //     partition
+        // );
 
-        let guard_partitions = self.child.guard_partition_count();
+        println!("repartitionmsj execute");
 
-        if guard_partitions == 1 {
-            //if there is only one partition, no need to do anything special
+        let stream = futures::stream::once(async move {
+            //this is where the stream object to be returned should be created
+            let state = rep_state
+                .get_or_init(|| async move {
+                    //create or initialize the state object
+                    Mutex::new(RepartitionExecState::new(
+                        self.child.guard().clone(),
+                        contextclone,
+                    ))
+                })
+                .await;
+
+            let state = state.lock();
+
+            println!("repartitionmsj test block");
+            println!("{}", state.debugTester);
+
+            // let child_stream = self.child.execute(partition, contextclone)?;
+            // child_stream
+            true
+        });
+        // Ok(Box::pin(stream))
+
             let child_stream = self.child.execute(partition, context)?;
             return Ok(child_stream);
-        } else {
-            //if there are multiple partitions, we need to combine the streams of the different partitions (or eventually repartition them into a specified amount)
-            let child_stream = self.child.execute(partition, context)?;
-            return Ok(child_stream);
-        }
+        // }
     }
-
 }
-
 
 impl MultiSemiJoinWrapper for RepartitionMultiSemiJoin {
     fn execute(
@@ -182,7 +356,7 @@ impl GroupByWrapper for RepartitionGroupBy {
         partition: usize,
     ) -> Result<GroupedRelRef, DataFusionError> {
         println!("RepartitionGroupBy materialize on partition {}", partition);
-        self.child.materialize(context, partition).await 
+        self.child.materialize(context, partition).await
     }
 
     fn child(&self) -> &Arc<dyn MultiSemiJoinWrapper> {

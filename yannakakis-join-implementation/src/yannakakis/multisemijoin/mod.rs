@@ -5,6 +5,7 @@ use std::sync::Arc;
 use std::task::Poll;
 
 use datafusion::arrow::datatypes::Schema;
+use datafusion::catalog::schema;
 use datafusion::execution::RecordBatchStream;
 use datafusion::physical_plan::metrics::MetricsSet;
 use datafusion::physical_plan::stream::RecordBatchStreamAdapter;
@@ -20,6 +21,7 @@ use datafusion::execution::SendableRecordBatchStream;
 use datafusion::execution::TaskContext;
 use datafusion::physical_plan::metrics::ExecutionPlanMetricsSet;
 use datafusion::physical_plan::ExecutionPlan;
+use pin_project_lite::pin_project;
 
 use crate::yannakakis::util::write_metrics_as_json;
 
@@ -34,8 +36,8 @@ use super::data::SemiJoinResultBatch;
 // use super::groupby::GroupBy;
 use super::kernel::take_nested_column_inplace;
 use super::repartitionshredded::GroupByWrapper;
-use super::repartitionshredded::MultiSemiJoinWrapper;
 use super::repartitionshredded::GroupByWrapperEnum;
+use super::repartitionshredded::MultiSemiJoinWrapper;
 use super::sel::Sel;
 use super::util::once_async::OnceAsync;
 use super::util::once_async::OnceFut;
@@ -81,7 +83,7 @@ impl MultiSemiJoin {
         guard: Arc<dyn ExecutionPlan>,
         children: Vec<Arc<GroupByWrapperEnum>>,
         equijoin_keys: Vec<Vec<(usize, usize)>>,
-        id:usize,
+        id: usize,
     ) -> Self {
         // Check that children and equijoin_keys have the same length
         assert_eq!(
@@ -152,76 +154,14 @@ impl MultiSemiJoin {
         }
     }
 
-    // pub fn execute(
-    //     &self,
-    //     partition: usize,
-    //     context: Arc<TaskContext>,
-    // ) -> Result<SendableSemiJoinResultBatchStream, DataFusionError> {
-    //     async fn materialize_child(
-    //         child: Arc<GroupBy>,
-    //         context: Arc<TaskContext>,
-    //     ) -> Result<GroupedRelRef, DataFusionError> {
-    //         child.materialize(context).await
-    //     }
-
-    //     let materialized_children_futs = self
-    //         .once_futs
-    //         .iter()
-    //         .zip(self.children.iter())
-    //         .map(|(onceasync, child)| {
-    //             onceasync.once(|| materialize_child(child.clone(), context.clone()))
-    //         })
-    //         .collect();
-        
-    //     //start timer to measure time of guard stream execute
-    //     let guard_time_start = std::time::Instant::now();
-        
-    //     let guard_stream : Pin<Box<dyn RecordBatchStream + Send>>;
-    //     //remake guard stream depending on partitioned, this can be used to only calculate values of partitions that are attributed to this msj
-    //     //for now there is only 1 msj for all partitions so we need to calculate all partitions
-    //     if self.partitioned {
-    //         let mut streams   = Vec::new();
-    //         println!("Partitioned MultiSemiJoin with {} partitions", self.guard.output_partitioning().partition_count());
-    //         for i in 0..self.guard.output_partitioning().partition_count(){
-    //             streams.push(self.guard.execute(i, context.clone())?);
-    //         }
-
-    //         guard_stream = combine_streams(self.guard.schema(), streams);
-    //     }
-    //     else{
-    //         guard_stream = self.guard.execute(partition, context)?;
-    //     }
-
-    //     let guard_time = guard_time_start.elapsed();
-    //     println!("node {} guard_time: {}", self.id,guard_time.as_nanos());
-
-
-    //     let schema = self.schema.clone();
-    //     let semijoin_keys = self.semijoin_keys.clone();
-    //     let semijoin_metrics = SemiJoinMetrics::new(partition, &self.metrics);
-    //     let hashes_buffer = Vec::new();
-
-    //     Ok(Box::pin(MultiSemiJoinStream {
-    //         schema,
-    //         guard_stream,
-    //         materialized_children_futs,
-    //         semijoin_keys,
-    //         semijoin_metrics,
-    //         hashes_buffer,
-    //         guard_batch_cache: None,
-    //     }))
-    // }
-
     /// The output schema of the [NestedRel] produced by this [MultiSemiJoin]
     pub fn schema(&self) -> &NestedSchemaRef {
         &self.schema
     }
 
-    
     pub fn children(&self) -> &[Arc<GroupByWrapperEnum>] {
         &self.children
     }
-    
 
     pub fn semijoin_keys(&self) -> &Vec<Vec<usize>> {
         &self.semijoin_keys
@@ -236,8 +176,7 @@ impl MultiSemiJoin {
     }
 }
 
-
-impl MultiSemiJoinWrapper for MultiSemiJoin{
+impl MultiSemiJoinWrapper for MultiSemiJoin {
     /// When it executes, a multisemijoin will return a stream of [MultiSemiJoinResultBatch]s.
     fn execute(
         &self,
@@ -252,25 +191,25 @@ impl MultiSemiJoinWrapper for MultiSemiJoin{
             child.materialize(context, partition).await
         }
 
-        println!("msj with id {} execute on partition {}", self.id, partition);
+        // println!("msj with id {} execute on partition {}", self.id, partition);
 
         let materialized_children_futs = self
             .once_futs
             .iter()
             .zip(self.children.iter())
             .map(|(onceasync, child)| {
-                println!("materialize child for partition {}", partition);
+                // println!("materialize child for partition {}", partition);
                 onceasync.once(|| materialize_child(child.clone(), context.clone(), 0))
             })
             .collect();
         // if self.id == 1{
         //     println!("msj execute on partition {}", partition);
         // }
-        
+
         //start timer to measure time of guard stream execute
         let guard_time_start = std::time::Instant::now();
-        
-        let guard_stream : Pin<Box<dyn RecordBatchStream + Send>>;
+
+        let guard_stream: Pin<Box<dyn RecordBatchStream + Send>>;
         //remake guard stream depending on partitioned, this can be used to only calculate values of partitions that are attributed to this msj
         //for now there is only 1 msj for all partitions so we need to calculate all partitions
         // if self.partitioned {
@@ -288,8 +227,7 @@ impl MultiSemiJoinWrapper for MultiSemiJoin{
         guard_stream = self.guard.execute(partition, context)?;
 
         let guard_time = guard_time_start.elapsed();
-        println!("node {} guard_time: {}", self.id,guard_time.as_nanos());
-
+        // println!("node {} guard_time: {}", self.id,guard_time.as_nanos());
 
         let schema = self.schema.clone();
         let semijoin_keys = self.semijoin_keys.clone();
@@ -306,11 +244,11 @@ impl MultiSemiJoinWrapper for MultiSemiJoin{
             guard_batch_cache: None,
         }))
     }
-    
+
     fn schema(&self) -> &NestedSchemaRef {
         &self.schema
     }
-    
+
     /// Get a JSON representation of the MultiSemiJoin node and all its descendants ([MultiSemiJoin] & [GroupBy]), including their metrics.
     /// The JSON representation is a string, without newlines, and is appended to `output`.
     fn as_json(&self, output: &mut String) -> Result<(), std::fmt::Error> {
@@ -334,7 +272,7 @@ impl MultiSemiJoinWrapper for MultiSemiJoin{
 
         Ok(())
     }
-    
+
     /// Collect metrics from this MultiSemiJoin node and all its descendants as a pretty-printed string.
     /// The string is appended to `output_buffer` with an indentation of `indent` spaces.
     fn collect_metrics(&self, output_buffer: &mut String, indent: usize) {
@@ -370,15 +308,16 @@ impl MultiSemiJoinWrapper for MultiSemiJoin{
     }
 }
 
-
 //function to combine an array of recordbatchstreams into one
-fn combine_streams(schema: Arc<datafusion::arrow::datatypes::Schema>, streams: Vec<Pin<Box<dyn RecordBatchStream + Send>>>) -> Pin<Box<dyn RecordBatchStream + Send>> {
+fn combine_streams(
+    schema: Arc<datafusion::arrow::datatypes::Schema>,
+    streams: Vec<Pin<Box<dyn RecordBatchStream + Send>>>,
+) -> Pin<Box<dyn RecordBatchStream + Send>> {
     //combine all streams (becomes selectall object so no recordbatch)
-    let streams_combined = futures::stream::select_all(streams); 
+    let streams_combined = futures::stream::select_all(streams);
     //turn it into a recordbatchstream and return
-    Box::pin(RecordBatchStreamAdapter::new(schema, streams_combined)) 
+    Box::pin(RecordBatchStreamAdapter::new(schema, streams_combined))
 }
-
 
 async fn collect_guard_stream(
     guard: Arc<dyn ExecutionPlan>,
@@ -388,8 +327,9 @@ async fn collect_guard_stream(
     guard.execute(partition, context)
 }
 
-pub type SendableSemiJoinResultBatchStream = Pin<Box<MultiSemiJoinStream>>;
 
+
+// pub type SendableSemiJoinResultBatchStream = Pin<Box<MultiSemiJoinStream>>;
 
 /// A [`Stream`] of [SemiJoinResultBatch] that does the actual work
 pub struct MultiSemiJoinStream {
@@ -412,7 +352,7 @@ pub struct MultiSemiJoinStream {
     guard_batch_cache: Option<RecordBatch>,
 }
 
-impl MultiSemiJoinStream{
+impl MultiSemiJoinStream {
     pub fn new(
         schema: NestedSchemaRef,
         guard_stream: SendableRecordBatchStream,
@@ -436,7 +376,12 @@ impl MultiSemiJoinStream{
     pub fn example_from_self(&self) -> Self {
         MultiSemiJoinStream {
             schema: self.schema.clone(),
-            guard_stream: Box::pin(RecordBatchStreamAdapter::new(Arc::new(Schema::new(Vec::<datafusion::arrow::datatypes::Field>::new())), futures::stream::empty())),
+            guard_stream: Box::pin(RecordBatchStreamAdapter::new(
+                Arc::new(Schema::new(
+                    Vec::<datafusion::arrow::datatypes::Field>::new(),
+                )),
+                futures::stream::empty(),
+            )),
             materialized_children_futs: self.materialized_children_futs.clone(),
             semijoin_keys: self.semijoin_keys.clone(),
             semijoin_metrics: self.semijoin_metrics.clone(),
@@ -445,9 +390,9 @@ impl MultiSemiJoinStream{
         }
     }
 
-    pub fn schema(&self) -> &NestedSchemaRef {
-        &self.schema
-    }
+    // pub fn schema(&self) -> &NestedSchemaRef {
+    //     &self.schema
+    // }
 
     pub fn guard_stream(&self) -> &SendableRecordBatchStream {
         &self.guard_stream
@@ -484,6 +429,14 @@ impl Stream for MultiSemiJoinStream {
         self.poll_next_impl(cx)
     }
 }
+
+impl MultiSemiJoinBatchStream for MultiSemiJoinStream {
+    fn schema(&self) -> &NestedSchemaRef {
+        &self.schema
+    }
+}
+
+
 
 /// poll_next_impl variant for MultiSemiJoinStream without children (i.e, leaf stream)
 #[inline(always)]
@@ -748,6 +701,61 @@ fn create_keys(guard_batch: &RecordBatch, semijoin_on: &[usize], keys: &mut Vec<
     }
 }
 
+
+//own implementation of RecordBatchStream, needed to create an adapter, needed to cast streams to nestedbatchstreams
+//works as an overarching trait for multisemijoinstream
+pub trait MultiSemiJoinBatchStream: Stream<Item = Result<SemiJoinResultBatch, DataFusionError>> {
+    fn schema(&self) -> &NestedSchemaRef;
+}
+
+// pub type SendableSemiJoinResultBatchStream = Pin<Box<MultiSemiJoinStream>>;
+pub type SendableSemiJoinResultBatchStream = Pin<Box<dyn MultiSemiJoinBatchStream + Send>>;
+
+pin_project! {
+    //combination of a stream with a nestedschemaref to create a msjstream
+    pub struct MultiSemiJoinStreamAdapter<S> {
+        schema: NestedSchemaRef,
+        #[pin]
+        stream: S,
+    }
+}
+
+impl<S> MultiSemiJoinStreamAdapter<S> {
+    // create a new MultiSemiJoinStreamAdapter
+    pub fn new(schema: NestedSchemaRef, stream: S) -> Self {
+        Self { schema, stream }
+    }
+}
+
+impl<S> std::fmt::Debug for MultiSemiJoinStreamAdapter<S> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("MultiSemiJoinStreamAdapter")
+            .field("schema", &self.schema)
+            .finish()
+    }
+}
+
+impl<S> Stream for MultiSemiJoinStreamAdapter<S>
+where
+    S: Stream<Item = Result<SemiJoinResultBatch, DataFusionError>>,
+{
+    type Item = Result<SemiJoinResultBatch, DataFusionError>;
+
+    fn poll_next(self: Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> Poll<Option<Self::Item>> {
+        self.project().stream.poll_next(cx)
+    }
+}
+
+impl<S> MultiSemiJoinBatchStream for MultiSemiJoinStreamAdapter<S> 
+where
+    S: Stream<Item = Result<SemiJoinResultBatch, DataFusionError>>,
+{
+    fn schema(&self) -> &NestedSchemaRef {
+        &self.schema
+    }
+}
+
+
 #[cfg(test)]
 mod tests {
 
@@ -827,13 +835,21 @@ mod tests {
         // R(a,b,c) groupby (a,b)
         // let child_ab = example_child(vec![0, 1]).unwrap();
 
-        let child_a = GroupByWrapperEnum::Groupby(Arc::try_unwrap(example_child(vec![0]).unwrap()).unwrap());
+        let child_a =
+            GroupByWrapperEnum::Groupby(Arc::try_unwrap(example_child(vec![0]).unwrap()).unwrap());
 
-        let child_ab = GroupByWrapperEnum::Groupby(Arc::try_unwrap(example_child(vec![0, 1]).unwrap()).unwrap());
+        let child_ab = GroupByWrapperEnum::Groupby(
+            Arc::try_unwrap(example_child(vec![0, 1]).unwrap()).unwrap(),
+        );
 
-
-        let _semijoin = MultiSemiJoin::new(guard.clone(), vec![child_a.into()], vec![vec![(0, 0)]], 0);
-        let _semijoin = MultiSemiJoin::new(guard.clone(), vec![child_ab.into()], vec![vec![(0, 0), (1, 1)]], 0);
+        let _semijoin =
+            MultiSemiJoin::new(guard.clone(), vec![child_a.into()], vec![vec![(0, 0)]], 0);
+        let _semijoin = MultiSemiJoin::new(
+            guard.clone(),
+            vec![child_ab.into()],
+            vec![vec![(0, 0), (1, 1)]],
+            0,
+        );
     }
 
     /// MultiSemiJoin::new with invalid equijoin keys.
@@ -847,7 +863,8 @@ mod tests {
         // R(a,b,c) groupby a
         // Schema of child: {a: u8}
         // let child = example_child(vec![0]).unwrap();
-        let child = GroupByWrapperEnum::Groupby(Arc::try_unwrap(example_child(vec![0]).unwrap()).unwrap());
+        let child =
+            GroupByWrapperEnum::Groupby(Arc::try_unwrap(example_child(vec![0]).unwrap()).unwrap());
 
         let _semijoin = MultiSemiJoin::new(guard, vec![child.into()], vec![vec![(1, 0)]], 0);
     }
@@ -863,7 +880,8 @@ mod tests {
         // R(a,b,c) groupby a
         // Schema of child: {a: u8}
         // let child = example_child(vec![0]).unwrap();
-        let child = GroupByWrapperEnum::Groupby(Arc::try_unwrap(example_child(vec![0]).unwrap()).unwrap());
+        let child =
+            GroupByWrapperEnum::Groupby(Arc::try_unwrap(example_child(vec![0]).unwrap()).unwrap());
 
         let _semijoin = MultiSemiJoin::new(guard, vec![child.into()], vec![vec![(0, 1)]], 0);
     }
@@ -900,9 +918,11 @@ mod tests {
         let guard = example_guard()?;
         // R(a,b,c) groupby a
         // let child_a = example_child(vec![0])?;
-        let child_a = GroupByWrapperEnum::Groupby(Arc::try_unwrap(example_child(vec![0]).unwrap()).unwrap());
+        let child_a =
+            GroupByWrapperEnum::Groupby(Arc::try_unwrap(example_child(vec![0]).unwrap()).unwrap());
 
-        let semijoin = MultiSemiJoin::new(guard.clone(), vec![child_a.into()], vec![vec![(0, 0)]], 0);
+        let semijoin =
+            MultiSemiJoin::new(guard.clone(), vec![child_a.into()], vec![vec![(0, 0)]], 0);
         let result = semijoin.execute(0, Arc::new(TaskContext::default()))?;
 
         let batches = result
@@ -943,9 +963,16 @@ mod tests {
         let guard = example_guard()?;
         // R2(a,b,c) groupby a,b
         // let child_a = example_child(vec![0, 1])?;
-        let child_a = GroupByWrapperEnum::Groupby(Arc::try_unwrap(example_child(vec![0, 1]).unwrap()).unwrap());
+        let child_a = GroupByWrapperEnum::Groupby(
+            Arc::try_unwrap(example_child(vec![0, 1]).unwrap()).unwrap(),
+        );
 
-        let semijoin = MultiSemiJoin::new(guard.clone(), vec![child_a.into()], vec![vec![(0, 0), (1, 1)]],0);
+        let semijoin = MultiSemiJoin::new(
+            guard.clone(),
+            vec![child_a.into()],
+            vec![vec![(0, 0), (1, 1)]],
+            0,
+        );
         let result = semijoin.execute(0, Arc::new(TaskContext::default()))?;
 
         let batches = result
@@ -1016,7 +1043,8 @@ mod tests {
         let batch = example_batch();
         let schema = batch.schema();
         let memoryexec = Arc::new(MemoryExec::try_new(&[vec![batch]], schema, None).unwrap());
-        let input: Arc<dyn MultiSemiJoinWrapper> = Arc::new(MultiSemiJoin::new(memoryexec.clone(), vec![], vec![], 0));
+        let input: Arc<dyn MultiSemiJoinWrapper> =
+            Arc::new(MultiSemiJoin::new(memoryexec.clone(), vec![], vec![], 0));
 
         // GroupBy on columns "a", "b", "c", "d"
         let groupby = Arc::new(GroupBy::new(input, vec![0, 1, 2, 3]));
@@ -1072,7 +1100,8 @@ mod tests {
         let guard = example_guard()?;
         // R(a,b,c) groupby {}
         // let child_a = example_child(vec![])?;
-        let child_a = GroupByWrapperEnum::Groupby(Arc::try_unwrap(example_child(vec![]).unwrap()).unwrap());
+        let child_a =
+            GroupByWrapperEnum::Groupby(Arc::try_unwrap(example_child(vec![]).unwrap()).unwrap());
 
         let semijoin = MultiSemiJoin::new(guard.clone(), vec![child_a.into()], vec![vec![]], 0);
         let result = semijoin.execute(0, Arc::new(TaskContext::default()))?;

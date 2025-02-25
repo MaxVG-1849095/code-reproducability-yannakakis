@@ -116,9 +116,9 @@ impl ToPhysicalNode for intermediate_plan::YannakakisNode {
                 schema.merge(&child_schema);
                 children.push(child);
             }
-            let mut msj: Box<dyn MultiSemiJoinWrapper>;
+            let msj: Box<dyn MultiSemiJoinWrapper>;
             if node.partitioned{
-                msj = Box::new(RepartitionMultiSemiJoin::new(guard, children, node.equijoin_keys.clone(), node.id));
+                msj = Box::new(RepartitionMultiSemiJoin::try_new(guard, children, node.equijoin_keys.clone(), node.id).unwrap());
             }
             else{
                 msj = Box::new(MultiSemiJoin::new(guard, children, node.equijoin_keys.clone(), node.id));

@@ -3,12 +3,14 @@
 //!
 
 use super::sel::Sel;
-use std::{any::Any, sync::Arc};
+use std::{any::Any, pin::Pin, sync::Arc};
 
-use datafusion::arrow::{
+use datafusion::{arrow::{
     array::{ArrayRef, RecordBatch},
     datatypes::{DataType, Field, FieldRef, Schema, SchemaRef},
-};
+}, error::DataFusionError};
+use datafusion::error;
+use futures::Stream;
 
 /// A [NestedSchema] is like a traditional flat relational schema except that fields may be nested.
 /// Formally, it is a sequence of the form (A1, ..., Am, N1, ..., Nn) where:
@@ -264,7 +266,7 @@ pub const WEIGHT_TYPE: DataType = DataType::UInt32; // arrow datatype variant
 /// A [NestedColumn] is  is either singular or non-singular. It is singular if it's schema is singular.
 /// We optimize the storage of singular nested columns: they do not occupy any space beyond stating the total number of tuples produced when completely unnesting.
 /// (See module-level discussion)
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum NestedColumn {
     Singular(SingularNestedColumn),
     NonSingular(NonSingularNestedColumn),
@@ -311,7 +313,7 @@ impl NestedColumn {
 }
 
 /// A singular nested column
-#[derive(Clone, Default)]
+#[derive(Clone, Default, Debug)]
 pub struct SingularNestedColumn {
     /// The weight of each tuple in the nested column.
     pub weights: Vec<Weight>,
@@ -340,7 +342,7 @@ impl SingularNestedColumn {
 
 /// A [NonSingularNestedColumn] is non-singular Nested Column occurring as a nested field in an instance of some [NestedSchema].
 //TODO: the clone should only be there in test mode, we should remove it in production.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct NonSingularNestedColumn {
     /// Head-Of-List indexes,  one for each tuple in the nested column, identifying the nested multisets in these tuples.
     /// Paired with the weights of the elements in the nested column.
@@ -448,7 +450,7 @@ impl TotalWeights<'_> {
 }
 
 //TODO: remove clone (only for testing purposes)
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct NestedRel {
     /// The schema of the nested column. This is guaranteed non-singular.
     pub schema: NestedSchemaRef,
@@ -648,11 +650,12 @@ pub type NestedRelRef = Arc<NestedRel>;
 
 /// A [NestedBatch] is a batch of records that have at *least one nested column* (possibly singular).
 //TODO: the clone should only be there in test mode. We should remove it in production.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct NestedBatch {
     /// The [NestedSchema] of the nested batch.
     pub inner: NestedRel,
 }
+
 
 impl NestedBatch {
     /// Create a new [NestedBatch] with the given schema.
@@ -793,7 +796,7 @@ pub trait GroupedRel: Send + Sync {
 pub type GroupedRelRef = Arc<dyn GroupedRel>;
 
 /// A [SemiJoinResultBatch] is the result of a semijoin operation.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum SemiJoinResultBatch {
     /// A flat batch.
     ///
@@ -815,7 +818,42 @@ impl SemiJoinResultBatch {
             SemiJoinResultBatch::Nested(nested) => nested.num_rows(),
         }
     }
+
+    pub fn get_array_memory_size(&self) ->usize {
+        match self{
+            SemiJoinResultBatch::Flat(batch) => {
+                let mut size = 0;
+                for col in batch.columns() {
+                    size += col.get_array_memory_size();
+                }
+                size
+            }
+            SemiJoinResultBatch::Nested(nested) => {
+                let mut size = 0;
+                for col in nested.inner.regular_cols.iter() {
+                    size += col.get_array_memory_size();
+                }
+                for col in nested.inner.nested_cols.iter() {
+                    match col {
+                        NestedColumn::Singular(s) => {
+                            size += s.weights.len() * std::mem::size_of::<Weight>();
+                        }
+                        NestedColumn::NonSingular(n) => {
+                            size += n.hols.len() * std::mem::size_of::<Idx>();
+                            size += n.weights.len() * std::mem::size_of::<Weight>();
+                        }
+                    }
+                }
+                size
+            }
+        }
+    }
 }
+
+
+
+
+
 
 #[cfg(test)]
 pub mod test {
