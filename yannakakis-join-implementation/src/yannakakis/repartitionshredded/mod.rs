@@ -61,7 +61,7 @@ struct RepartitionExecState {
 
 impl RepartitionExecState {
     fn new(input: Arc<MultiSemiJoin>, context: Arc<TaskContext>) -> Self {
-        eprintln!("RepartitionExecState new");
+        // eprintln!("RepartitionExecState new");
         let num_input_partitions = input.guard_partition_count();
         let (input_channels, output_channels) = {
             //only the preserve_order = false route has been implemented for now
@@ -90,8 +90,6 @@ impl RepartitionExecState {
         }
 
         //TODO: add metrics
-
-        //TODO: add spawned_tasks
 
         // goal is to launch 1 task per input partition, these tasks gather input via a helper function and send it to the output channel
         // each task has its own waiter, which is used to wait for the task to finish
@@ -210,7 +208,7 @@ impl RepartitionMultiSemiJoin {
         let contextclone = context.clone();
         let child = Arc::clone(&self.child);
 
-        println!("repartitionmsj execute");
+        // println!("repartitionmsj execute");
 
         let stream = futures::stream::once(async move {
             let num_input_partitions = input.output_partitioning().partition_count();    
@@ -227,7 +225,7 @@ impl RepartitionMultiSemiJoin {
             
             // let state = state.lock();
             //test block
-            println!("repartitionmsj test block");
+            // println!("repartitionmsj test block");
 
             let(mut output_channel, reservation, abort_helper) = {
                 let mut state = state.lock();
@@ -279,8 +277,8 @@ impl RepartitionMultiSemiJoin {
 
             let state = state.lock();
 
-            eprintln!("repartitionmsj test block");
-            eprintln!("{}", state.debugTester);
+            // eprintln!("repartitionmsj test block");
+            // eprintln!("{}", state.debugTester);
 
             // let child_stream = self.child.execute(partition, contextclone)?;
             // child_stream
@@ -314,7 +312,7 @@ impl RepartitionMultiSemiJoin {
                 None => break,
             };
 
-            if let Some((input_channel, reservation)) = output_channnels.get_mut(&partition) {
+            if let Some((input_channel, reservation)) = output_channnels.get_mut(&partition) { //choose the output channel to send to, if we set this to 0 we will send everything to the first partition
                 let size = batch.get_array_memory_size();
                 reservation.lock().try_grow(size)?;
 

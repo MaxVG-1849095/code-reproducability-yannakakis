@@ -223,7 +223,7 @@ impl GroupByWrapper for GroupBy {
         context: Arc<TaskContext>,
         partition: usize
     ) -> Result<GroupedRelRef, DataFusionError> {
-        println!("Groupby materialize");
+        println!("Groupby materialize on partition {}", partition);
         // Init metrics and start timer
         let metrics = GroupByMetrics::new(0, &self.metrics);
         let materialize_timer = metrics.materialize_total_time.timer();
@@ -231,7 +231,7 @@ impl GroupByWrapper for GroupBy {
         let collect_timer = metrics.semijoin_collect_time.timer();
 
         // Execute child node
-        let semijoin_stream = self.child.execute(0, context)?;
+        let semijoin_stream = self.child.execute(partition, context)?;
 
         // While collecting all batches from the semijoin stream:
         //      - Store all batches in a Vec

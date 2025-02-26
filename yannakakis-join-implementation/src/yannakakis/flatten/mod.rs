@@ -181,6 +181,7 @@ impl ExecutionPlan for Flatten {
         partition: usize,
         context: Arc<TaskContext>,
     ) -> Result<SendableRecordBatchStream, DataFusionError> {
+        println!("executing Flatten on partition {}", partition);
         let metrics = FlattenMetrics::new(partition, &self.metrics);
 
         // Get stream of SemiJoinResultBatches
