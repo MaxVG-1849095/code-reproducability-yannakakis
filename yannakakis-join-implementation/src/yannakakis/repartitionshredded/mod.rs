@@ -98,10 +98,17 @@ impl RepartitionExecState {
         let mut spawned_tasks = Vec::with_capacity(num_input_partitions);
         eprintln!("{}", num_input_partitions);
         for i in 0..num_input_partitions {
+
+            let channels_in: HashMap<_,_> = channels
+            .iter()
+            .map(|(partition, (input_channels, _output_channels, reservations)) | {
+                (*partition, (input_channels[i].clone(), reservations.clone()))
+            }).collect();
+
             let input_task = SpawnedTask::spawn(RepartitionMultiSemiJoin::pull_from_input(
                 Arc::clone(&input),
                 i,
-                channels.clone(),
+                channels_in,
                 Arc::clone(&context),
             ));
 
