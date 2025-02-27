@@ -1,20 +1,20 @@
 {
-    "execution_time": 0.174375,
+    "execution_time": 0.155785,
     "root": {
         "name": "AGGREGATE",
-        "execution_time": 0.000261,
+        "execution_time": 0.000222,
         "actual_rows": 1,
         "estimated_cardinality": null,
         "children": [
             {
                 "name": "HASHJOIN",
-                "execution_time": 0.101777,
+                "execution_time": 0.086695,
                 "actual_rows": 1380035,
                 "estimated_cardinality": null,
                 "children": [
                     {
                         "name": "SEQUENTIALSCAN",
-                        "execution_time": 0.029329,
+                        "execution_time": 0.026844,
                         "actual_rows": 2525792,
                         "estimated_cardinality": 2528312,
                         "children": [],
@@ -29,7 +29,7 @@
                     },
                     {
                         "name": "SEQUENTIALSCAN",
-                        "execution_time": 0.008865,
+                        "execution_time": 0.008523,
                         "actual_rows": 1380035,
                         "estimated_cardinality": 1380035,
                         "children": [],
@@ -63,7 +63,7 @@
         ]
     },
     "aliases": {
-        "t": "title",
-        "mi_idx": "movie_info_idx"
+        "mi_idx": "movie_info_idx",
+        "t": "title"
     }
 }

@@ -1,16 +1,16 @@
 {
    "name":  "Query", 
-   "result": 0.130679,
-   "timing": 0.130679,
+   "result": 0.133315,
+   "timing": 0.133315,
    "cardinality": 0,
-   "extra-info": "SELECT t.id,\n         t.title\nFROM mi_idx,\n     t\nWHERE t.id = mi_idx.movie_id AND t.title = 'The Shawshank Redemption';", 
+   "extra-info": "SELECT t.id,\n         t.title\nFROM mi_idx,\n     t\nWHERE t.id = mi_idx.movie_id AND t.title = 'The Shawshank Redemption';PRAGMA profile_output = '/home/maxvg/Documents/masterINF/Masterproef/code-reproducability-yannakakis/query_plans/imdb_duckdb/2_original_with_aliases/2/run_1.json';", 
    "timings": [
 
    ],
    "children": [
     {
       "name": "RESULT_COLLECTOR",
-      "timing":0.000008,
+      "timing":0.000003,
       "cardinality":0,
       "extra_info": "",
       "children": [
@@ -22,13 +22,13 @@
          "children": [
           {
             "name": "HASH_JOIN",
-            "timing":0.003573,
+            "timing":0.004095,
             "cardinality":4,
             "extra_info": "INNER\nmi_idx.movie_id = t.id\n\n[INFOSEPARATOR]\nEC: 1\n",
             "children": [
              {
                "name": "SEQ_SCAN ",
-               "timing":0.001298,
+               "timing":0.001417,
                "cardinality":1380035,
                "extra_info": "mi_idx\n[INFOSEPARATOR]\nmovie_id\n[INFOSEPARATOR]\nEC: 1380035",
                "children": [
@@ -37,13 +37,13 @@
 ,
              {
                "name": "FILTER",
-               "timing":0.000114,
+               "timing":0.000158,
                "cardinality":1,
                "extra_info": "(t.id BETWEEN 2 AND 2525793)\n[INFOSEPARATOR]\nEC: 3",
                "children": [
                 {
                   "name": "SEQ_SCAN ",
-                  "timing":0.125270,
+                  "timing":0.127147,
                   "cardinality":1,
                   "extra_info": "t\n[INFOSEPARATOR]\nid\ntitle\n[INFOSEPARATOR]\nFilters: title='The Shawshank Redemption' AND title IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 3",
                   "children": [

@@ -66,38 +66,38 @@
 		</thead><tbody>
 	<tr>
 			<td><b>TOTAL TIME</b></td>
-            <td>0.130679</td>
+            <td>0.133315</td>
             <td>100.0%</td>
     </tr>
 
 	<tr>
 			<td><b>Execution Time</b></td>
-            <td>0.130263</td>
-            <td>99.681%</td>
+            <td>0.13282</td>
+            <td>99.628%</td>
     </tr>
 
 	<tr>
 			<td>SEQ_SCAN </td>
-            <td>0.12656799999999999</td>
-            <td>96.854%</td>
+            <td>0.128564</td>
+            <td>96.436%</td>
     </tr>
 
 	<tr>
 			<td>HASH_JOIN</td>
-            <td>0.003573</td>
-            <td>2.7341%</td>
+            <td>0.004095</td>
+            <td>3.0716%</td>
     </tr>
 
 	<tr>
 			<td>FILTER</td>
-            <td>0.000114</td>
-            <td>0.0872%</td>
+            <td>0.000158</td>
+            <td>0.1185%</td>
     </tr>
 
 	<tr>
 			<td>RESULT_COLLECTOR</td>
-            <td>8e-06</td>
-            <td>0.0061%</td>
+            <td>3e-06</td>
+            <td>0.0022%</td>
     </tr>
 
 	<tr>
@@ -108,6 +108,6 @@
 </tbody></table>
 	</div>
 	<div class="tf-tree tf-gap-lg"> 
- <ul><li><span class="tf-nc" style=""><div class="node-body"><p> <b>RESULT COLLECTOR (8e-06s) </b></p><p> cardinality = 0 </p></div></span><ul><li><span class="tf-nc" style="background-color: #ffb3ba;"><div class="node-body"><p> <b>PROJECTION (0.0s) </b></p><p> t.id<br>t.title<br> </p><p> cardinality = 4 </p></div></span><ul><li><span class="tf-nc" style="background-color: #ffffba;"><div class="node-body"><p> <b>HASH JOIN (0.003573s) </b></p><p> INNER<br>mi_idx.movie_id = t.id<br>----<br>EC: 1<br> </p><p> cardinality = 4 </p></div></span><ul><li><span class="tf-nc" style="background-color: #baffc9;"><div class="node-body"><p> <b>SEQ SCAN  (0.001298s) </b></p><p> mi_idx<br>----<br>movie_id<br>----<br>EC: 1380035 </p><p> cardinality = 1380035 </p></div></span></li><li><span class="tf-nc" style="background-color: #bae1ff;"><div class="node-body"><p> <b>FILTER (0.000114s) </b></p><p> (t.id BETWEEN 2 AND 2525793)<br>----<br>EC: 3 </p><p> cardinality = 1 </p></div></span><ul><li><span class="tf-nc" style="background-color: #baffc9;"><div class="node-body"><p> <b>SEQ SCAN  (0.12527s) </b></p><p> t<br>----<br>id<br>title<br>----<br>Filters: title='The Shawshank Redemption' AND title IS NOT NULL<br>----<br>EC: 3 </p><p> cardinality = 1 </p></div></span></li></ul></li></ul></li></ul></li></ul></li></ul> </div>
+ <ul><li><span class="tf-nc" style=""><div class="node-body"><p> <b>RESULT COLLECTOR (3e-06s) </b></p><p> cardinality = 0 </p></div></span><ul><li><span class="tf-nc" style="background-color: #ffb3ba;"><div class="node-body"><p> <b>PROJECTION (0.0s) </b></p><p> t.id<br>t.title<br> </p><p> cardinality = 4 </p></div></span><ul><li><span class="tf-nc" style="background-color: #ffffba;"><div class="node-body"><p> <b>HASH JOIN (0.004095s) </b></p><p> INNER<br>mi_idx.movie_id = t.id<br>----<br>EC: 1<br> </p><p> cardinality = 4 </p></div></span><ul><li><span class="tf-nc" style="background-color: #baffc9;"><div class="node-body"><p> <b>SEQ SCAN  (0.001417s) </b></p><p> mi_idx<br>----<br>movie_id<br>----<br>EC: 1380035 </p><p> cardinality = 1380035 </p></div></span></li><li><span class="tf-nc" style="background-color: #bae1ff;"><div class="node-body"><p> <b>FILTER (0.000158s) </b></p><p> (t.id BETWEEN 2 AND 2525793)<br>----<br>EC: 3 </p><p> cardinality = 1 </p></div></span><ul><li><span class="tf-nc" style="background-color: #baffc9;"><div class="node-body"><p> <b>SEQ SCAN  (0.127147s) </b></p><p> t<br>----<br>id<br>title<br>----<br>Filters: title='The Shawshank Redemption' AND title IS NOT NULL<br>----<br>EC: 3 </p><p> cardinality = 1 </p></div></span></li></ul></li></ul></li></ul></li></ul></li></ul> </div>
 </body>
 </html>

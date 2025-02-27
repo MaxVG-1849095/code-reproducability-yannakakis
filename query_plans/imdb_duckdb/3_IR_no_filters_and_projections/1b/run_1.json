@@ -1,5 +1,5 @@
 {
-    "execution_time": 0.130679,
+    "execution_time": 0.133315,
     "root": {
         "name": "PROJECTION",
         "execution_time": 0.0,
@@ -8,13 +8,13 @@
         "children": [
             {
                 "name": "HASHJOIN",
-                "execution_time": 0.003573,
+                "execution_time": 0.004095,
                 "actual_rows": 4,
                 "estimated_cardinality": null,
                 "children": [
                     {
                         "name": "SEQUENTIALSCAN",
-                        "execution_time": 0.001298,
+                        "execution_time": 0.001417,
                         "actual_rows": 1380035,
                         "estimated_cardinality": 1380035,
                         "children": [],
@@ -29,13 +29,13 @@
                     },
                     {
                         "name": "FILTER",
-                        "execution_time": 0.000114,
+                        "execution_time": 0.000158,
                         "actual_rows": 1,
                         "estimated_cardinality": 3,
                         "children": [
                             {
                                 "name": "SEQUENTIALSCAN",
-                                "execution_time": 0.12527,
+                                "execution_time": 0.127147,
                                 "actual_rows": 1,
                                 "estimated_cardinality": 3,
                                 "children": [],
@@ -82,7 +82,7 @@
         ]
     },
     "aliases": {
-        "t": "title",
-        "mi_idx": "movie_info_idx"
+        "mi_idx": "movie_info_idx",
+        "t": "title"
     }
 }

@@ -1,0 +1,235 @@
+{
+    "execution_time": 1.899787,
+    "root": {
+        "name": "AGGREGATE",
+        "execution_time": 9e-06,
+        "actual_rows": 1,
+        "estimated_cardinality": null,
+        "children": [
+            {
+                "name": "HASHJOIN",
+                "execution_time": 0.009732,
+                "actual_rows": 7250,
+                "estimated_cardinality": null,
+                "children": [
+                    {
+                        "name": "PROJECTION",
+                        "execution_time": 6.7e-05,
+                        "actual_rows": 706674,
+                        "estimated_cardinality": null,
+                        "children": [
+                            {
+                                "name": "FILTER",
+                                "execution_time": 0.002177,
+                                "actual_rows": 706674,
+                                "estimated_cardinality": 2967144,
+                                "children": [
+                                    {
+                                        "name": "PROJECTION",
+                                        "execution_time": 0.000117,
+                                        "actual_rows": 706674,
+                                        "estimated_cardinality": null,
+                                        "children": [
+                                            {
+                                                "name": "FILTER",
+                                                "execution_time": 0.016389,
+                                                "actual_rows": 706674,
+                                                "estimated_cardinality": 2967144,
+                                                "children": [
+                                                    {
+                                                        "name": "SEQUENTIALSCAN",
+                                                        "execution_time": 1.278073,
+                                                        "actual_rows": 14835720,
+                                                        "estimated_cardinality": 14835720,
+                                                        "children": [],
+                                                        "relation": "movie_info",
+                                                        "opt_filter": null,
+                                                        "projection": [
+                                                            {
+                                                                "table_name": "mi",
+                                                                "field_name": "info"
+                                                            },
+                                                            {
+                                                                "table_name": "mi",
+                                                                "field_name": "movie_id"
+                                                            }
+                                                        ]
+                                                    }
+                                                ],
+                                                "condition": "mi.info IN ('Sweden',\n                  'Norway',\n                  'Germany',\n                  'Denmark',\n                  'Swedish',\n                  'Denish',\n                  'Norwegian',\n                  'German',\n                  'USA',\n                  'American')"
+                                            }
+                                        ],
+                                        "on": [
+                                            {
+                                                "table_name": "mi",
+                                                "field_name": "movie_id"
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "condition": "(mi.movie_id BETWEEN 2 AND 2525971)"
+                            }
+                        ],
+                        "on": [
+                            {
+                                "table_name": "mi",
+                                "field_name": "movie_id"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "HASHJOIN",
+                        "execution_time": 0.007474,
+                        "actual_rows": 7874,
+                        "estimated_cardinality": null,
+                        "children": [
+                            {
+                                "name": "HASHJOIN",
+                                "execution_time": 0.099401,
+                                "actual_rows": 2742670,
+                                "estimated_cardinality": null,
+                                "children": [
+                                    {
+                                        "name": "SEQUENTIALSCAN",
+                                        "execution_time": 0.041873,
+                                        "actual_rows": 4523930,
+                                        "estimated_cardinality": 4523930,
+                                        "children": [],
+                                        "relation": "movie_keyword",
+                                        "opt_filter": null,
+                                        "projection": [
+                                            {
+                                                "table_name": "mk",
+                                                "field_name": "movie_id"
+                                            },
+                                            {
+                                                "table_name": "mk",
+                                                "field_name": "keyword_id"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "name": "PROJECTION",
+                                        "execution_time": 8e-05,
+                                        "actual_rows": 1748483,
+                                        "estimated_cardinality": null,
+                                        "children": [
+                                            {
+                                                "name": "FILTER",
+                                                "execution_time": 0.004584,
+                                                "actual_rows": 1748483,
+                                                "estimated_cardinality": 505662,
+                                                "children": [
+                                                    {
+                                                        "name": "SEQUENTIALSCAN",
+                                                        "execution_time": 0.101951,
+                                                        "actual_rows": 1749032,
+                                                        "estimated_cardinality": 505662,
+                                                        "children": [],
+                                                        "relation": "title",
+                                                        "opt_filter": "production_year>1990 AND production_year IS NOT NULL",
+                                                        "projection": [
+                                                            {
+                                                                "table_name": "t",
+                                                                "field_name": "id"
+                                                            },
+                                                            {
+                                                                "table_name": "t",
+                                                                "field_name": "title"
+                                                            }
+                                                        ]
+                                                    }
+                                                ],
+                                                "condition": "(t.id BETWEEN 2 AND 2525971)"
+                                            }
+                                        ],
+                                        "on": [
+                                            {
+                                                "table_name": "t",
+                                                "field_name": "id"
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "condition": [
+                                    [
+                                        {
+                                            "table_name": "mk",
+                                            "field_name": "movie_id"
+                                        },
+                                        {
+                                            "table_name": "t",
+                                            "field_name": "id"
+                                        }
+                                    ]
+                                ]
+                            },
+                            {
+                                "name": "FILTER",
+                                "execution_time": 0.003075,
+                                "actual_rows": 30,
+                                "estimated_cardinality": 26834,
+                                "children": [
+                                    {
+                                        "name": "SEQUENTIALSCAN",
+                                        "execution_time": 0.0091,
+                                        "actual_rows": 134170,
+                                        "estimated_cardinality": 26834,
+                                        "children": [],
+                                        "relation": "keyword",
+                                        "opt_filter": null,
+                                        "projection": [
+                                            {
+                                                "table_name": "k",
+                                                "field_name": "keyword"
+                                            },
+                                            {
+                                                "table_name": "k",
+                                                "field_name": "id"
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "condition": "k.keyword LIKE '%sequel%'"
+                            }
+                        ],
+                        "condition": [
+                            [
+                                {
+                                    "table_name": "mk",
+                                    "field_name": "keyword_id"
+                                },
+                                {
+                                    "table_name": "k",
+                                    "field_name": "id"
+                                }
+                            ]
+                        ]
+                    }
+                ],
+                "condition": [
+                    [
+                        {
+                            "table_name": "mi",
+                            "field_name": "movie_id"
+                        },
+                        {
+                            "table_name": "t",
+                            "field_name": "id"
+                        }
+                    ]
+                ]
+            }
+        ],
+        "group_by": null,
+        "aggregate": [
+            "count_star()"
+        ]
+    },
+    "aliases": {
+        "t": "title",
+        "k": "keyword",
+        "mk": "movie_keyword",
+        "mi": "movie_info"
+    }
+}
