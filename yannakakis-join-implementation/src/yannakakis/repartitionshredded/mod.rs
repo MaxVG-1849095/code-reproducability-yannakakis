@@ -312,8 +312,9 @@ impl RepartitionMultiSemiJoin {
                 Some(batch) => batch?,
                 None => break,
             };
-
-            if let Some((input_channel, reservation)) = output_channnels.get_mut(&partition) { //choose the output channel to send to, if we set this to 0 we will send everything to the first partition
+            //choose the output channel to send to, if we set this to 0 we will send everything to the first partition
+            // for now we just send it to the partition it came from, it should be changed to hash to a partition depending on the group_on key for the groupby operator above this msj operator
+            if let Some((input_channel, reservation)) = output_channnels.get_mut(&partition) { 
                 let size = batch.get_array_memory_size();
                 reservation.lock().try_grow(size)?;
 

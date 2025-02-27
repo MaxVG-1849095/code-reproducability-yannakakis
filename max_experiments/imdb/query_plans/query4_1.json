@@ -15,6 +15,8 @@
               ]
             ]
           ],
+          "partitioned": false,
+          "id": 1,
           "guard": {
             "name": "SEQUENTIALSCAN",
             "children": [],
@@ -33,9 +35,13 @@
               "group_on": [
                 0
               ],
+              "partitioned": false,
+              "id": 2,
               "child": {
                 "name": "MULTISEMIJOIN",
                 "equijoin_keys": [],
+                "partitioned": false,
+                "id": 3,
                 "guard": {
                   "name": "FILTER",
                   "children": [

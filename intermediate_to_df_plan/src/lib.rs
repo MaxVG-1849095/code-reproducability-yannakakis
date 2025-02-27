@@ -31,7 +31,7 @@ pub async fn to_execution_plan(
     // Convert the Plan into an ExecutionPlan
     let (_dfschema, plan) = plan
         .root
-        .to_execution_plan(&catalog, alternative_flatten)
+        .to_execution_plan(&catalog, alternative_flatten, 0)
         .await?;
     Ok(plan)
 }

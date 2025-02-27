@@ -1,0 +1,103 @@
+{
+    "root": {
+        "name": "PROJECTION",
+        "estimated_cardinality": null,
+        "children": [
+            {
+                "name": "YANNAKAKIS",
+                "root": {
+                    "name": "MULTISEMIJOIN",
+                    "equijoin_keys": [[
+                        [
+                            0,
+                            0
+                        ]
+                    ]],
+                    "partitioned": false,
+                    "id": 3,
+                    "guard": {
+                        "name": "REPARTITION",
+                        "num_partitions": 6,
+                        "partitioning": "unknown",
+                        "children": [
+                            {
+                                "name": "FILTER",
+                                "children": [
+                                    {
+                                        "name": "SEQUENTIALSCAN",
+                                        "children": [],
+                                        "relation": "title",
+                                        "opt_filter": "title='The Shawshank Redemption' AND title IS NOT NULL",
+                                        "projection": [
+                                            {
+                                                "table_name": "t",
+                                                "field_name": "id"
+                                            },
+                                            {
+                                                "table_name": "t",
+                                                "field_name": "title"
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "condition": "(t.id BETWEEN 2 AND 2525793)"
+                            }
+                        ]
+                    },
+                    "children": [
+                        {
+                            "name": "GROUPBY",
+                            "group_on": [
+                                0
+                            ],
+                            "partitioned": false,
+                            "id": 2,
+                            "child": {
+                                "name": "MULTISEMIJOIN",
+                                "equijoin_keys": [
+                                    
+                                ],
+                                "partitioned": false,
+                                "id": 1,
+                                "guard": {
+                                    "name": "REPARTITION",
+                                    "num_partitions": 6,
+                                    "partitioning": "unknown",
+                                    "children": [
+                                        {
+                                            "name": "SEQUENTIALSCAN",
+                                            "children": [],
+                                            "relation": "movie_info_idx",
+                                            "opt_filter": null,
+                                            "projection": [
+                                                {
+                                                    "table_name": "mi_idx",
+                                                    "field_name": "movie_id"
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                },
+                                "children": []
+                            }
+                        }
+                    ]
+                }
+            }
+        ],
+        "on": [
+            {
+                "table_name": "t",
+                "field_name": "id"
+            },
+            {
+                "table_name": "t",
+                "field_name": "title"
+            }
+        ]
+    },
+    "aliases": {
+        "mi_idx": "movie_info_idx",
+        "t": "title"
+    }
+}

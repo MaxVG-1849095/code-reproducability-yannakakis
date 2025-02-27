@@ -202,7 +202,7 @@ impl MultiSemiJoinWrapper for MultiSemiJoin {
             .iter()
             .zip(self.children.iter())
             .map(|(onceasync, child)| {
-                onceasync.clear(); // ! probably not the way to do this! --> needed for now to be able to materialize for each partition
+                onceasync.clear(); // ! probably not the best way to do this! --> needed for now to be able to materialize for each partition
                 onceasync.once(|| materialize_child(child.clone(), context.clone(), partition))
             })
             .collect();
@@ -366,22 +366,6 @@ impl MultiSemiJoinStream {
         }
     }
 
-    pub fn example_from_self(&self) -> Self {
-        MultiSemiJoinStream {
-            schema: self.schema.clone(),
-            guard_stream: Box::pin(RecordBatchStreamAdapter::new(
-                Arc::new(Schema::new(
-                    Vec::<datafusion::arrow::datatypes::Field>::new(),
-                )),
-                futures::stream::empty(),
-            )),
-            materialized_children_futs: self.materialized_children_futs.clone(),
-            semijoin_keys: self.semijoin_keys.clone(),
-            semijoin_metrics: self.semijoin_metrics.clone(),
-            hashes_buffer: self.hashes_buffer.clone(),
-            guard_batch_cache: self.guard_batch_cache.clone(),
-        }
-    }
 
     // pub fn schema(&self) -> &NestedSchemaRef {
     //     &self.schema

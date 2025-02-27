@@ -41,6 +41,7 @@ pub trait ToPhysicalNode {
         &self,
         catalog: &Catalog,
         alternative_flatten: bool,
+        partition_key: usize,
     ) -> Result<(DFSchemaRef, Arc<dyn ExecutionPlan>), DataFusionError>;
 }
 
@@ -50,17 +51,18 @@ impl ToPhysicalNode for intermediate_plan::Node {
         &self,
         catalog: &Catalog,
         alternative_flatten: bool,
+        partition_key: usize,
     ) -> Result<(DFSchemaRef, Arc<dyn ExecutionPlan>), DataFusionError> {
         use intermediate_plan::*;
         match self {
-            Node::Aggregate(n) => n.to_execution_plan(catalog, alternative_flatten).await,
-            Node::Projection(n) => n.to_execution_plan(catalog, alternative_flatten).await,
-            Node::Filter(n) => n.to_execution_plan(catalog, alternative_flatten).await,
-            Node::HashJoin(n) => n.to_execution_plan(catalog, alternative_flatten).await,
-            Node::MergeJoin(n) => n.to_execution_plan(catalog, alternative_flatten).await,
-            Node::SequentialScan(n) => n.to_execution_plan(catalog, alternative_flatten).await,
-            Node::Yannakakis(n) => n.to_execution_plan(catalog, alternative_flatten).await,
-            Node::Repartition(n) => n.to_execution_plan(catalog, alternative_flatten).await,
+            Node::Aggregate(n) => n.to_execution_plan(catalog, alternative_flatten, partition_key).await,
+            Node::Projection(n) => n.to_execution_plan(catalog, alternative_flatten, partition_key).await,
+            Node::Filter(n) => n.to_execution_plan(catalog, alternative_flatten, partition_key).await,
+            Node::HashJoin(n) => n.to_execution_plan(catalog, alternative_flatten, partition_key).await,
+            Node::MergeJoin(n) => n.to_execution_plan(catalog, alternative_flatten, partition_key).await,
+            Node::SequentialScan(n) => n.to_execution_plan(catalog, alternative_flatten, partition_key).await,
+            Node::Yannakakis(n) => n.to_execution_plan(catalog, alternative_flatten, partition_key).await,
+            Node::Repartition(n) => n.to_execution_plan(catalog, alternative_flatten, partition_key).await,
             // Node::RepartitionShredded(n) => n.to_execution_plan(catalog, alternative_flatten).await,
         }
     }
@@ -72,15 +74,16 @@ impl ToPhysicalNode for intermediate_plan::YannakakisNode {
         &self,
         catalog: &Catalog,
         alternative_flatten: bool,
+        partition_key: usize,
     ) -> Result<(DFSchemaRef, Arc<dyn ExecutionPlan>), DataFusionError> {
         async fn groupby_to_plan(
             node: &intermediate_plan::GroupByNode,
             catalog: &Catalog,
             alternative_flatten: bool,
         ) -> Result<(DFSchema, Arc<GroupByWrapperEnum>), DataFusionError> {
-            let (child_schema, child) =
-                multisemijoin_to_plan(&node.child, catalog, alternative_flatten).await?;
             let group_on = node.group_on.clone();
+            let (child_schema, child) =
+                multisemijoin_to_plan(&node.child, catalog, alternative_flatten, group_on[0]).await?;
 
             let mut grpby: GroupByWrapperEnum;
 
@@ -100,11 +103,12 @@ impl ToPhysicalNode for intermediate_plan::YannakakisNode {
             node: &intermediate_plan::MultiSemiJoinNode,
             catalog: &Catalog,
             alternative_flatten: bool,
+            partition_key: usize,
         ) -> Result<(DFSchema, Box<dyn MultiSemiJoinWrapper>), DataFusionError> {
             let mut schema: DFSchema = DFSchema::empty();
             let (guard_schema, guard) = node
                 .guard
-                .to_execution_plan(catalog, alternative_flatten)
+                .to_execution_plan(catalog, alternative_flatten, partition_key)
                 .await?;
             schema.merge(&guard_schema);
 
@@ -130,7 +134,7 @@ impl ToPhysicalNode for intermediate_plan::YannakakisNode {
         }
 
         let (dfschema, root) =
-            multisemijoin_to_plan(&self.root, &catalog, alternative_flatten).await?;
+            multisemijoin_to_plan(&self.root, &catalog, alternative_flatten, 0).await?;
 
         if alternative_flatten {
             Ok((
@@ -149,6 +153,7 @@ impl ToPhysicalNode for intermediate_plan::AggregateNode {
         &self,
         catalog: &Catalog,
         alternative_flatten: bool,
+        partition_key: usize,
     ) -> Result<(DFSchemaRef, Arc<dyn ExecutionPlan>), DataFusionError> {
         use datafusion::physical_plan::aggregates::AggregateMode::*;
 
@@ -156,7 +161,7 @@ impl ToPhysicalNode for intermediate_plan::AggregateNode {
         let child = &self.base.children;
         assert!(child.len() == 1, "AggregateNode must have 1 child");
         let (input_dfschema, child) = child[0]
-            .to_execution_plan(catalog, alternative_flatten)
+            .to_execution_plan(catalog, alternative_flatten, partition_key)
             .await?;
         let input_schema = child.schema();
 
@@ -199,10 +204,11 @@ impl ToPhysicalNode for intermediate_plan::ProjectionNode {
         &self,
         catalog: &Catalog,
         alternative_flatten: bool,
+        partition_key: usize,
     ) -> Result<(DFSchemaRef, Arc<dyn ExecutionPlan>), DataFusionError> {
         assert!(self.base.children.len() == 1);
         let (input_dfschema, child) = self.base.children[0]
-            .to_execution_plan(catalog, alternative_flatten)
+            .to_execution_plan(catalog, alternative_flatten, partition_key)
             .await?;
 
         let on = &self
@@ -267,13 +273,14 @@ impl ToPhysicalNode for intermediate_plan::FilterNode {
         &self,
         catalog: &Catalog,
         alternative_flatten: bool,
+        partition_key: usize,
     ) -> Result<(DFSchemaRef, Arc<dyn ExecutionPlan>), DataFusionError> {
         assert!(
             self.base.children.len() == 1,
             "FilterNode must have 1 child"
         );
         let (input_dfschema, input) = self.base.children[0]
-            .to_execution_plan(catalog, alternative_flatten)
+            .to_execution_plan(catalog, alternative_flatten, partition_key)
             .await?;
 
         let input_arrow_schema = input.schema();
@@ -388,6 +395,7 @@ impl ToPhysicalNode for intermediate_plan::HashJoinNode {
         &self,
         catalog: &Catalog,
         alternative_flatten: bool,
+        partition_key: usize,
     ) -> Result<(DFSchemaRef, Arc<dyn ExecutionPlan>), DataFusionError> {
         let children = &self.base.children;
         assert!(children.len() == 2, "HashJoinNode must have 2 children");
@@ -396,10 +404,10 @@ impl ToPhysicalNode for intermediate_plan::HashJoinNode {
         // in datafusion, it is the opposite
         let ((left_dfschema, left), (right_dfschema, right)) = (
             children[1]
-                .to_execution_plan(catalog, alternative_flatten)
+                .to_execution_plan(catalog, alternative_flatten, partition_key)
                 .await?, // right becomes left
             children[0]
-                .to_execution_plan(catalog, alternative_flatten)
+                .to_execution_plan(catalog, alternative_flatten, partition_key)
                 .await?, // left becomes right
         );
 
@@ -443,16 +451,17 @@ impl ToPhysicalNode for intermediate_plan::MergeJoinNode {
         &self,
         catalog: &Catalog,
         alternative_flatten: bool,
+        partition_key: usize,
     ) -> Result<(DFSchemaRef, Arc<dyn ExecutionPlan>), DataFusionError> {
         let children = &self.base.children;
         assert!(children.len() == 2, "MergeJoinNode must have 2 children");
 
         let ((left_dfschema, left), (right_dfschema, right)) = (
             children[0]
-                .to_execution_plan(catalog, alternative_flatten)
+                .to_execution_plan(catalog, alternative_flatten, partition_key)
                 .await?,
             children[1]
-                .to_execution_plan(catalog, alternative_flatten)
+                .to_execution_plan(catalog, alternative_flatten, partition_key)
                 .await?,
         );
 
@@ -490,6 +499,7 @@ impl ToPhysicalNode for intermediate_plan::SequentialScanNode {
         &self,
         catalog: &Catalog,
         _alternative_flatten: bool,
+        partition_key: usize,
     ) -> Result<(DFSchemaRef, Arc<dyn ExecutionPlan>), DataFusionError> {
         // seqscan_to_memoryexec(&self, catalog).await
 
@@ -544,11 +554,12 @@ impl ToPhysicalNode for intermediate_plan::RepartitionExecNode {
         &self,
         catalog: &Catalog,
         alternative_flatten: bool,
+        partition_key: usize,
     ) -> Result<(DFSchemaRef, Arc<dyn ExecutionPlan>), DataFusionError> {
         // 1 child, currently only supports repartitioning the output of a sequential scan
         assert!(self.base.children.len() == 1);
         let (input_dfschema, input) = self.base.children[0]
-            .to_execution_plan(catalog, alternative_flatten)
+            .to_execution_plan(catalog, alternative_flatten, partition_key)
             .await?;
 
         let num_partitions = self.num_partitions;
@@ -556,7 +567,7 @@ impl ToPhysicalNode for intermediate_plan::RepartitionExecNode {
 
         // let partitioning = Partitioning::RoundRobinBatch(num_partitions); 
 
-        let column_expr = Arc::new(Column::new("id", 0));//TODO: change to hash partitioning on join key, this way we can repartition correctly
+        let column_expr = Arc::new(Column::new("id", partition_key));//TODO: change to hash partitioning on join key, this way we can repartition correctly
         let partitioning = Partitioning::Hash(vec![column_expr], num_partitions);
 
         let repartition = datafusion::physical_plan::repartition::RepartitionExec::try_new(
@@ -934,7 +945,7 @@ mod tests {
 
         let plan = serde_json::from_str::<Plan>(json).expect("Invalid JSON");
         catalog.update_aliases(&plan);
-        let (schema, execution_plan) = plan.root.to_execution_plan(&catalog, false).await?;
+        let (schema, execution_plan) = plan.root.to_execution_plan(&catalog, false, 0).await?;
 
         let expected = DFSchema::try_from_qualified_schema(
             TableReference::bare("r"),
@@ -981,7 +992,7 @@ mod tests {
 
         let plan = serde_json::from_str::<Plan>(json).expect("Invalid JSON");
         catalog.update_aliases(&plan);
-        let (schema, execution_plan) = plan.root.to_execution_plan(&catalog, false).await?;
+        let (schema, execution_plan) = plan.root.to_execution_plan(&catalog, false, 0).await?;
 
         let expected = DFSchema::try_from_qualified_schema(
             TableReference::bare("r1"),
@@ -1027,7 +1038,7 @@ mod tests {
 
         let plan = serde_json::from_str::<Plan>(json).expect("Invalid JSON");
         catalog.update_aliases(&plan);
-        let (schema, execution_plan) = plan.root.to_execution_plan(&catalog, false).await?;
+        let (schema, execution_plan) = plan.root.to_execution_plan(&catalog, false, 0).await?;
 
         let expected = DFSchema::try_from_qualified_schema(
             TableReference::bare("r"),
@@ -1073,7 +1084,7 @@ mod tests {
 
         let plan = serde_json::from_str::<Plan>(json).expect("Invalid JSON");
         catalog.update_aliases(&plan);
-        let (schema, execution_plan) = plan.root.to_execution_plan(&catalog, false).await?;
+        let (schema, execution_plan) = plan.root.to_execution_plan(&catalog, false, 0).await?;
 
         let expected = DFSchema::try_from_qualified_schema(
             TableReference::bare("r"),
@@ -1120,7 +1131,7 @@ mod tests {
 
         let plan = serde_json::from_str::<Plan>(json).expect("Invalid JSON");
         catalog.update_aliases(&plan);
-        let (schema, execution_plan) = plan.root.to_execution_plan(&catalog, false).await?;
+        let (schema, execution_plan) = plan.root.to_execution_plan(&catalog, false, 0).await?;
 
         let expected = DFSchema::try_from_qualified_schema(
             TableReference::bare("r"),
@@ -1168,7 +1179,7 @@ mod tests {
 
         let plan = serde_json::from_str::<Plan>(json).expect("Invalid JSON");
         catalog.update_aliases(&plan);
-        let (schema, execution_plan) = plan.root.to_execution_plan(&catalog, false).await?;
+        let (schema, execution_plan) = plan.root.to_execution_plan(&catalog, false, 0).await?;
 
         let expected = DFSchema::try_from_qualified_schema(
             TableReference::bare("r1"),
@@ -1216,7 +1227,7 @@ mod tests {
 
         let plan = serde_json::from_str::<Plan>(json).expect("Invalid JSON");
         catalog.update_aliases(&plan);
-        let (schema, execution_plan) = plan.root.to_execution_plan(&catalog, false).await?;
+        let (schema, execution_plan) = plan.root.to_execution_plan(&catalog, false, 0).await?;
 
         let expected = DFSchema::try_from_qualified_schema(
             TableReference::bare("r1"),
@@ -1285,7 +1296,7 @@ mod tests {
 
         let plan = serde_json::from_str::<Plan>(json).expect("Invalid JSON");
         catalog.update_aliases(&plan);
-        let (schema, execution_plan) = plan.root.to_execution_plan(&catalog, false).await?;
+        let (schema, execution_plan) = plan.root.to_execution_plan(&catalog, false, 0).await?;
 
         let expected = DFSchema::try_from_qualified_schema(
             TableReference::bare("r1"),
@@ -1354,7 +1365,7 @@ mod tests {
 
         let plan = serde_json::from_str::<Plan>(json).expect("Invalid JSON");
         catalog.update_aliases(&plan);
-        let (schema, execution_plan) = plan.root.to_execution_plan(&catalog, false).await?;
+        let (schema, execution_plan) = plan.root.to_execution_plan(&catalog, false, 0).await?;
 
         let expected = DFSchema::try_from_qualified_schema(
             TableReference::bare("r1"),
@@ -1456,7 +1467,7 @@ mod tests {
 
         let plan = serde_json::from_str::<Plan>(json).expect("Invalid JSON");
         catalog.update_aliases(&plan);
-        let (schema, execution_plan) = plan.root.to_execution_plan(&catalog, false).await?;
+        let (schema, execution_plan) = plan.root.to_execution_plan(&catalog, false, 0).await?;
 
         let r_schema = DFSchema::try_from_qualified_schema(
             TableReference::bare("r"),
@@ -1564,7 +1575,7 @@ mod tests {
 
         let plan = serde_json::from_str::<Plan>(json).expect("Invalid JSON");
         catalog.update_aliases(&plan);
-        let (schema, execution_plan) = plan.root.to_execution_plan(&catalog, false).await?;
+        let (schema, execution_plan) = plan.root.to_execution_plan(&catalog, false, 0).await?;
 
         let r_schema = DFSchema::try_from_qualified_schema(
             TableReference::bare("r"),
@@ -1673,7 +1684,7 @@ mod tests {
 
         let plan = serde_json::from_str::<Plan>(json).expect("Invalid JSON");
         catalog.update_aliases(&plan);
-        let (schema, execution_plan) = plan.root.to_execution_plan(&catalog, false).await?;
+        let (schema, execution_plan) = plan.root.to_execution_plan(&catalog, false, 0).await?;
 
         let r1_schema = DFSchema::try_from_qualified_schema(
             TableReference::bare("r1"),
@@ -1825,7 +1836,7 @@ mod tests {
 
         let plan = serde_json::from_str::<Plan>(json).expect("Invalid JSON");
         catalog.update_aliases(&plan);
-        let (_, execution_plan) = plan.root.to_execution_plan(&catalog, false).await?;
+        let (_, execution_plan) = plan.root.to_execution_plan(&catalog, false, 0).await?;
 
         insta::with_settings!({
             description => format!("{:#?}", plan),
