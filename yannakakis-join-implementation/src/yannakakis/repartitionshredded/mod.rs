@@ -61,7 +61,7 @@ struct RepartitionExecState {
 
 impl RepartitionExecState {
     fn new(input: Arc<MultiSemiJoin>, context: Arc<TaskContext>) -> Self {
-        // eprintln!("RepartitionExecState new");
+        eprintln!("RepartitionExecState new");
         let num_input_partitions = input.guard_partition_count();
         let (input_channels, output_channels) = {
             //only the preserve_order = false route has been implemented for now
@@ -94,7 +94,7 @@ impl RepartitionExecState {
         // goal is to launch 1 task per input partition, these tasks gather input via a helper function and send it to the output channel
         // each task has its own waiter, which is used to wait for the task to finish
         let mut spawned_tasks = Vec::with_capacity(num_input_partitions);
-        eprintln!("{}", num_input_partitions);
+        // eprintln!("{}", num_input_partitions);
         for i in 0..num_input_partitions {
 
             let channels_in: HashMap<_,_> = channels
@@ -302,6 +302,7 @@ impl RepartitionMultiSemiJoin {
         >,
         context: Arc<TaskContext>,
     ) -> Result<(), DataFusionError> {
+        println!("pull from input on partition {}", partition);
         let mut input_stream = input.execute(partition, context)?;
 
         loop {

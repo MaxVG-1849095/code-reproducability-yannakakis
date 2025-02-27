@@ -49,6 +49,10 @@ impl<T: 'static> OnceAsync<T> {
             .get_or_insert_with(|| OnceFut::new(f()))
             .clone()
     }
+
+    pub(crate) fn clear(&self) {
+        *self.fut.lock() = None;
+    }
 }
 
 /// The shared future type used internally within [`OnceAsync`]

@@ -1,8 +1,8 @@
 {
-    "execution_time": 0.160878,
+    "execution_time": 0.849998,
     "root": {
         "name": "AGGREGATE",
-        "execution_time": 0.00023,
+        "execution_time": 0.000166,
         "actual_rows": 1,
         "estimated_cardinality": null,
         "children": [
@@ -10,8 +10,6 @@
                 "name": "YANNAKAKIS",
                 "root": {
                     "name": "MULTISEMIJOIN",
-                    "partitioned": true,
-                    "id": 1,
                     "equijoin_keys": [
                         [
                             [
@@ -20,23 +18,25 @@
                             ]
                         ]
                     ],
+                    "partitioned": true,
+                    "id": 1,
                     "guard": {
                         "name": "REPARTITION",
-                        "num_partitions": 2,
+                        "num_partitions": 4,
                         "partitioning": "unknown",
                         "children": [
                             {
                                 "name": "SEQUENTIALSCAN",
-                                "execution_time": 0.028519,
-                                "actual_rows": 2525792,
-                                "estimated_cardinality": 2528312,
+                                "execution_time": 0.048533,
+                                "actual_rows": 8331253,
+                                "estimated_cardinality": 8331273,
                                 "children": [],
-                                "relation": "title",
-                                "opt_filter": "id>=2 AND id<=2525793 AND id IS NOT NULL",
+                                "relation": "yago0",
+                                "opt_filter": "d>=4532271 AND d<=12811178 AND d IS NOT NULL",
                                 "projection": [
                                     {
-                                        "table_name": "t",
-                                        "field_name": "id"
+                                        "table_name": "yago0",
+                                        "field_name": "d"
                                     }
                                 ]
                             }
@@ -45,33 +45,33 @@
                     "children": [
                         {
                             "name": "GROUPBY",
-                            "partitioned": true,
-                            "id": 2,
                             "group_on": [
                                 0
                             ],
+                            "partitioned": false,
+                            "id": 2,
                             "child": {
                                 "name": "MULTISEMIJOIN",
+                                "equijoin_keys": [],
                                 "partitioned": true,
                                 "id": 3,
-                                "equijoin_keys": [],
                                 "guard": {
                                     "name": "REPARTITION",
-                                    "num_partitions": 2,
+                                    "num_partitions": 4,
                                     "partitioning": "unknown",
                                     "children": [
                                         {
                                             "name": "SEQUENTIALSCAN",
-                                            "execution_time": 0.009365,
-                                            "actual_rows": 1380035,
-                                            "estimated_cardinality": 1380035,
+                                            "execution_time": 0.002395,
+                                            "actual_rows": 569410,
+                                            "estimated_cardinality": 569410,
                                             "children": [],
-                                            "relation": "movie_info_idx",
+                                            "relation": "yago1",
                                             "opt_filter": null,
                                             "projection": [
                                                 {
-                                                    "table_name": "mi_idx",
-                                                    "field_name": "movie_id"
+                                                    "table_name": "yago1",
+                                                    "field_name": "d"
                                                 }
                                             ]
                                         }
@@ -90,7 +90,7 @@
         ]
     },
     "aliases": {
-        "t": "title",
-        "mi_idx": "movie_info_idx"
+        "yago0": "yago0",
+        "yago1": "yago1"
     }
 }

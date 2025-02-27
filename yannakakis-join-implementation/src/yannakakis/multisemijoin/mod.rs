@@ -188,30 +188,40 @@ impl MultiSemiJoinWrapper for MultiSemiJoin {
             context: Arc<TaskContext>,
             partition: usize,
         ) -> Result<GroupedRelRef, DataFusionError> {
+            println!(
+                "materialize child for partition {} in onceasync materialize_child",
+                partition
+            );
             child.materialize(context, partition).await
         }
 
         // println!("msj with id {} execute on partition {}", self.id, partition);
 
-        let materialized_children_futs = self
+        let materialized_children_futs: Vec<OnceFut<Arc<dyn GroupedRel>>> = self
             .once_futs
             .iter()
             .zip(self.children.iter())
             .map(|(onceasync, child)| {
-                // println!("materialize child for partition {}", partition);
+                onceasync.clear(); // ! probably not the way to do this! --> needed for now to be able to materialize for each partition
                 onceasync.once(|| materialize_child(child.clone(), context.clone(), partition))
             })
             .collect();
 
+        println!(
+            "materialized_children_futs length: {}",
+            materialized_children_futs.len()
+        );
+
         println!("msj with id {} execute on partition {}", self.id, partition);
 
         //start timer to measure time of guard stream execute
-        let guard_time_start = std::time::Instant::now();
+        // let guard_time_start = std::time::Instant::now();
 
         let guard_stream: Pin<Box<dyn RecordBatchStream + Send>>;
         guard_stream = self.guard.execute(partition, context)?;
 
-        let guard_time = guard_time_start.elapsed();
+        //get
+        // let guard_time = guard_time_start.elapsed();
         // println!("node {} guard_time: {}", self.id,guard_time.as_nanos());
 
         let schema = self.schema.clone();
@@ -311,8 +321,6 @@ async fn collect_guard_stream(
 ) -> Result<SendableRecordBatchStream, DataFusionError> {
     guard.execute(partition, context)
 }
-
-
 
 // pub type SendableSemiJoinResultBatchStream = Pin<Box<MultiSemiJoinStream>>;
 
@@ -420,8 +428,6 @@ impl MultiSemiJoinBatchStream for MultiSemiJoinStream {
         &self.schema
     }
 }
-
-
 
 /// poll_next_impl variant for MultiSemiJoinStream without children (i.e, leaf stream)
 #[inline(always)]
@@ -686,10 +692,11 @@ fn create_keys(guard_batch: &RecordBatch, semijoin_on: &[usize], keys: &mut Vec<
     }
 }
 
-
 //own implementation of RecordBatchStream, needed to create an adapter, needed to cast streams to nestedbatchstreams
 //works as an overarching trait for multisemijoinstream
-pub trait MultiSemiJoinBatchStream: Stream<Item = Result<SemiJoinResultBatch, DataFusionError>> {
+pub trait MultiSemiJoinBatchStream:
+    Stream<Item = Result<SemiJoinResultBatch, DataFusionError>>
+{
     fn schema(&self) -> &NestedSchemaRef;
 }
 
@@ -726,12 +733,15 @@ where
 {
     type Item = Result<SemiJoinResultBatch, DataFusionError>;
 
-    fn poll_next(self: Pin<&mut Self>, cx: &mut std::task::Context<'_>) -> Poll<Option<Self::Item>> {
+    fn poll_next(
+        self: Pin<&mut Self>,
+        cx: &mut std::task::Context<'_>,
+    ) -> Poll<Option<Self::Item>> {
         self.project().stream.poll_next(cx)
     }
 }
 
-impl<S> MultiSemiJoinBatchStream for MultiSemiJoinStreamAdapter<S> 
+impl<S> MultiSemiJoinBatchStream for MultiSemiJoinStreamAdapter<S>
 where
     S: Stream<Item = Result<SemiJoinResultBatch, DataFusionError>>,
 {
@@ -739,7 +749,6 @@ where
         &self.schema
     }
 }
-
 
 #[cfg(test)]
 mod tests {

@@ -145,6 +145,8 @@ impl ExecutionPlan for Flatten {
         vec![Distribution::SinglePartition; n_children]
     }
 
+
+    //get output partitioning from the guard relation of the msj node so datafusion knows what partitioning to expect
     fn output_partitioning(&self) -> datafusion::physical_plan::Partitioning {
         self.child.guard().output_partitioning()
     }

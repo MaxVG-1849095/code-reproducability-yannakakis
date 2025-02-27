@@ -249,6 +249,8 @@ impl GroupByWrapper for GroupBy {
         metrics.input_rows.add(total_rows);
         metrics.input_batches.add(batches.len());
 
+        println!("Groupby materialize on partition {} with {} rows", partition, total_rows);
+
         // Measure total time spent by grouping the input tuples
         let groupby_timer = metrics.groupby_time.timer();
         let mut grouped_rel_builder = init_grouped_rel_builder(
@@ -289,6 +291,7 @@ impl GroupByWrapper for GroupBy {
 
         Ok(result)
     }
+    
 
     /// Get groupby input.
     fn child(&self) -> &Arc<dyn MultiSemiJoinWrapper> {
@@ -340,6 +343,7 @@ impl GroupByWrapper for GroupBy {
         self.partitioned = partitioned;
     }
 }
+
 
 /// The [GroupBy] operator creates a new [GroupedRel] object that has a single nested column.
 /// This function creates the [NestedRel] that provides the data for this single nested column.
