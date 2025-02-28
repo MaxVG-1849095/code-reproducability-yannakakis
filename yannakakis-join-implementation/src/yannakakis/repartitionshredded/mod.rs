@@ -4,6 +4,8 @@ use std::task::{Context, Poll};
 use std::{pin::Pin, sync::Arc};
 
 use datafusion::execution::memory_pool::MemoryReservation;
+use datafusion::physical_plan::repartition::BatchPartitioner;
+use datafusion::physical_plan::{Partitioning, PhysicalExpr};
 use datafusion::{
     error::DataFusionError,
     execution::{memory_pool::MemoryConsumer, RecordBatchStream, TaskContext},
@@ -96,12 +98,17 @@ impl RepartitionExecState {
         let mut spawned_tasks = Vec::with_capacity(num_input_partitions);
         // eprintln!("{}", num_input_partitions);
         for i in 0..num_input_partitions {
-
-            let channels_in: HashMap<_,_> = channels
-            .iter()
-            .map(|(partition, (input_channels, _output_channels, reservations)) | {
-                (*partition, (input_channels[i].clone(), reservations.clone()))
-            }).collect();
+            let channels_in: HashMap<_, _> = channels
+                .iter()
+                .map(
+                    |(partition, (input_channels, _output_channels, reservations))| {
+                        (
+                            *partition,
+                            (input_channels[i].clone(), reservations.clone()),
+                        )
+                    },
+                )
+                .collect();
 
             let input_task = SpawnedTask::spawn(RepartitionMultiSemiJoin::pull_from_input(
                 Arc::clone(&input),
@@ -110,7 +117,8 @@ impl RepartitionExecState {
                 Arc::clone(&context),
             ));
 
-            let wait_for_task = SpawnedTask::spawn(RepartitionMultiSemiJoin::wait_for_task(input_task));
+            let wait_for_task =
+                SpawnedTask::spawn(RepartitionMultiSemiJoin::wait_for_task(input_task));
             spawned_tasks.push(wait_for_task);
         }
 
@@ -127,6 +135,87 @@ impl RepartitionExecState {
 }
 
 type LazyRepState = Arc<tokio::sync::OnceCell<Mutex<RepartitionExecState>>>; // oncecell to make sure we only initialize once, mutex to make sure we can (correctly) access it from multiple threads
+
+// partitioner for batches based on a partitioning
+pub struct MsjBatchPartitioner {
+    state: MsjBatchPartitionerState,
+}
+
+// batch partitioner possibilities, hash is supposed to be used but roundrobin was created to test the workings
+enum MsjBatchPartitionerState {
+    Hash {
+        random_state: ahash::RandomState,
+        exprs: Vec<Arc<dyn PhysicalExpr>>,
+        num_partitions: usize,
+        hash_buffer: Vec<u64>,
+    },
+    RoundRobin{
+        num_partitions: usize,
+        next_idx: usize,
+    }
+}
+
+impl MsjBatchPartitioner {
+    pub fn try_new(num_partitions: usize) -> Result<Self, DataFusionError> {
+        // let state = match partitioning{
+        //     Partitioning::Hash(exprs, num_partitions) => MsjBatchPartitionerState::Hash{
+        //         random_state: ahash::RandomState::new(),
+        //         exprs,
+        //         num_partitions,
+        //         hash_buffer: vec![],
+        //     },
+        //     Partitioning::RoundRobinBatch(num_partitions) => {
+        //         MsjBatchPartitionerState::RoundRobin{
+        //             num_partitions,
+        //             next_idx: 0,
+        //         }
+        //     },
+        //     other => return Err(DataFusionError::NotImplemented(format!("Partitioning {:?} not implemented for MsjBatchPartitioner", other)))
+        // };
+
+        let state = MsjBatchPartitionerState::RoundRobin{
+                num_partitions,
+                next_idx: 0,
+            };
+
+        Ok(Self{state})
+    }
+
+    pub fn partition<F>(&mut self, batch: SemiJoinResultBatch, mut f: F) -> Result<(), DataFusionError>
+    where
+        F: FnMut(usize, SemiJoinResultBatch) -> Result<(), DataFusionError>,
+        {
+            self.partition_iter(batch)?.try_for_each(|res| match res{
+                Ok((partition, batch)) => f(partition, batch),
+                Err(e) => Err(e),
+            })
+        }
+
+    fn partition_iter(&mut self, batch: SemiJoinResultBatch)
+    -> Result<impl Iterator< Item = Result<(usize, SemiJoinResultBatch), DataFusionError>>, DataFusionError>{
+        let it: Box<dyn Iterator<Item = Result<(usize, SemiJoinResultBatch), DataFusionError>> + Send> = 
+        match &mut self.state{
+            MsjBatchPartitionerState::RoundRobin {
+                num_partitions, 
+                next_idx,
+            } => {
+                let idx = *next_idx;
+                *next_idx = (*next_idx + 1) % *num_partitions;
+                Box::new(std::iter::once(Ok((idx, batch))))
+            }
+            MsjBatchPartitionerState::Hash { 
+                random_state, 
+                exprs, 
+                num_partitions,
+                hash_buffer, 
+            } => {
+                //throw error
+                Err(DataFusionError::NotImplemented("Hash partitioning not implemented for MsjBatchPartitioner".to_string()))?
+            }
+        };
+        Ok(it)
+    }
+}
 
 pub trait MultiSemiJoinWrapper: Debug + Send + Sync {
     fn schema(&self) -> &NestedSchemaRef;
@@ -211,40 +300,39 @@ impl RepartitionMultiSemiJoin {
         // println!("repartitionmsj execute");
 
         let stream = futures::stream::once(async move {
-            let num_input_partitions = input.output_partitioning().partition_count();    
+            let num_input_partitions = input.output_partitioning().partition_count();
             //this is where the stream object to be returned should be created
             let state = rep_state
                 .get_or_init(|| async move {
                     //create or initialize the state object
-                    Mutex::new(RepartitionExecState::new(
-                        child,
-                        contextclone,
-                    ))
+                    Mutex::new(RepartitionExecState::new(child, contextclone))
                 })
                 .await;
-            
+
             // let state = state.lock();
             //test block
             // println!("repartitionmsj test block");
 
-            let(mut output_channel, reservation, abort_helper) = {
+            let (mut output_channel, reservation, abort_helper) = {
                 let mut state = state.lock();
 
-                let(_input_channel, output_channel, reservation) = state
-                .channels
-                .remove(&partition)
-                .expect("partition not used yet");
+                let (_input_channel, output_channel, reservation) = state
+                    .channels
+                    .remove(&partition)
+                    .expect("partition not used yet");
 
-            (output_channel, reservation, state.abort_helper.clone())
+                (output_channel, reservation, state.abort_helper.clone())
             };
-            Ok::<Pin<Box<dyn MultiSemiJoinBatchStream + Send>>, DataFusionError>(Box::pin(MsjRepartitionStream {
-                num_input_partitions,
-                num_input_partitions_processed: 0,
-                input: output_channel.swap_remove(0),
-                schema,
-                reservation,
-            }) as SendableSemiJoinResultBatchStream)
-            
+            Ok::<Pin<Box<dyn MultiSemiJoinBatchStream + Send>>, DataFusionError>(Box::pin(
+                MsjRepartitionStream {
+                    num_input_partitions,
+                    num_input_partitions_processed: 0,
+                    input: output_channel.swap_remove(0),
+                    schema,
+                    reservation,
+                },
+            )
+                as SendableSemiJoinResultBatchStream)
         })
         .try_flatten();
         // Ok(Box::pin(stream))
@@ -258,7 +346,10 @@ impl RepartitionMultiSemiJoin {
         // }
     }
 
-    pub fn statetest(&self, context: Arc<TaskContext>) -> futures::stream::Once<impl std::future::Future<Output = String>> {
+    pub fn statetest(
+        &self,
+        context: Arc<TaskContext>,
+    ) -> futures::stream::Once<impl std::future::Future<Output = String>> {
         let rep_state = Arc::clone(&self.state);
         let contextclone = context.clone();
         let childguard = self.child.guard().clone();
@@ -268,10 +359,7 @@ impl RepartitionMultiSemiJoin {
             let state = rep_state
                 .get_or_init(|| async move {
                     //create or initialize the state object
-                    Mutex::new(RepartitionExecState::new(
-                        child,
-                        contextclone,
-                    ))
+                    Mutex::new(RepartitionExecState::new(child, contextclone))
                 })
                 .await;
 
@@ -304,6 +392,8 @@ impl RepartitionMultiSemiJoin {
     ) -> Result<(), DataFusionError> {
         println!("pull from input on partition {}", partition);
         let mut input_stream = input.execute(partition, context)?;
+        let mut partitioner = MsjBatchPartitioner::try_new(2)?; // ! obviously should not be a hardcoded 2
+        // let mut partitioner = MsjBatchPartitioner::try_new(input.guard().clone().guard().clone().output_partitioning())?;
 
         loop {
             let batch = input_stream.next().await; //as long as there is a next in the input stream
@@ -312,26 +402,29 @@ impl RepartitionMultiSemiJoin {
                 Some(batch) => batch?,
                 None => break,
             };
-            //choose the output channel to send to, if we set this to 0 we will send everything to the first partition
-            // for now we just send it to the partition it came from, it should be changed to hash to a partition depending on the group_on key for the groupby operator above this msj operator
-            if let Some((input_channel, reservation)) = output_channnels.get_mut(&partition) { 
-                let size = batch.get_array_memory_size();
-                reservation.lock().try_grow(size)?;
 
-                if input_channel.send(Some(Ok(batch))).await.is_err() {
-                    //if send is unsuccessful, shrink
-                    reservation.lock().shrink(size);
+            for res in partitioner.partition_iter(batch)?{
+                let (partition_send, batch) = res?;
+                // println!("sending batch from partition {} to partition {}", partition, partition_send);
+                if let Some((input_channel, reservation)) = output_channnels.get_mut(&partition_send) {
+                    let size = batch.get_array_memory_size();
+                    reservation.lock().try_grow(size)?;
+    
+                    if input_channel.send(Some(Ok(batch))).await.is_err() {
+                        //if send is unsuccessful, shrink
+                        reservation.lock().shrink(size);
+                    }
                 }
             }
+            //choose the output channel to send to, if we set this to 0 we will send everything to the first partition
+            // for now we just send it to the partition it came from, it should be changed to hash to a partition depending on the group_on key for the groupby operator above this msj operator
         }
 
         Ok(()) //success
     }
 
     //function to wait for a given input task
-    async fn wait_for_task(
-        input_task: SpawnedTask<Result<(), DataFusionError>>,
-    ){
+    async fn wait_for_task(input_task: SpawnedTask<Result<(), DataFusionError>>) {
         input_task.join().await;
     }
 }
@@ -397,40 +490,43 @@ struct MsjRepartitionStream {
 impl Stream for MsjRepartitionStream {
     type Item = Result<SemiJoinResultBatch, DataFusionError>;
 
-
     //poll next function taken from repartition stream
-    fn poll_next(mut self: Pin<&mut Self>, 
-        cx: &mut Context) -> Poll<Option<Self::Item>> {
-            loop {
-                match self.input.recv().poll_unpin(cx) { //look at state for poll_unpin
-                    Poll::Ready(Some(Some(v))) => { //if resultbatch gotten
-                        if let Ok(batch) = &v {
-                            self.reservation
-                                .lock()
-                                .shrink(batch.get_array_memory_size());
-                        }
-    
-                        return Poll::Ready(Some(v));
+    fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context) -> Poll<Option<Self::Item>> {
+        loop {
+            match self.input.recv().poll_unpin(cx) {
+                //look at state for poll_unpin
+                Poll::Ready(Some(Some(v))) => {
+                    //if resultbatch gotten
+                    if let Ok(batch) = &v {
+                        self.reservation
+                            .lock()
+                            .shrink(batch.get_array_memory_size());
                     }
-                    Poll::Ready(Some(None)) => { //if no resultbatch is none
-                        self.num_input_partitions_processed += 1;
-    
-                        if self.num_input_partitions == self.num_input_partitions_processed {
-                            // all input partitions have finished sending batches
-                            return Poll::Ready(None);
-                        } else {
-                            // other partitions still have data to send
-                            continue;
-                        }
-                    }
-                    Poll::Ready(None) => { //if no result
+
+                    return Poll::Ready(Some(v));
+                }
+                Poll::Ready(Some(None)) => {
+                    //if no resultbatch is none
+                    self.num_input_partitions_processed += 1;
+
+                    if self.num_input_partitions == self.num_input_partitions_processed {
+                        // all input partitions have finished sending batches
                         return Poll::Ready(None);
-                    }
-                    Poll::Pending => { //if pending
-                        return Poll::Pending;
+                    } else {
+                        // other partitions still have data to send
+                        continue;
                     }
                 }
+                Poll::Ready(None) => {
+                    //if no result
+                    return Poll::Ready(None);
+                }
+                Poll::Pending => {
+                    //if pending
+                    return Poll::Pending;
+                }
             }
+        }
     }
 }
 
@@ -690,7 +786,6 @@ mod tests {
     //     Ok(())
     // }
 
-
     #[tokio::test]
     async fn test_state_creation() -> Result<(), Box<dyn Error>> {
         let guard = example_guard().unwrap();
@@ -705,7 +800,6 @@ mod tests {
         // let state = state.lock();
 
         assert_eq!(word[0], "Test");
-
 
         Ok(())
     }
