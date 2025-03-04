@@ -10,7 +10,7 @@
                 "name": "YANNAKAKIS",
                 "root": {
                     "name": "MULTISEMIJOIN",
-                    "partitioned": true,
+                    "partitioned": false,
                     "id": 1,
                     "equijoin_keys": [
                         [
@@ -22,7 +22,7 @@
                     ],
                     "guard": {
                         "name": "REPARTITION",
-                        "num_partitions": 2,
+                        "num_partitions": 4,
                         "partitioning": "unknown",
                         "children": [
                             {
@@ -57,7 +57,7 @@
                                 "equijoin_keys": [],
                                 "guard": {
                                     "name": "REPARTITION",
-                                    "num_partitions": 2,
+                                    "num_partitions": 4,
                                     "partitioning": "unknown",
                                     "children": [
                                         {

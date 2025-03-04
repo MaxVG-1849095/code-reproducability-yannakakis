@@ -186,12 +186,13 @@ impl MsjBatchPartitioner {
     pub fn partition<F>(
         &mut self,
         batch: SemiJoinResultBatch,
+        partition: usize,
         mut f: F,
     ) -> Result<(), DataFusionError>
     where
         F: FnMut(usize, SemiJoinResultBatch) -> Result<(), DataFusionError>,
     {
-        self.partition_iter(batch)?.try_for_each(|res| match res {
+        self.partition_iter(batch, partition)?.try_for_each(|res| match res {
             Ok((partition, batch)) => f(partition, batch),
             Err(e) => Err(e),
         })
@@ -200,6 +201,7 @@ impl MsjBatchPartitioner {
     fn partition_iter(
         &mut self,
         batch: SemiJoinResultBatch,
+        partition: usize,
     ) -> Result<
         impl Iterator<Item = Result<(usize, SemiJoinResultBatch), DataFusionError>>,
         DataFusionError,
@@ -223,29 +225,66 @@ impl MsjBatchPartitioner {
                 let num_partitions = *num_partitions;
                 match batch {
                     SemiJoinResultBatch::Flat(val) => {
-                        let mut matrix: Vec<Vec<u32>> = vec![vec![]; num_partitions]; // matrix to store the indices of the rows for each partition
                         let column = val.column(0);
+
+                        // ! old code
+                        //let mut matrix: Vec<Vec<u32>> = vec![vec![]; num_partitions]; // matrix to store the indices of the rows for each partition
+                        
                         // println!("column data: {:?}", column);
                         // println!("column data type: {:?}", column.data_type());
-                        let mut int_array;
-                        if column.data_type().is_numeric() {
-                            int_array = column.as_any().downcast_ref::<Int32Array>().unwrap();
-                        } else {
-                            return Err(DataFusionError::NotImplemented(
-                                    "Hash partitioning not implemented for MsjBatchPartitioner on data type that is not numeric".to_string(),
-                               ))?;
-                        }
-
-                        for i in 0..int_array.len() {
-                            let key_value = int_array.value(i);
-                            let hash = key_value as u64 % num_partitions as u64;
-                            println!("value: {}, hash: {}", key_value, hash);
-                            matrix[hash as usize].push(i.try_into().unwrap());
-                        }
+                        // let mut int_array;
+                        // if column.data_type().is_numeric() {
+                        //     //get the column that we hash on //! needs to be improved to handle more than just int32 via pattern matching
+                        //     int_array = column.as_any().downcast_ref::<Int32Array>().unwrap();
+                        // } else {
+                        //     return Err(DataFusionError::NotImplemented(
+                        //             "Hash partitioning not implemented for MsjBatchPartitioner on data type that is not numeric".to_string(),
+                        //        ))?;
+                        // }
+                        // calculate hashes
+                        // for i in 0..int_array.len() {
+                        //     let key_value = int_array.value(i);
+                        //     let hash = key_value as u64 % num_partitions as u64;
+                        //     // println!("value: {}, hash: {}", key_value, hash);
+                        //     matrix[hash as usize].push(i.try_into().unwrap());
+                        // }
 
                         // create_hashes(, random_state, hash_buffer);
-                        let mut batches: Vec<SemiJoinResultBatch> = Vec::new();
+                        // let mut batches: Vec<SemiJoinResultBatch> = Vec::new();
 
+                        // for i in 0..num_partitions {
+                        //     //rebuild batches
+                        //     let new_columns: Vec<ArrayRef> = val
+                        //         .columns()
+                        //         .iter()
+                        //         .map(|column| {
+                        //             let indices =
+                        //                 Arc::new(UInt32Array::from(matrix[i].clone())) as ArrayRef;
+                        //             let new_column = take(column.as_ref(), &indices, None)?;
+                        //             Ok::<_, DataFusionError>(new_column)
+                        //         })
+                        //         .collect::<Result<Vec<_>, _>>()?;
+                        //     let new_batch = SemiJoinResultBatch::Flat(RecordBatch::try_new(
+                        //         val.schema().clone(),
+                        //         new_columns,
+                        //     )?);
+                        //     batches.push(new_batch);
+                        // }
+                        // ! end of old code
+                        hash_buffer.clear();
+                        hash_buffer.resize(val.num_rows(), 0);
+                        let array_ref = column.clone();
+                        create_hashes(&[array_ref], random_state, hash_buffer)?;
+
+                        //init indices
+                        let mut indices: Vec<_> = (0..num_partitions)
+                            .map(|_| Vec::with_capacity(val.num_rows()))
+                            .collect();
+                        
+                        for(index, hash) in hash_buffer.iter().enumerate(){
+                            indices[(hash % num_partitions as u64) as usize].push(index as u32);
+                        }
+                        let mut batches: Vec<SemiJoinResultBatch> = Vec::new();
                         for i in 0..num_partitions {
                             //rebuild batches
                             let new_columns: Vec<ArrayRef> = val
@@ -253,7 +292,7 @@ impl MsjBatchPartitioner {
                                 .iter()
                                 .map(|column| {
                                     let indices =
-                                        Arc::new(UInt32Array::from(matrix[i].clone())) as ArrayRef;
+                                        Arc::new(UInt32Array::from(indices[i].clone())) as ArrayRef;
                                     let new_column = take(column.as_ref(), &indices, None)?;
                                     Ok::<_, DataFusionError>(new_column)
                                 })
@@ -264,33 +303,45 @@ impl MsjBatchPartitioner {
                             )?);
                             batches.push(new_batch);
                         }
+                        
+
+                        
 
                         return Ok(batches
                             .into_iter()
                             .enumerate()
-                            .map(|(i, batch)|Ok((i, batch))));
+                            .map(|(i, batch)| Ok((i, batch))));
                     }
                     SemiJoinResultBatch::Nested(val) => {
-                        let mut matrix: Vec<Vec<u32>> = vec![vec![]; num_partitions]; // matrix to store the indices of the rows for each partition
+                        // matrix to store the indices of the rows for each partition
+                        let mut matrix: Vec<Vec<u32>> = vec![vec![]; num_partitions];
 
-                        let column = val.inner.regular_column(0);
-                        for i in 0..column.len() {
-                            let key_value = column.slice(i, 1); //get value, this could probably be done better
-                            let key_value = key_value
-                                .as_any()
-                                .downcast_ref::<UInt64Array>()
-                                .unwrap()
-                                .value(0);
+                        let column = val.regular_column(0);
 
-                            let hash = key_value % num_partitions as u64;
+                        let mut int_array;
+                        if column.data_type().is_numeric() {
+                            //get the column that we hash on //! needs to be improved to handle more than just int32 via pattern matching
+                            int_array = column.as_any().downcast_ref::<Int32Array>().unwrap();
+                        } else {
+                            return Err(DataFusionError::NotImplemented(
+                                    "Hash partitioning not implemented for MsjBatchPartitioner on data type that is not numeric".to_string(),
+                               ))?;
+                        }
+
+                        // calculate hashes
+                        for i in 0..int_array.len() {
+                            let key_value = int_array.value(i);
+                            let hash = key_value as u64 % num_partitions as u64;
+                            // println!("from partition {}, value: {}, hash: {}",partition, key_value, hash);
                             matrix[hash as usize].push(i.try_into().unwrap());
                         }
-                        // let mut batches: Vec<SemiJoinResultBatch> = Vec::new();
-
-                        // //rebuild batches
-                        // for i in 0..num_partitions{
-
-                        // }
+                        
+                        //rebuild batches
+                        for i in 0..num_partitions{
+                            //take from val the indices in matrix[i]
+                            let indices = Arc::new(UInt32Array::from(matrix[i].clone())) as ArrayRef;
+                            // let new_batch = val.take(&indices)?;
+                        }
                     }
                 }
 
@@ -505,16 +556,16 @@ impl RepartitionMultiSemiJoin {
             //         //get nestedbatch
             //     }
             // }
-            for res in partitioner.partition_iter(batch)? {
+            for res in partitioner.partition_iter(batch, partition)? {
                 let (partition_send, batch) = res?;
-                println!(
-                    "sending batch from partition {} to partition {}",
-                    partition, partition_send
-                );
+                // println!(
+                //     "sending batch from partition {} to partition {}",
+                //     partition, partition_send
+                // );
 
                 // println!("schema: {}", rbatch.schema());
                 // println!("num rows: {}", rbatch.num_rows());
-                if let Some((input_channel, reservation)) = output_channnels.get_mut(&partition) {
+                if let Some((input_channel, reservation)) = output_channnels.get_mut(&partition_send) {
                     //this partition is the partition we are sending to
                     let size = batch.get_array_memory_size();
                     reservation.lock().try_grow(size)?;
