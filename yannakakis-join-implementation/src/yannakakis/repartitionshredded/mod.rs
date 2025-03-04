@@ -1,8 +1,14 @@
 // Implementation of the repartitionexec operator for shredded records, implemented to partition data calculated via multisemijoin
 
+use core::hash;
 use std::task::{Context, Poll};
 use std::{pin::Pin, sync::Arc};
 
+use datafusion::arrow::array::{
+    ArrayRef, Int32Array, RecordBatch, UInt32Array, UInt64Array, UInt8Array,
+};
+use datafusion::arrow::compute::take;
+use datafusion::common::hash_utils::{self, create_hashes};
 use datafusion::execution::memory_pool::MemoryReservation;
 use datafusion::physical_plan::repartition::BatchPartitioner;
 use datafusion::physical_plan::{Partitioning, PhysicalExpr};
@@ -145,75 +151,158 @@ pub struct MsjBatchPartitioner {
 enum MsjBatchPartitionerState {
     Hash {
         random_state: ahash::RandomState,
-        exprs: Vec<Arc<dyn PhysicalExpr>>,
         num_partitions: usize,
         hash_buffer: Vec<u64>,
     },
-    RoundRobin{
+    RoundRobin {
         num_partitions: usize,
         next_idx: usize,
-    }
+    },
 }
 
 impl MsjBatchPartitioner {
-    pub fn try_new(num_partitions: usize) -> Result<Self, DataFusionError> {
-        // let state = match partitioning{
-        //     Partitioning::Hash(exprs, num_partitions) => MsjBatchPartitionerState::Hash{
-        //         random_state: ahash::RandomState::new(),
-        //         exprs,
-        //         num_partitions,
-        //         hash_buffer: vec![],
-        //     },
-        //     Partitioning::RoundRobinBatch(num_partitions) => {
-        //         MsjBatchPartitionerState::RoundRobin{
-        //             num_partitions,
-        //             next_idx: 0,
-        //         }
-        //     },
-        //     other => return Err(DataFusionError::NotImplemented(format!("Partitioning {:?} not implemented for MsjBatchPartitioner", other)))
-        // };
-
-        let state = MsjBatchPartitionerState::RoundRobin{
+    pub fn try_new(num_partitions: usize, partition_id: usize) -> Result<Self, DataFusionError> {
+        let state = match partition_id {
+            0 => MsjBatchPartitionerState::Hash {
+                random_state: ahash::RandomState::with_seeds(0, 0, 0, 0),
+                num_partitions,
+                hash_buffer: vec![],
+            },
+            1 => MsjBatchPartitionerState::RoundRobin {
                 num_partitions,
                 next_idx: 0,
-            };
+            },
+            other => {
+                return Err(DataFusionError::NotImplemented(format!(
+                    "Partitioning {:?} not implemented for MsjBatchPartitioner",
+                    other
+                )))
+            }
+        };
 
-        Ok(Self{state})
+        Ok(Self { state })
     }
 
-    pub fn partition<F>(&mut self, batch: SemiJoinResultBatch, mut f: F) -> Result<(), DataFusionError>
+    pub fn partition<F>(
+        &mut self,
+        batch: SemiJoinResultBatch,
+        mut f: F,
+    ) -> Result<(), DataFusionError>
     where
         F: FnMut(usize, SemiJoinResultBatch) -> Result<(), DataFusionError>,
-        {
-            self.partition_iter(batch)?.try_for_each(|res| match res{
-                Ok((partition, batch)) => f(partition, batch),
-                Err(e) => Err(e),
-            })
-        }
+    {
+        self.partition_iter(batch)?.try_for_each(|res| match res {
+            Ok((partition, batch)) => f(partition, batch),
+            Err(e) => Err(e),
+        })
+    }
 
-    fn partition_iter(&mut self, batch: SemiJoinResultBatch)
-    -> Result<impl Iterator< Item = Result<(usize, SemiJoinResultBatch), DataFusionError>>, DataFusionError>{
-        let it: Box<dyn Iterator<Item = Result<(usize, SemiJoinResultBatch), DataFusionError>> + Send> = 
-        match &mut self.state{
+    fn partition_iter(
+        &mut self,
+        batch: SemiJoinResultBatch,
+    ) -> Result<
+        impl Iterator<Item = Result<(usize, SemiJoinResultBatch), DataFusionError>>,
+        DataFusionError,
+    > {
+        let it: Box<
+            dyn Iterator<Item = Result<(usize, SemiJoinResultBatch), DataFusionError>> + Send,
+        > = match &mut self.state {
             MsjBatchPartitionerState::RoundRobin {
-                num_partitions, 
+                num_partitions,
                 next_idx,
             } => {
                 let idx = *next_idx;
                 *next_idx = (*next_idx + 1) % *num_partitions;
                 Box::new(std::iter::once(Ok((idx, batch))))
             }
-            MsjBatchPartitionerState::Hash { 
-                random_state, 
-                exprs, 
+            MsjBatchPartitionerState::Hash {
+                random_state,
                 num_partitions,
-                hash_buffer, 
+                hash_buffer,
             } => {
+                let num_partitions = *num_partitions;
+                match batch {
+                    SemiJoinResultBatch::Flat(val) => {
+                        let mut matrix: Vec<Vec<u32>> = vec![vec![]; num_partitions]; // matrix to store the indices of the rows for each partition
+                        let column = val.column(0);
+                        // println!("column data: {:?}", column);
+                        // println!("column data type: {:?}", column.data_type());
+                        let mut int_array;
+                        if column.data_type().is_numeric() {
+                            int_array = column.as_any().downcast_ref::<Int32Array>().unwrap();
+                        } else {
+                            return Err(DataFusionError::NotImplemented(
+                                    "Hash partitioning not implemented for MsjBatchPartitioner on data type that is not numeric".to_string(),
+                               ))?;
+                        }
+
+                        for i in 0..int_array.len() {
+                            let key_value = int_array.value(i);
+                            let hash = key_value as u64 % num_partitions as u64;
+                            println!("value: {}, hash: {}", key_value, hash);
+                            matrix[hash as usize].push(i.try_into().unwrap());
+                        }
+
+                        // create_hashes(, random_state, hash_buffer);
+                        let mut batches: Vec<SemiJoinResultBatch> = Vec::new();
+
+                        for i in 0..num_partitions {
+                            //rebuild batches
+                            let new_columns: Vec<ArrayRef> = val
+                                .columns()
+                                .iter()
+                                .map(|column| {
+                                    let indices =
+                                        Arc::new(UInt32Array::from(matrix[i].clone())) as ArrayRef;
+                                    let new_column = take(column.as_ref(), &indices, None)?;
+                                    Ok::<_, DataFusionError>(new_column)
+                                })
+                                .collect::<Result<Vec<_>, _>>()?;
+                            let new_batch = SemiJoinResultBatch::Flat(RecordBatch::try_new(
+                                val.schema().clone(),
+                                new_columns,
+                            )?);
+                            batches.push(new_batch);
+                        }
+
+                        return Ok(batches
+                            .into_iter()
+                            .enumerate()
+                            .map(|(i, batch)|Ok((i, batch))));
+                    }
+                    SemiJoinResultBatch::Nested(val) => {
+                        let mut matrix: Vec<Vec<u32>> = vec![vec![]; num_partitions]; // matrix to store the indices of the rows for each partition
+
+                        let column = val.inner.regular_column(0);
+                        for i in 0..column.len() {
+                            let key_value = column.slice(i, 1); //get value, this could probably be done better
+                            let key_value = key_value
+                                .as_any()
+                                .downcast_ref::<UInt64Array>()
+                                .unwrap()
+                                .value(0);
+
+                            let hash = key_value % num_partitions as u64;
+                            matrix[hash as usize].push(i.try_into().unwrap());
+                        }
+                        // let mut batches: Vec<SemiJoinResultBatch> = Vec::new();
+
+                        // //rebuild batches
+                        // for i in 0..num_partitions{
+
+                        // }
+                    }
+                }
+
                 //throw error
-                Err(DataFusionError::NotImplemented("Hash partitioning not implemented for MsjBatchPartitioner".to_string()))?
+                Err(DataFusionError::NotImplemented(
+                    "Hash partitioning not implemented for MsjBatchPartitioner".to_string(),
+                ))?
             }
         };
-        Ok(it)
+        Err(DataFusionError::NotImplemented(
+            "Hash partitioning not implemented for MsjBatchPartitioner".to_string(),
+        ))?
     }
 }
 
@@ -392,10 +481,12 @@ impl RepartitionMultiSemiJoin {
     ) -> Result<(), DataFusionError> {
         println!("pull from input on partition {}", partition);
         let mut input_stream = input.execute(partition, context)?;
-        let mut partitioner = MsjBatchPartitioner::try_new(2)?; // ! obviously should not be a hardcoded 2
-        // let mut partitioner = MsjBatchPartitioner::try_new(input.guard().clone().guard().clone().output_partitioning())?;
+        let num_outputs = output_channnels.len();
+        println!("num outputs: {}", num_outputs);
+        let mut partitioner = MsjBatchPartitioner::try_new(num_outputs, 0)?; // ! num partitions obviously should not be a hardcoded 2
 
         loop {
+            //get batch from input stream, break the loop if there is no next
             let batch = input_stream.next().await; //as long as there is a next in the input stream
             let batch = match batch {
                 //if it is a batch, proceed otherwise break
@@ -403,13 +494,31 @@ impl RepartitionMultiSemiJoin {
                 None => break,
             };
 
-            for res in partitioner.partition_iter(batch)?{
+            //print if batch is flat or nested
+            // match batch {
+            //     SemiJoinResultBatch::Flat(val) => {
+            //         println!("flat batch");
+
+            //     }
+            //     SemiJoinResultBatch::Nested(val) => {
+            //         println!("nested batch");
+            //         //get nestedbatch
+            //     }
+            // }
+            for res in partitioner.partition_iter(batch)? {
                 let (partition_send, batch) = res?;
-                // println!("sending batch from partition {} to partition {}", partition, partition_send);
-                if let Some((input_channel, reservation)) = output_channnels.get_mut(&partition_send) {
+                println!(
+                    "sending batch from partition {} to partition {}",
+                    partition, partition_send
+                );
+
+                // println!("schema: {}", rbatch.schema());
+                // println!("num rows: {}", rbatch.num_rows());
+                if let Some((input_channel, reservation)) = output_channnels.get_mut(&partition) {
+                    //this partition is the partition we are sending to
                     let size = batch.get_array_memory_size();
                     reservation.lock().try_grow(size)?;
-    
+
                     if input_channel.send(Some(Ok(batch))).await.is_err() {
                         //if send is unsuccessful, shrink
                         reservation.lock().shrink(size);
@@ -417,7 +526,6 @@ impl RepartitionMultiSemiJoin {
                 }
             }
             //choose the output channel to send to, if we set this to 0 we will send everything to the first partition
-            // for now we just send it to the partition it came from, it should be changed to hash to a partition depending on the group_on key for the groupby operator above this msj operator
         }
 
         Ok(()) //success
