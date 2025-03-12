@@ -176,16 +176,16 @@ async fn exec_plan(
         }
         let (results, duration) = time_execution(plan.clone(), task_ctx.clone()).await?;
 
-        // println!("{}", pretty_format_batches(&results)?.to_string());
+        println!("{}", pretty_format_batches(&results)?.to_string());
         //print amount of rows
         // println!("Rows: {}", results[0].num_rows());
-        let mut results_count = 0;
-        let mut batch_count = 0;
-        for batch in results {
-            results_count += batch.num_rows();
-            batch_count += 1;
-        }
-        println!("Batches: {}, Rows: {}",batch_count, results_count);
+        // let mut results_count = 0;
+        // let mut batch_count = 0;
+        // for batch in results {
+        //     results_count += batch.num_rows();
+        //     batch_count += 1;
+        // }
+        // println!("Batches: {}, Rows: {}",batch_count, results_count);
         println!("Execution time: {:?}", duration);
         durations.push(duration);
 

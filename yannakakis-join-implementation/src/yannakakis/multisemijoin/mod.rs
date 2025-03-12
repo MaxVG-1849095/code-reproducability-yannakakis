@@ -205,14 +205,14 @@ impl MultiSemiJoinWrapper for MultiSemiJoin {
 
         // ! still incorrect, once futs is made for one per child but currently using it for 1 per partition 
         let materialized_children_futs: Vec<OnceFut<Arc<dyn GroupedRel>>> = self.children.iter().map(|child|{
-            println!("calling once for partition {} in id: {}", partition, self.id);
+            // println!("calling once for partition {} in id: {}", partition, self.id);
             self.once_futs[partition].once(|| materialize_child(child.clone(), context.clone(), partition))
         }).collect();
 
-        println!("materialized children futs length: {} in id: {}", materialized_children_futs.len(), self.id);
+        // println!("materialized children futs length: {} in id: {}", materialized_children_futs.len(), self.id);
 
 
-        println!("msj with id {} execute on partition {}", self.id, partition);
+        // println!("msj with id {} execute on partition {}", self.id, partition);
 
         //start timer to measure time of guard stream execute
         // let guard_time_start = std::time::Instant::now();

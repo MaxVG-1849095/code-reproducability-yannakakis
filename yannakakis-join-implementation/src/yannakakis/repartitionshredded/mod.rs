@@ -31,7 +31,7 @@ use crate::yannakakis::unnest;
 use super::data::{Idx, NestedColumn, NonSingularNestedColumn, SemiJoinResultBatch, SingularNestedColumn};
 use super::kernel::take_nested_column_inplace;
 use super::multisemijoin::MultiSemiJoinBatchStream;
-use super::sel::Sel;
+use super::sel::{self, Sel};
 use super::{
     data::{GroupedRelRef, NestedBatch, NestedSchemaRef},
     groupby::GroupBy,
@@ -105,7 +105,7 @@ impl RepartitionExecState {
         // goal is to launch 1 task per input partition, these tasks gather input via a helper function and send it to the output channel
         // each task has its own waiter, which is used to wait for the task to finish
         let mut spawned_tasks = Vec::with_capacity(num_input_partitions);
-        // eprintln!("{}", num_input_partitions);
+        let child_id = input.id();
         for i in 0..num_input_partitions {
             let channels_in: HashMap<_, _> = channels
                 .iter()
@@ -125,6 +125,7 @@ impl RepartitionExecState {
                 channels_in.clone(),
                 Arc::clone(&context),
                 repartition_key,
+                child_id,
             ));
 
             let wait_for_task =
@@ -151,6 +152,7 @@ type LazyRepState = Arc<tokio::sync::OnceCell<Mutex<RepartitionExecState>>>; // 
 // partitioner for batches based on a partitioning
 pub struct MsjBatchPartitioner {
     state: MsjBatchPartitionerState,
+    id: usize,
 }
 
 // batch partitioner possibilities, hash is supposed to be used but roundrobin was created to test the workings
@@ -172,6 +174,7 @@ impl MsjBatchPartitioner {
         num_partitions: usize,
         partition_id: usize,
         partition_key: usize,
+        msj_id: usize,
     ) -> Result<Self, DataFusionError> {
         let state = match partition_id {
             0 => MsjBatchPartitionerState::Hash {
@@ -192,29 +195,30 @@ impl MsjBatchPartitioner {
             }
         };
 
-        Ok(Self { state })
+        Ok(Self { state , id: msj_id})
     }
 
-    pub fn partition<F>(
-        &mut self,
-        batch: SemiJoinResultBatch,
-        partition: usize,
-        mut f: F,
-    ) -> Result<(), DataFusionError>
-    where
-        F: FnMut(usize, SemiJoinResultBatch) -> Result<(), DataFusionError>,
-    {
-        self.partition_iter(batch, partition)?
-            .try_for_each(|res| match res {
-                Ok((partition, batch)) => f(partition, batch),
-                Err(e) => Err(e),
-            })
-    }
+    // pub fn partition<F>(
+    //     &mut self,
+    //     batch: SemiJoinResultBatch,
+    //     partition: usize,
+    //     mut f: F,
+    // ) -> Result<(), DataFusionError>
+    // where
+    //     F: FnMut(usize, SemiJoinResultBatch) -> Result<(), DataFusionError>,
+    // {
+    //     self.partition_iter(batch, partition)?
+    //         .try_for_each(|res| match res {
+    //             Ok((partition, batch)) => f(partition, batch),
+    //             Err(e) => Err(e),
+    //         })
+    // }
 
     fn partition_iter(
         &mut self,
         batch: SemiJoinResultBatch,
         partition: usize,
+        msj_id: usize,
     ) -> Result<
         impl Iterator<Item = Result<(usize, SemiJoinResultBatch), DataFusionError>>,
         DataFusionError,
@@ -239,15 +243,7 @@ impl MsjBatchPartitioner {
                 let num_partitions = *num_partitions;
                 match batch {
                     SemiJoinResultBatch::Flat(val) => {
-                        println!("partition key: {} in id", partition_key);
                         let column = val.column(*partition_key);
-                        // println!("val column count: {}", val.num_columns());
-                        // println!(
-                        //     "[Flat] val num rows: {} on partition {}",
-                        //     val.num_rows(),
-                        //     partition
-                        // );
-                        // println!("batch: {:?}", val);
                         hash_buffer.clear();
                         hash_buffer.resize(val.num_rows(), 0);
                         let array_ref = column.clone();
@@ -261,14 +257,6 @@ impl MsjBatchPartitioner {
                         for (index, hash) in hash_buffer.iter().enumerate() {
                             indices[(hash % num_partitions as u64) as usize].push(index as u32);
                         }
-
-
-                        //decrease indices size //! debugging purposes!
-                        // for i in 0..num_partitions {
-                        //     if indices[i].len() > 2 {
-                        //         indices[i] = indices[i][0..1].to_vec();
-                        //     }
-                        // }
 
                         //vector containing the rebuilt batches
                         let mut batches: Vec<SemiJoinResultBatch> = Vec::new();
@@ -289,14 +277,7 @@ impl MsjBatchPartitioner {
                                 val.schema().clone(),
                                 new_columns,
                             )?);
-                            let nb = new_batch.clone();
-                            match nb {
-                                SemiJoinResultBatch::Flat(val) => {
-                                    // println!("[Flat]nb num rows: {} on partition {}", val.num_rows(), partition);
-                                }
-                                _ => {}
-                            }
-                            // println!("-----\noriginal batch: {:?}\n batch {}: {:?}\n-----", val, i, new_batch);
+                            println!("-----\nmsj id {}, original batch: {:?}\n batch {}: {:?}\n-----",msj_id, val, i, new_batch);
                             batches.push(new_batch);
                             
                         }
@@ -316,7 +297,6 @@ impl MsjBatchPartitioner {
                             >);
                     }
                     SemiJoinResultBatch::Nested(val) => {
-                        // println!("partition key: {} in id", partition_key);
                         let column = val.regular_column(*partition_key);
                     
                         
@@ -342,19 +322,12 @@ impl MsjBatchPartitioner {
                             // let arr: Sel = Sel::new(arr);
 
                             let schema = val.schema().clone();
-
-                            // let v = val.clone();
-                            // let mut inner_cols = val.inner.nested_cols;
-                            //rebuild batches
-                            // println!("inner cols len: {}", inner_cols.len());
                             let mut inner_cols_final: Vec<NestedColumn> = Vec::new();
                             for col in val.inner.nested_cols.iter() {
                                 // take_nested_column_inplace(col, &arr);
                                 let c = take_rows_from_nestedcol(col, arr.as_ref())?;
                                 inner_cols_final.push(c);
                             }
-
-                            // println!("sel len: {}", sel.len());
 
                             let regular_cols = val
                                 .inner
@@ -373,15 +346,11 @@ impl MsjBatchPartitioner {
                                 regular_cols,
                                 inner_cols_final,
                             ));
-                            // println!("-----\n-----\noriginal batch:\n {:?}\n+++++\n new batch for partition {}:\n {:?}\n-----\n-----", val, i, new_batch);
+                            println!("-----\n-----\nmsj {} original batch:\n {:?}\n+++++\n new batch for partition {}:\n {:?}\n-----\n-----",msj_id, val, i, new_batch);
 
                             batches.push(new_batch);
                         }
 
-                        // return Ok(batches
-                        //     .into_iter()
-                        //     .enumerate()
-                        //     .map(|(i, batch)| Ok((i, batch))));
                         return Ok(Box::new(
                             batches
                                 .into_iter()
@@ -610,9 +579,6 @@ impl RepartitionMultiSemiJoin {
 
             let state = state.lock();
 
-            // eprintln!("repartitionmsj test block");
-            // eprintln!("{}", state.debugTester);
-
             // let child_stream = self.child.execute(partition, contextclone)?;
             // child_stream
             state.debugTester.clone()
@@ -635,12 +601,13 @@ impl RepartitionMultiSemiJoin {
         >,
         context: Arc<TaskContext>,
         repartition_key: usize,
+        msj_id: usize,
     ) -> Result<(), DataFusionError> {
-        println!("pull from input on partition {}", partition);
+        // println!("pull from input on partition {}", partition);
         let mut input_stream = input.execute(partition, context)?;
         let num_outputs = output_channnels.len();
         // println!("num outputs: {}", num_outputs);
-        let mut partitioner = MsjBatchPartitioner::try_new(num_outputs, 0, repartition_key)?; // ! num partitions obviously should not be a hardcoded 2
+        let mut partitioner = MsjBatchPartitioner::try_new(num_outputs, 0, repartition_key, msj_id)?; 
 
         loop {
             //get batch from input stream, break the loop if there is no next
@@ -651,15 +618,13 @@ impl RepartitionMultiSemiJoin {
                 None => break,
             };
 
-            for res in partitioner.partition_iter(batch, partition)? {
+            for res in partitioner.partition_iter(batch, partition, msj_id)? {
                 let (partition_send, batch) = res?;
                 // println!(
                 //     "sending batch from partition {} to partition {}",
                 //     partition, partition_send
                 // );
 
-                // println!("schema: {}", rbatch.schema());
-                // println!("num rows: {}", rbatch.num_rows());
                 //choose the output channel to send to, if we set this to 0 we will send everything to the first partition
                 if let Some((input_channel, reservation)) =
                     output_channnels.get_mut(&partition_send)
@@ -675,7 +640,7 @@ impl RepartitionMultiSemiJoin {
                 }
             }
         }
-        println!("pull from input on partition {} done", partition);
+        // println!("pull from input on partition {} done", partition);
         Ok(()) //success
     }
 
