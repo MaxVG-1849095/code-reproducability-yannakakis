@@ -6,7 +6,7 @@ use std::task::{Context, Poll};
 use std::{pin::Pin, sync::Arc};
 
 use datafusion::arrow::array::{
-    ArrayRef, Datum, Int32Array, Int64Array, RecordBatch, UInt32Array, UInt64Array, UInt8Array
+    ArrayRef, Datum, Int32Array, Int64Array, RecordBatch, UInt32Array, UInt64Array, UInt8Array,
 };
 use datafusion::arrow::compute::kernels::partition;
 use datafusion::arrow::compute::take;
@@ -26,9 +26,9 @@ use futures::stream::TryFlatten;
 use futures::{FutureExt, Stream, StreamExt, TryStreamExt};
 use rand::prelude::Distribution;
 
-use crate::yannakakis::multisemijoin::MultiSemiJoinStreamAdapter;
-use crate::yannakakis::unnest;
-use super::data::{Idx, NestedColumn, NonSingularNestedColumn, SemiJoinResultBatch, SingularNestedColumn};
+use super::data::{
+    Idx, NestedColumn, NonSingularNestedColumn, SemiJoinResultBatch, SingularNestedColumn,
+};
 use super::kernel::take_nested_column_inplace;
 use super::multisemijoin::MultiSemiJoinBatchStream;
 use super::sel::{self, Sel};
@@ -37,6 +37,8 @@ use super::{
     groupby::GroupBy,
     multisemijoin::{MultiSemiJoin, SendableSemiJoinResultBatchStream},
 };
+use crate::yannakakis::multisemijoin::MultiSemiJoinStreamAdapter;
+use crate::yannakakis::unnest;
 use distributor_channels::{channels, DistributionReceiver, DistributionSender};
 use hashbrown::HashMap;
 use parking_lot::Mutex;
@@ -128,9 +130,12 @@ impl RepartitionExecState {
                 child_id,
             ));
 
-            let wait_for_task =
-                SpawnedTask::spawn(RepartitionMultiSemiJoin::wait_for_task(input_task,
-                channels_in.into_iter().map(|(partition, (tx, _reservation))| (partition, tx)).collect()
+            let wait_for_task = SpawnedTask::spawn(RepartitionMultiSemiJoin::wait_for_task(
+                input_task,
+                channels_in
+                    .into_iter()
+                    .map(|(partition, (tx, _reservation))| (partition, tx))
+                    .collect(),
             ));
             spawned_tasks.push(wait_for_task);
         }
@@ -195,7 +200,7 @@ impl MsjBatchPartitioner {
             }
         };
 
-        Ok(Self { state , id: msj_id})
+        Ok(Self { state, id: msj_id })
     }
 
     // pub fn partition<F>(
@@ -260,6 +265,7 @@ impl MsjBatchPartitioner {
 
                         //vector containing the rebuilt batches
                         let mut batches: Vec<SemiJoinResultBatch> = Vec::new();
+                        let mut batchindices: Vec<usize> = Vec::new();
                         //for each partition, create a new batch
                         for i in 0..num_partitions {
                             //rebuild batches
@@ -277,15 +283,24 @@ impl MsjBatchPartitioner {
                                 val.schema().clone(),
                                 new_columns,
                             )?);
-                            println!("-----\nmsj id {}, original batch: {:?}\n batch {}: {:?}\n-----",msj_id, val, i, new_batch);
-                            batches.push(new_batch);
-                            
+                            // println!(
+                            //     "-----\nmsj id {}, original batch: {:?}\n batch {}: {:?}\n-----",
+                            //     msj_id, val, i, new_batch
+                            // );
+                            //if the batch's reguar columns are not empty, add it to output otherwise we skip it
+                            if new_batch.num_rows() > 0 {
+                                batches.push(new_batch);
+                                batchindices.push(i);
+                            }
+                            else{
+                                // println!("empty batch");
+                            }
                         }
                         return Ok(Box::new(
                             batches
                                 .into_iter()
-                                .enumerate()
-                                .map(|(i, batch)| Ok((i, batch))),
+                                .zip(batchindices.into_iter())
+                                .map(|(batch, idx)| Ok((idx, batch))),
                         )
                             as Box<
                                 dyn Iterator<
@@ -298,8 +313,6 @@ impl MsjBatchPartitioner {
                     }
                     SemiJoinResultBatch::Nested(val) => {
                         let column = val.regular_column(*partition_key);
-                    
-                        
 
                         hash_buffer.clear();
                         hash_buffer.resize(val.num_rows(), 0);
@@ -316,6 +329,7 @@ impl MsjBatchPartitioner {
                         }
                         //vector containing the rebuilt batches
                         let mut batches: Vec<SemiJoinResultBatch> = Vec::new();
+                        let mut batchindices: Vec<usize> = Vec::new();
                         //rebuild a batch for each partition
                         for i in 0..num_partitions {
                             let arr: Vec<u32> = indices[i].iter().map(|x| *x as u32).collect();
@@ -346,16 +360,21 @@ impl MsjBatchPartitioner {
                                 regular_cols,
                                 inner_cols_final,
                             ));
-                            println!("-----\n-----\nmsj {} original batch:\n {:?}\n+++++\n new batch for partition {}:\n {:?}\n-----\n-----",msj_id, val, i, new_batch);
-
-                            batches.push(new_batch);
+                            // println!("-----\n-----\nmsj {} original batch:\n {:?}\n+++++\n new batch for partition {}:\n {:?}\n-----\n-----",msj_id, val, i, new_batch);
+                            if new_batch.num_rows() > 0 {
+                                batches.push(new_batch);
+                                batchindices.push(i);
+                            }
+                            else{
+                                // println!("empty batch");
+                            }
                         }
 
                         return Ok(Box::new(
                             batches
                                 .into_iter()
-                                .enumerate()
-                                .map(|(i, batch)| Ok((i, batch))),
+                                .zip(batchindices.into_iter())
+                                .map(|(batch, idx)| Ok((idx, batch))),
                         )
                             as Box<
                                 dyn Iterator<
@@ -607,7 +626,8 @@ impl RepartitionMultiSemiJoin {
         let mut input_stream = input.execute(partition, context)?;
         let num_outputs = output_channnels.len();
         // println!("num outputs: {}", num_outputs);
-        let mut partitioner = MsjBatchPartitioner::try_new(num_outputs, 0, repartition_key, msj_id)?; 
+        let mut partitioner =
+            MsjBatchPartitioner::try_new(num_outputs, 0, repartition_key, msj_id)?;
 
         loop {
             //get batch from input stream, break the loop if there is no next
@@ -645,22 +665,28 @@ impl RepartitionMultiSemiJoin {
     }
 
     //function to wait for a given input task
-    async fn wait_for_task(input_task: SpawnedTask<Result<(), DataFusionError>>, txs: HashMap<usize, DistributionSender<MaybeNestedBatch>>) {
+    async fn wait_for_task(
+        input_task: SpawnedTask<Result<(), DataFusionError>>,
+        txs: HashMap<usize, DistributionSender<MaybeNestedBatch>>,
+    ) {
         // input_task.join().await;
-        match input_task.join().await{
+        match input_task.join().await {
             Ok(_) => {
                 for (i, tx) in txs {
                     tx.send(None).await.expect("send none");
                     // println!("sent none to {}", i);
                 }
-            },
+            }
             Err(e) => {
                 let e = Arc::new(e);
                 for (_, tx) in txs {
-                    let err = Err(DataFusionError::Context("error".to_string(), Box::new(DataFusionError::External(Box::new(Arc::clone(&e))))));
+                    let err = Err(DataFusionError::Context(
+                        "error".to_string(),
+                        Box::new(DataFusionError::External(Box::new(Arc::clone(&e)))),
+                    ));
                     tx.send(Some(err)).await.expect("send none");
                 }
-            },
+            }
         }
     }
 }
@@ -774,8 +800,6 @@ impl MultiSemiJoinBatchStream for MsjRepartitionStream {
         &self.schema
     }
 }
-
-
 
 #[cfg(test)]
 

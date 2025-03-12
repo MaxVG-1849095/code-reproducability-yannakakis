@@ -69,9 +69,9 @@ struct Args {
 //TODO: multithreaded runtime
 // Single threaded, also known as "current_thread" runtime in Tokio
 // src: https://docs.rs/tokio/latest/tokio/attr.main.html#using-current-thread-runtime
-// #[tokio::main(flavor = "multi_thread", worker_threads = 1)]
+#[tokio::main(flavor = "multi_thread", worker_threads = 4)]
 // #[tokio::main]
-#[tokio::main(flavor = "current_thread")]
+// #[tokio::main(flavor = "current_thread")]
 
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Args = Args::parse();
@@ -179,13 +179,13 @@ async fn exec_plan(
         println!("{}", pretty_format_batches(&results)?.to_string());
         //print amount of rows
         // println!("Rows: {}", results[0].num_rows());
-        // let mut results_count = 0;
-        // let mut batch_count = 0;
-        // for batch in results {
-        //     results_count += batch.num_rows();
-        //     batch_count += 1;
-        // }
-        // println!("Batches: {}, Rows: {}",batch_count, results_count);
+        let mut results_count = 0;
+        let mut batch_count = 0;
+        for batch in results {
+            results_count += batch.num_rows();
+            batch_count += 1;
+        }
+        println!("Batches: {}, Rows: {}",batch_count, results_count);
         println!("Execution time: {:?}", duration);
         durations.push(duration);
 

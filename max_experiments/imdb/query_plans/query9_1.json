@@ -22,7 +22,8 @@
                     ],
                     "guard": {
                         "name": "REPARTITION",
-                        "num_partitions": 2,
+                        "num_partitions": 4,
+                        "partition_on": 0,
                         "partitioning": "unknown",
                         "children": [
                             {
@@ -64,8 +65,9 @@
                                 ],
                                 "guard": {
                                     "name": "REPARTITION",
-                                    "num_partitions": 2,
+                                    "num_partitions": 4,
                                     "partitioning": "unknown",
+                                    "partition_on": 0,
                                     "children": [
                                         {
                                             "name": "SEQUENTIALSCAN",
@@ -99,8 +101,9 @@
                                             "equijoin_keys": [],
                                             "guard": {
                                                 "name": "REPARTITION",
-                                                "num_partitions": 2,
+                                                "num_partitions": 4,
                                                 "partitioning": "unknown",
+                                                "partition_on": 0,
                                                 "children": [
                                                     {
                                                         "name": "SEQUENTIALSCAN",
