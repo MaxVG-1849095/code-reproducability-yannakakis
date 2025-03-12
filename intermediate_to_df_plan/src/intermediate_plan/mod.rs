@@ -103,6 +103,7 @@ pub struct RepartitionExecNode {
     pub base: BaseNode,
     pub partitioning: String,
     pub num_partitions: usize,
+    pub partition_on: usize,
 }
 
 // #[derive(Serialize, Deserialize, Debug)]

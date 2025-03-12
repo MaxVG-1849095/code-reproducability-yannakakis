@@ -1,0 +1,121 @@
+{
+    "execution_time": 0.490437,
+    "root": {
+        "name": "AGGREGATE",
+        "execution_time": 0.000265,
+        "actual_rows": 1,
+        "estimated_cardinality": null,
+        "children": [
+            {
+                "name": "YANNAKAKIS",
+                "root": {
+                    "name": "MULTISEMIJOIN",
+                    "partitioned": false,
+                    "id": 0,
+                    "equijoin_keys": [
+                        [
+                            [
+                                0,
+                                0
+                            ]
+                        ]
+                    ],
+                    "guard": {
+                        "name": "SEQUENTIALSCAN",
+                        "execution_time": 0.016881,
+                        "actual_rows": 4297008,
+                        "estimated_cardinality": 4302340,
+                        "children": [],
+                        "relation": "dblp23",
+                        "opt_filter": "s IS NOT NULL",
+                        "projection": [
+                            {
+                                "table_name": "dblp23",
+                                "field_name": "s"
+                            }
+                        ]
+                    },
+                    "children": [
+                        {
+                            "name": "GROUPBY",
+                            "partitioned": false,
+                            "id": 0,
+                            "group_on": [
+                                0
+                            ],
+                            "child": {
+                                "name": "MULTISEMIJOIN",
+                                "partitioned": false,
+                                "id": 0,
+                                "equijoin_keys": [
+                                    [
+                                        [
+                                            0,
+                                            0
+                                        ]
+                                    ]
+                                ],
+                                "guard": {
+                                    "name": "SEQUENTIALSCAN",
+                                    "execution_time": 0.006163,
+                                    "actual_rows": 2134666,
+                                    "estimated_cardinality": 3343619,
+                                    "children": [],
+                                    "relation": "dblp21",
+                                    "opt_filter": "s IS NOT NULL",
+                                    "projection": [
+                                        {
+                                            "table_name": "dblp21",
+                                            "field_name": "s"
+                                        }
+                                    ]
+                                },
+                                "children": [
+                                    {
+                                        "name": "GROUPBY",
+                                        "partitioned": false,
+                                        "id": 0,
+                                        "group_on": [
+                                            0
+                                        ],
+                                        "child": {
+                                            "name": "MULTISEMIJOIN",
+                                            "partitioned": false,
+                                            "id": 0,
+                                            "equijoin_keys": [],
+                                            "guard": {
+                                                "name": "SEQUENTIALSCAN",
+                                                "execution_time": 0.005164,
+                                                "actual_rows": 2134666,
+                                                "estimated_cardinality": 2134666,
+                                                "children": [],
+                                                "relation": "dblp7",
+                                                "opt_filter": null,
+                                                "projection": [
+                                                    {
+                                                        "table_name": "dblp7",
+                                                        "field_name": "s"
+                                                    }
+                                                ]
+                                            },
+                                            "children": []
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            }
+        ],
+        "group_by": null,
+        "aggregate": [
+            "count_star()"
+        ]
+    },
+    "aliases": {
+        "dblp7": "dblp7",
+        "dblp21": "dblp21",
+        "dblp23": "dblp23"
+    }
+}

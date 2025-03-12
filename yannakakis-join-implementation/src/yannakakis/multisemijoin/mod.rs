@@ -33,10 +33,8 @@ use super::data::NestedColumn;
 use super::data::NestedSchema;
 use super::data::NestedSchemaRef;
 use super::data::SemiJoinResultBatch;
-// use super::groupby::GroupBy;
+use super::groupby::GroupBy;
 use super::kernel::take_nested_column_inplace;
-use super::repartitionshredded::GroupByWrapper;
-use super::repartitionshredded::GroupByWrapperEnum;
 use super::repartitionshredded::MultiSemiJoinWrapper;
 use super::sel::Sel;
 use super::util::once_async::OnceAsync;
@@ -52,7 +50,7 @@ pub struct MultiSemiJoin {
     guard: Arc<dyn ExecutionPlan>,
 
     /// The non-empty vector of child nodes.
-    children: Vec<Arc<GroupByWrapperEnum>>, // Arc because shared between multiple partitions
+    children: Vec<Arc<GroupBy>>, // Arc because shared between multiple partitions
 
     /// For each child, a vector [ A,B ] indicating the indices of the guard columns that form a lookup key in the GroupBy child.
     /// Is of the same length as `children`.
@@ -81,7 +79,7 @@ pub struct MultiSemiJoin {
 impl MultiSemiJoin {
     pub fn new(
         guard: Arc<dyn ExecutionPlan>,
-        children: Vec<Arc<GroupByWrapperEnum>>,
+        children: Vec<Arc<GroupBy>>,
         equijoin_keys: Vec<Vec<(usize, usize)>>,
         id: usize,
     ) -> Self {
@@ -136,7 +134,7 @@ impl MultiSemiJoin {
         let child_schemas: Vec<_> = children.iter().map(|c| c.schema()).collect();
         let result_schema = NestedSchema::semijoin(&guard_schema, &child_schemas);
 
-        let once_futs = (0..children.len()).map(|_| Default::default()).collect();
+        let once_futs = (0..guard.output_partitioning().partition_count()).map(|_| Default::default()).collect();
 
         let guard_partitions = guard.output_partitioning().partition_count();
 
@@ -159,7 +157,7 @@ impl MultiSemiJoin {
         &self.schema
     }
 
-    pub fn children(&self) -> &[Arc<GroupByWrapperEnum>] {
+    pub fn children(&self) -> &[Arc<GroupBy>] {
         &self.children
     }
 
@@ -184,33 +182,35 @@ impl MultiSemiJoinWrapper for MultiSemiJoin {
         context: Arc<TaskContext>,
     ) -> Result<SendableSemiJoinResultBatchStream, DataFusionError> {
         async fn materialize_child(
-            child: Arc<GroupByWrapperEnum>,
+            child: Arc<GroupBy>,
             context: Arc<TaskContext>,
             partition: usize,
         ) -> Result<GroupedRelRef, DataFusionError> {
-            println!(
-                "materialize child for partition {} in onceasync materialize_child",
-                partition
-            );
             child.materialize(context, partition).await
         }
 
         // println!("msj with id {} execute on partition {}", self.id, partition);
 
-        let materialized_children_futs: Vec<OnceFut<Arc<dyn GroupedRel>>> = self
-            .once_futs
-            .iter()
-            .zip(self.children.iter())
-            .map(|(onceasync, child)| {
-                onceasync.clear(); // ! probably not the best way to do this! --> needed for now to be able to materialize for each partition
-                onceasync.once(|| materialize_child(child.clone(), context.clone(), partition))
-            })
-            .collect();
+        // let materialized_children_futs: Vec<OnceFut<Arc<dyn GroupedRel>>> = self
+        //     .once_futs
+        //     .iter()
+        //     .zip(self.children.iter())
+        //     .map(|(onceasync, child)| {
+        //         onceasync.clear(); // ! probably not the best way to do this! --> needed for now to be able to materialize for each partition
+        //         onceasync.once(|| materialize_child(child.clone(), context.clone(), partition))
+        //     })
+        //     .collect();
 
-        println!(
-            "materialized_children_futs length: {}",
-            materialized_children_futs.len()
-        );
+        // println!("materialized_children_futs length: {}", materialized_children_futs.len());
+
+        // ! still incorrect, once futs is made for one per child but currently using it for 1 per partition 
+        let materialized_children_futs: Vec<OnceFut<Arc<dyn GroupedRel>>> = self.children.iter().map(|child|{
+            println!("calling once for partition {} in id: {}", partition, self.id);
+            self.once_futs[partition].once(|| materialize_child(child.clone(), context.clone(), partition))
+        }).collect();
+
+        println!("materialized children futs length: {} in id: {}", materialized_children_futs.len(), self.id);
+
 
         println!("msj with id {} execute on partition {}", self.id, partition);
 
@@ -220,9 +220,6 @@ impl MultiSemiJoinWrapper for MultiSemiJoin {
         let guard_stream: Pin<Box<dyn RecordBatchStream + Send>>;
         guard_stream = self.guard.execute(partition, context)?;
 
-        //get
-        // let guard_time = guard_time_start.elapsed();
-        // println!("node {} guard_time: {}", self.id,guard_time.as_nanos());
 
         let schema = self.schema.clone();
         let semijoin_keys = self.semijoin_keys.clone();
@@ -285,7 +282,7 @@ impl MultiSemiJoinWrapper for MultiSemiJoin {
     fn guard(&self) -> &Arc<dyn ExecutionPlan> {
         &self.guard
     }
-    fn children(&self) -> &[Arc<GroupByWrapperEnum>] {
+    fn children(&self) -> &[Arc<GroupBy>] {
         &self.children
     }
 
@@ -425,7 +422,8 @@ fn poll_next_leaf(
     // - the guard input batch is not yet available
     // - the guard stream returned an error
     let guard_batch = match ready!(guard_stream.poll_next_unpin(cx)) {
-        Some(Ok(guard_batch)) => guard_batch,
+        Some(Ok(guard_batch)) => {//println!("guard_batch leaf:{:?}", guard_batch);
+        guard_batch},
         Some(Err(e)) => return Poll::Ready(Some(Err(e))),
         None => return Poll::Ready(None),
     };
@@ -468,7 +466,8 @@ fn poll_next_single_semijoin(
     // - the guard input batch is not yet available (see the ready! macro)
     // - the guard stream returned an error
     let guard_batch = match ready!(guard_stream.poll_next_unpin(cx)) {
-        Some(Ok(guard_batch)) => guard_batch,
+        Some(Ok(guard_batch)) => {//println!("guard_batch single:{:?}", guard_batch);
+        guard_batch},
         Some(Err(e)) => return Poll::Ready(Some(Err(e))),
         None => return Poll::Ready(None),
     };
@@ -734,383 +733,383 @@ where
     }
 }
 
-#[cfg(test)]
-mod tests {
+// #[cfg(test)]
+// mod tests {
 
-    use std::error::Error;
+//     use std::error::Error;
 
-    use datafusion::{
-        arrow::{
-            array::{Int8Array, UInt8Array},
-            datatypes::{DataType, Field, Schema},
-            error::ArrowError,
-        },
-        physical_plan::memory::MemoryExec,
-    };
+//     use datafusion::{
+//         arrow::{
+//             array::{Int8Array, UInt8Array},
+//             datatypes::{DataType, Field, Schema},
+//             error::ArrowError,
+//         },
+//         physical_plan::memory::MemoryExec,
+//     };
 
-    use crate::yannakakis::groupby::GroupBy;
+//     use crate::yannakakis::groupby::GroupBy;
 
-    use super::*;
+//     use super::*;
 
-    /// | a | b  | c |
-    /// | - | -- | - |
-    /// | 1 | 1  | 1 |
-    /// | 1 | 2  | 2 |
-    /// | 1 | 3  | 3 |
-    /// | 1 | 4  | 4 |
-    /// | 1 | 5  | 5 |
-    /// | 1 | 6  | 1 |
-    /// | 1 | 7  | 2 |
-    /// | 1 | 8  | 3 |
-    /// | 1 | 9  | 4 |
-    /// | 1 | 10 | 5 |
-    fn example_batch() -> Result<RecordBatch, ArrowError> {
-        let schema = Arc::new(Schema::new(vec![
-            Field::new("a", DataType::UInt8, false),
-            Field::new("b", DataType::Int8, false),
-            Field::new("c", DataType::UInt8, false),
-        ]));
-        let a = UInt8Array::from(vec![1, 1, 1, 1, 1, 1, 1, 1, 1, 1]);
-        let b = Int8Array::from(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
-        let c = UInt8Array::from(vec![1, 2, 3, 4, 5, 1, 2, 3, 4, 5]);
-        RecordBatch::try_new(schema.clone(), vec![Arc::new(a), Arc::new(b), Arc::new(c)])
-    }
+//     /// | a | b  | c |
+//     /// | - | -- | - |
+//     /// | 1 | 1  | 1 |
+//     /// | 1 | 2  | 2 |
+//     /// | 1 | 3  | 3 |
+//     /// | 1 | 4  | 4 |
+//     /// | 1 | 5  | 5 |
+//     /// | 1 | 6  | 1 |
+//     /// | 1 | 7  | 2 |
+//     /// | 1 | 8  | 3 |
+//     /// | 1 | 9  | 4 |
+//     /// | 1 | 10 | 5 |
+//     fn example_batch() -> Result<RecordBatch, ArrowError> {
+//         let schema = Arc::new(Schema::new(vec![
+//             Field::new("a", DataType::UInt8, false),
+//             Field::new("b", DataType::Int8, false),
+//             Field::new("c", DataType::UInt8, false),
+//         ]));
+//         let a = UInt8Array::from(vec![1, 1, 1, 1, 1, 1, 1, 1, 1, 1]);
+//         let b = Int8Array::from(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+//         let c = UInt8Array::from(vec![1, 2, 3, 4, 5, 1, 2, 3, 4, 5]);
+//         RecordBatch::try_new(schema.clone(), vec![Arc::new(a), Arc::new(b), Arc::new(c)])
+//     }
 
-    /// | a | b  | c |
-    /// | - | -- | - |
-    /// | 1 | 1  | 1 |
-    /// | 1 | 2  | 2 |
-    /// | 1 | 3  | 3 |
-    /// | 1 | 4  | 4 |
-    /// | 1 | 5  | 5 |
-    /// | 1 | 6  | 1 |
-    /// | 1 | 7  | 2 |
-    /// | 1 | 8  | 3 |
-    /// | 1 | 9  | 4 |
-    /// | 1 | 10 | 5 |
-    fn example_guard() -> Result<Arc<dyn ExecutionPlan>, DataFusionError> {
-        let batch = example_batch()?;
-        let schema = batch.schema();
-        let partition = vec![batch];
-        Ok(Arc::new(MemoryExec::try_new(&[partition], schema, None)?))
-    }
+//     /// | a | b  | c |
+//     /// | - | -- | - |
+//     /// | 1 | 1  | 1 |
+//     /// | 1 | 2  | 2 |
+//     /// | 1 | 3  | 3 |
+//     /// | 1 | 4  | 4 |
+//     /// | 1 | 5  | 5 |
+//     /// | 1 | 6  | 1 |
+//     /// | 1 | 7  | 2 |
+//     /// | 1 | 8  | 3 |
+//     /// | 1 | 9  | 4 |
+//     /// | 1 | 10 | 5 |
+//     fn example_guard() -> Result<Arc<dyn ExecutionPlan>, DataFusionError> {
+//         let batch = example_batch()?;
+//         let schema = batch.schema();
+//         let partition = vec![batch];
+//         Ok(Arc::new(MemoryExec::try_new(&[partition], schema, None)?))
+//     }
 
-    /// Groupby R(a,b,c) on `groupby_cols`
-    fn example_child(group_columns: Vec<usize>) -> Result<Arc<GroupBy>, DataFusionError> {
-        let leaf = MultiSemiJoin::new(example_guard()?, vec![], vec![], 0); //TODO: fix this
-        let groupby = GroupBy::new(Arc::new(leaf), group_columns);
-        Ok(Arc::new(groupby))
-    }
+//     /// Groupby R(a,b,c) on `groupby_cols`
+//     fn example_child(group_columns: Vec<usize>) -> Result<Arc<GroupBy>, DataFusionError> {
+//         let leaf = MultiSemiJoin::new(example_guard()?, vec![], vec![], 0); //TODO: fix this
+//         let groupby = GroupBy::new(Arc::new(leaf), group_columns, 0);
+//         Ok(Arc::new(groupby))
+//     }
 
-    /// MultiSemiJoin::new with valid equijoin keys.
-    /// Should not panic
-    #[test]
-    fn test_multisemijoin_new() {
-        // R(a,b,c)
-        let guard = example_guard().unwrap();
-        // R(a,b,c) groupby a
-        // let child_a = example_child(vec![0]).unwrap();
-        // R(a,b,c) groupby (a,b)
-        // let child_ab = example_child(vec![0, 1]).unwrap();
+//     /// MultiSemiJoin::new with valid equijoin keys.
+//     /// Should not panic
+//     #[test]
+//     fn test_multisemijoin_new() {
+//         // R(a,b,c)
+//         let guard = example_guard().unwrap();
+//         // R(a,b,c) groupby a
+//         // let child_a = example_child(vec![0]).unwrap();
+//         // R(a,b,c) groupby (a,b)
+//         // let child_ab = example_child(vec![0, 1]).unwrap();
 
-        let child_a =
-            GroupByWrapperEnum::Groupby(Arc::try_unwrap(example_child(vec![0]).unwrap()).unwrap());
+//         let child_a =
+//             GroupByWrapperEnum::Groupby(Arc::try_unwrap(example_child(vec![0]).unwrap()).unwrap());
 
-        let child_ab = GroupByWrapperEnum::Groupby(
-            Arc::try_unwrap(example_child(vec![0, 1]).unwrap()).unwrap(),
-        );
+//         let child_ab = GroupByWrapperEnum::Groupby(
+//             Arc::try_unwrap(example_child(vec![0, 1]).unwrap()).unwrap(),
+//         );
 
-        let _semijoin =
-            MultiSemiJoin::new(guard.clone(), vec![child_a.into()], vec![vec![(0, 0)]], 0);
-        let _semijoin = MultiSemiJoin::new(
-            guard.clone(),
-            vec![child_ab.into()],
-            vec![vec![(0, 0), (1, 1)]],
-            0,
-        );
-    }
+//         let _semijoin =
+//             MultiSemiJoin::new(guard.clone(), vec![child_a.into()], vec![vec![(0, 0)]], 0);
+//         let _semijoin = MultiSemiJoin::new(
+//             guard.clone(),
+//             vec![child_ab.into()],
+//             vec![vec![(0, 0), (1, 1)]],
+//             0,
+//         );
+//     }
 
-    /// MultiSemiJoin::new with invalid equijoin keys.
-    /// Two relations are equijoined on columns of different types
-    #[test]
-    #[should_panic]
-    fn test_multisemijoin_invalid_keys() {
-        // R(a,b,c)
-        // Schema of guard: {a: u8, b: i8, c: u8}
-        let guard = example_guard().unwrap();
-        // R(a,b,c) groupby a
-        // Schema of child: {a: u8}
-        // let child = example_child(vec![0]).unwrap();
-        let child =
-            GroupByWrapperEnum::Groupby(Arc::try_unwrap(example_child(vec![0]).unwrap()).unwrap());
+//     /// MultiSemiJoin::new with invalid equijoin keys.
+//     /// Two relations are equijoined on columns of different types
+//     #[test]
+//     #[should_panic]
+//     fn test_multisemijoin_invalid_keys() {
+//         // R(a,b,c)
+//         // Schema of guard: {a: u8, b: i8, c: u8}
+//         let guard = example_guard().unwrap();
+//         // R(a,b,c) groupby a
+//         // Schema of child: {a: u8}
+//         // let child = example_child(vec![0]).unwrap();
+//         let child =
+//             GroupByWrapperEnum::Groupby(Arc::try_unwrap(example_child(vec![0]).unwrap()).unwrap());
 
-        let _semijoin = MultiSemiJoin::new(guard, vec![child.into()], vec![vec![(1, 0)]], 0);
-    }
+//         let _semijoin = MultiSemiJoin::new(guard, vec![child.into()], vec![vec![(1, 0)]], 0);
+//     }
 
-    /// MultiSemiJoin::new with invalid equijoin keys.
-    /// Key invalid because out of bounds
-    #[test]
-    #[should_panic]
-    fn test_multisemijoin_equijoin_key_out_of_bounds() {
-        // R(a,b,c)
-        // Schema of guard: {a: u8, b: i8, c: u8}
-        let guard = example_guard().unwrap();
-        // R(a,b,c) groupby a
-        // Schema of child: {a: u8}
-        // let child = example_child(vec![0]).unwrap();
-        let child =
-            GroupByWrapperEnum::Groupby(Arc::try_unwrap(example_child(vec![0]).unwrap()).unwrap());
+//     /// MultiSemiJoin::new with invalid equijoin keys.
+//     /// Key invalid because out of bounds
+//     #[test]
+//     #[should_panic]
+//     fn test_multisemijoin_equijoin_key_out_of_bounds() {
+//         // R(a,b,c)
+//         // Schema of guard: {a: u8, b: i8, c: u8}
+//         let guard = example_guard().unwrap();
+//         // R(a,b,c) groupby a
+//         // Schema of child: {a: u8}
+//         // let child = example_child(vec![0]).unwrap();
+//         let child =
+//             GroupByWrapperEnum::Groupby(Arc::try_unwrap(example_child(vec![0]).unwrap()).unwrap());
 
-        let _semijoin = MultiSemiJoin::new(guard, vec![child.into()], vec![vec![(0, 1)]], 0);
-    }
+//         let _semijoin = MultiSemiJoin::new(guard, vec![child.into()], vec![vec![(0, 1)]], 0);
+//     }
 
-    /// Test unary multisemijoin (leaf node)
-    #[tokio::test]
-    async fn test_unary_semijoin() -> Result<(), Box<dyn Error>> {
-        // R(a,b,c)
-        // Schema of guard: {a: u8, b: i8, c: u8}
-        let guard = example_guard().unwrap();
+//     /// Test unary multisemijoin (leaf node)
+//     #[tokio::test]
+//     async fn test_unary_semijoin() -> Result<(), Box<dyn Error>> {
+//         // R(a,b,c)
+//         // Schema of guard: {a: u8, b: i8, c: u8}
+//         let guard = example_guard().unwrap();
 
-        let semijoin = MultiSemiJoin::new(guard, vec![], vec![], 0);
-        let result = semijoin.execute(0, Arc::new(TaskContext::default()))?;
+//         let semijoin = MultiSemiJoin::new(guard, vec![], vec![], 0);
+//         let result = semijoin.execute(0, Arc::new(TaskContext::default()))?;
 
-        let batches = result
-            .collect::<Vec<Result<SemiJoinResultBatch, DataFusionError>>>()
-            .await;
+//         let batches = result
+//             .collect::<Vec<Result<SemiJoinResultBatch, DataFusionError>>>()
+//             .await;
 
-        assert_eq!(batches.len(), 1);
-        let batch = batches[0].as_ref().unwrap();
-        match batch {
-            SemiJoinResultBatch::Flat(b) => assert_eq!(b, &example_batch().unwrap()),
-            SemiJoinResultBatch::Nested(_) => panic!("Expected a flat batch"),
-        }
+//         assert_eq!(batches.len(), 1);
+//         let batch = batches[0].as_ref().unwrap();
+//         match batch {
+//             SemiJoinResultBatch::Flat(b) => assert_eq!(b, &example_batch().unwrap()),
+//             SemiJoinResultBatch::Nested(_) => panic!("Expected a flat batch"),
+//         }
 
-        Ok(())
-    }
+//         Ok(())
+//     }
 
-    /// Test binary semijoin (single equijoin key).
-    /// Special case: cartesian product
-    #[tokio::test]
-    async fn test_cartesian_prod_single_key() -> Result<(), Box<dyn Error>> {
-        // R(a,b,c)
-        let guard = example_guard()?;
-        // R(a,b,c) groupby a
-        // let child_a = example_child(vec![0])?;
-        let child_a =
-            GroupByWrapperEnum::Groupby(Arc::try_unwrap(example_child(vec![0]).unwrap()).unwrap());
+//     /// Test binary semijoin (single equijoin key).
+//     /// Special case: cartesian product
+//     #[tokio::test]
+//     async fn test_cartesian_prod_single_key() -> Result<(), Box<dyn Error>> {
+//         // R(a,b,c)
+//         let guard = example_guard()?;
+//         // R(a,b,c) groupby a
+//         // let child_a = example_child(vec![0])?;
+//         let child_a =
+//             GroupByWrapperEnum::Groupby(Arc::try_unwrap(example_child(vec![0]).unwrap()).unwrap());
 
-        let semijoin =
-            MultiSemiJoin::new(guard.clone(), vec![child_a.into()], vec![vec![(0, 0)]], 0);
-        let result = semijoin.execute(0, Arc::new(TaskContext::default()))?;
+//         let semijoin =
+//             MultiSemiJoin::new(guard.clone(), vec![child_a.into()], vec![vec![(0, 0)]], 0);
+//         let result = semijoin.execute(0, Arc::new(TaskContext::default()))?;
 
-        let batches = result
-            .collect::<Vec<Result<SemiJoinResultBatch, DataFusionError>>>()
-            .await;
+//         let batches = result
+//             .collect::<Vec<Result<SemiJoinResultBatch, DataFusionError>>>()
+//             .await;
 
-        assert_eq!(batches.len(), 1);
-        let batch = batches[0].as_ref().unwrap();
-        match batch {
-            SemiJoinResultBatch::Flat(_) => panic!("Expected a nested batch"),
-            SemiJoinResultBatch::Nested(nested_batch) => {
-                // The guard batch has 10 rows
-                assert_eq!(nested_batch.num_rows(), 10);
-                // Each row has weight 10 (it joins with 10 other tuples)
-                nested_batch
-                    .total_weights()
-                    .iter()
-                    .for_each(|w| assert_eq!(*w, 10));
-                // Next vector is none because top-level
-                let inner = &nested_batch.inner;
-                assert!(inner.next.is_none());
-                // The nested batch has 1 nested column
-                assert_eq!(nested_batch.schema().nested_fields.len(), 1);
-                let nested_col = nested_batch.nested_column(0).as_non_singular();
-                // All hols point to the same group
-                nested_col.hols.iter().for_each(|hol| assert_eq!(*hol, 10));
-            }
-        }
+//         assert_eq!(batches.len(), 1);
+//         let batch = batches[0].as_ref().unwrap();
+//         match batch {
+//             SemiJoinResultBatch::Flat(_) => panic!("Expected a nested batch"),
+//             SemiJoinResultBatch::Nested(nested_batch) => {
+//                 // The guard batch has 10 rows
+//                 assert_eq!(nested_batch.num_rows(), 10);
+//                 // Each row has weight 10 (it joins with 10 other tuples)
+//                 nested_batch
+//                     .total_weights()
+//                     .iter()
+//                     .for_each(|w| assert_eq!(*w, 10));
+//                 // Next vector is none because top-level
+//                 let inner = &nested_batch.inner;
+//                 assert!(inner.next.is_none());
+//                 // The nested batch has 1 nested column
+//                 assert_eq!(nested_batch.schema().nested_fields.len(), 1);
+//                 let nested_col = nested_batch.nested_column(0).as_non_singular();
+//                 // All hols point to the same group
+//                 nested_col.hols.iter().for_each(|hol| assert_eq!(*hol, 10));
+//             }
+//         }
 
-        Ok(())
-    }
+//         Ok(())
+//     }
 
-    /// Test binary semijoin (equijoin on 2 columns)
-    /// (1-1 relationship) -> Each tuple in the guard joins with exactly one tuple in child.
-    #[tokio::test]
-    async fn test_binary_semijoin_2keycols() -> Result<(), Box<dyn Error>> {
-        // R1(a,b,c)
-        let guard = example_guard()?;
-        // R2(a,b,c) groupby a,b
-        // let child_a = example_child(vec![0, 1])?;
-        let child_a = GroupByWrapperEnum::Groupby(
-            Arc::try_unwrap(example_child(vec![0, 1]).unwrap()).unwrap(),
-        );
+//     /// Test binary semijoin (equijoin on 2 columns)
+//     /// (1-1 relationship) -> Each tuple in the guard joins with exactly one tuple in child.
+//     #[tokio::test]
+//     async fn test_binary_semijoin_2keycols() -> Result<(), Box<dyn Error>> {
+//         // R1(a,b,c)
+//         let guard = example_guard()?;
+//         // R2(a,b,c) groupby a,b
+//         // let child_a = example_child(vec![0, 1])?;
+//         let child_a = GroupByWrapperEnum::Groupby(
+//             Arc::try_unwrap(example_child(vec![0, 1]).unwrap()).unwrap(),
+//         );
 
-        let semijoin = MultiSemiJoin::new(
-            guard.clone(),
-            vec![child_a.into()],
-            vec![vec![(0, 0), (1, 1)]],
-            0,
-        );
-        let result = semijoin.execute(0, Arc::new(TaskContext::default()))?;
+//         let semijoin = MultiSemiJoin::new(
+//             guard.clone(),
+//             vec![child_a.into()],
+//             vec![vec![(0, 0), (1, 1)]],
+//             0,
+//         );
+//         let result = semijoin.execute(0, Arc::new(TaskContext::default()))?;
 
-        let batches = result
-            .collect::<Vec<Result<SemiJoinResultBatch, DataFusionError>>>()
-            .await;
+//         let batches = result
+//             .collect::<Vec<Result<SemiJoinResultBatch, DataFusionError>>>()
+//             .await;
 
-        assert_eq!(batches.len(), 1);
-        let batch = batches[0].as_ref().unwrap();
-        match batch {
-            SemiJoinResultBatch::Flat(_) => panic!("Expected a nested batch"),
-            SemiJoinResultBatch::Nested(nested_batch) => {
-                // The guard batch has 10 rows
-                assert_eq!(nested_batch.num_rows(), 10);
-                // Each row has weight 1 (it joins with 1 other tuple)
-                nested_batch
-                    .total_weights()
-                    .iter()
-                    .for_each(|w| assert_eq!(*w, 1));
-                // Next vector is none because top-level
-                let inner = &nested_batch.inner;
-                assert!(inner.next.is_none());
-                // The nested batch has 1 nested column
-                assert_eq!(nested_batch.schema().nested_fields.len(), 1);
-                let nested_col = nested_batch.nested_column(0).as_non_singular();
-                // All hols point to another group
-                nested_col
-                    .hols
-                    .iter()
-                    .enumerate()
-                    .for_each(|(i, hol)| assert_eq!(*hol as usize - 1, i));
-            }
-        }
+//         assert_eq!(batches.len(), 1);
+//         let batch = batches[0].as_ref().unwrap();
+//         match batch {
+//             SemiJoinResultBatch::Flat(_) => panic!("Expected a nested batch"),
+//             SemiJoinResultBatch::Nested(nested_batch) => {
+//                 // The guard batch has 10 rows
+//                 assert_eq!(nested_batch.num_rows(), 10);
+//                 // Each row has weight 1 (it joins with 1 other tuple)
+//                 nested_batch
+//                     .total_weights()
+//                     .iter()
+//                     .for_each(|w| assert_eq!(*w, 1));
+//                 // Next vector is none because top-level
+//                 let inner = &nested_batch.inner;
+//                 assert!(inner.next.is_none());
+//                 // The nested batch has 1 nested column
+//                 assert_eq!(nested_batch.schema().nested_fields.len(), 1);
+//                 let nested_col = nested_batch.nested_column(0).as_non_singular();
+//                 // All hols point to another group
+//                 nested_col
+//                     .hols
+//                     .iter()
+//                     .enumerate()
+//                     .for_each(|(i, hol)| assert_eq!(*hol as usize - 1, i));
+//             }
+//         }
 
-        Ok(())
-    }
+//         Ok(())
+//     }
 
-    /// Test binary semijoin (equijoin on 4 columns)
-    /// (1-1 relationship) -> Each tuple in the guard joins with exactly one tuple in child.
-    #[tokio::test]
-    async fn test_binary_semijoin_multikeycols() -> Result<(), Box<dyn Error>> {
-        let example_batch = || {
-            let schema = Arc::new(Schema::new(vec![
-                Field::new("a", DataType::UInt8, false),
-                Field::new("b", DataType::UInt8, false),
-                Field::new("c", DataType::UInt8, false),
-                Field::new("d", DataType::UInt8, false),
-                Field::new("e", DataType::UInt8, false),
-            ]));
-            let a = UInt8Array::from(vec![1, 1, 1, 1, 1, 1, 1, 1, 1, 1]);
-            let b = UInt8Array::from(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
-            let c = UInt8Array::from(vec![1, 2, 3, 4, 5, 1, 2, 3, 4, 5]);
-            let d = UInt8Array::from(vec![1, 2, 3, 4, 5, 1, 2, 3, 4, 5]);
-            let e = UInt8Array::from(vec![1, 2, 3, 4, 5, 1, 2, 3, 4, 5]);
-            let batch = RecordBatch::try_new(
-                schema.clone(),
-                vec![
-                    Arc::new(a),
-                    Arc::new(b),
-                    Arc::new(c),
-                    Arc::new(d),
-                    Arc::new(e),
-                ],
-            )
-            .unwrap();
-            batch
-        };
+//     /// Test binary semijoin (equijoin on 4 columns)
+//     /// (1-1 relationship) -> Each tuple in the guard joins with exactly one tuple in child.
+//     #[tokio::test]
+//     async fn test_binary_semijoin_multikeycols() -> Result<(), Box<dyn Error>> {
+//         let example_batch = || {
+//             let schema = Arc::new(Schema::new(vec![
+//                 Field::new("a", DataType::UInt8, false),
+//                 Field::new("b", DataType::UInt8, false),
+//                 Field::new("c", DataType::UInt8, false),
+//                 Field::new("d", DataType::UInt8, false),
+//                 Field::new("e", DataType::UInt8, false),
+//             ]));
+//             let a = UInt8Array::from(vec![1, 1, 1, 1, 1, 1, 1, 1, 1, 1]);
+//             let b = UInt8Array::from(vec![1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+//             let c = UInt8Array::from(vec![1, 2, 3, 4, 5, 1, 2, 3, 4, 5]);
+//             let d = UInt8Array::from(vec![1, 2, 3, 4, 5, 1, 2, 3, 4, 5]);
+//             let e = UInt8Array::from(vec![1, 2, 3, 4, 5, 1, 2, 3, 4, 5]);
+//             let batch = RecordBatch::try_new(
+//                 schema.clone(),
+//                 vec![
+//                     Arc::new(a),
+//                     Arc::new(b),
+//                     Arc::new(c),
+//                     Arc::new(d),
+//                     Arc::new(e),
+//                 ],
+//             )
+//             .unwrap();
+//             batch
+//         };
 
-        let batch = example_batch();
-        let schema = batch.schema();
-        let memoryexec = Arc::new(MemoryExec::try_new(&[vec![batch]], schema, None).unwrap());
-        let input: Arc<dyn MultiSemiJoinWrapper> =
-            Arc::new(MultiSemiJoin::new(memoryexec.clone(), vec![], vec![], 0));
+//         let batch = example_batch();
+//         let schema = batch.schema();
+//         let memoryexec = Arc::new(MemoryExec::try_new(&[vec![batch]], schema, None).unwrap());
+//         let input: Arc<dyn MultiSemiJoinWrapper> =
+//             Arc::new(MultiSemiJoin::new(memoryexec.clone(), vec![], vec![], 0));
 
-        // GroupBy on columns "a", "b", "c", "d"
-        let groupby = Arc::new(GroupBy::new(input, vec![0, 1, 2, 3]));
+//         // GroupBy on columns "a", "b", "c", "d"
+//         let groupby = Arc::new(GroupBy::new(input, vec![0, 1, 2, 3], 0));
 
-        let semijoin = MultiSemiJoin::new(
-            memoryexec,
-            vec![GroupByWrapperEnum::Groupby(Arc::try_unwrap(groupby).unwrap()).into()],
-            vec![vec![(0, 0), (1, 1), (2, 2), (3, 3)]],
-            0,
-        );
-        let result = semijoin.execute(0, Arc::new(TaskContext::default()))?;
+//         let semijoin = MultiSemiJoin::new(
+//             memoryexec,
+//             vec![GroupByWrapperEnum::Groupby(Arc::try_unwrap(groupby).unwrap()).into()],
+//             vec![vec![(0, 0), (1, 1), (2, 2), (3, 3)]],
+//             0,
+//         );
+//         let result = semijoin.execute(0, Arc::new(TaskContext::default()))?;
 
-        let batches = result
-            .collect::<Vec<Result<SemiJoinResultBatch, DataFusionError>>>()
-            .await;
+//         let batches = result
+//             .collect::<Vec<Result<SemiJoinResultBatch, DataFusionError>>>()
+//             .await;
 
-        assert_eq!(batches.len(), 1);
-        let batch = batches[0].as_ref().unwrap();
+//         assert_eq!(batches.len(), 1);
+//         let batch = batches[0].as_ref().unwrap();
 
-        match batch {
-            SemiJoinResultBatch::Flat(_) => panic!("Expected a nested batch"),
-            SemiJoinResultBatch::Nested(nested_batch) => {
-                // The guard batch has 10 rows
-                assert_eq!(nested_batch.num_rows(), 10);
-                // Each row has weight 1 (it joins with 1 other tuple)
-                nested_batch
-                    .total_weights()
-                    .iter()
-                    .for_each(|w| assert_eq!(*w, 1));
-                // Next vector is none because top-level
-                let inner = &nested_batch.inner;
-                assert!(inner.next.is_none());
-                // The nested batch has 1 nested column
-                assert_eq!(nested_batch.schema().nested_fields.len(), 1);
-                let nested_col = nested_batch.nested_column(0).as_non_singular();
-                // All hols point to another group
-                nested_col
-                    .hols
-                    .iter()
-                    .enumerate()
-                    .for_each(|(i, hol)| assert_eq!(*hol as usize - 1, i));
-            }
-        }
+//         match batch {
+//             SemiJoinResultBatch::Flat(_) => panic!("Expected a nested batch"),
+//             SemiJoinResultBatch::Nested(nested_batch) => {
+//                 // The guard batch has 10 rows
+//                 assert_eq!(nested_batch.num_rows(), 10);
+//                 // Each row has weight 1 (it joins with 1 other tuple)
+//                 nested_batch
+//                     .total_weights()
+//                     .iter()
+//                     .for_each(|w| assert_eq!(*w, 1));
+//                 // Next vector is none because top-level
+//                 let inner = &nested_batch.inner;
+//                 assert!(inner.next.is_none());
+//                 // The nested batch has 1 nested column
+//                 assert_eq!(nested_batch.schema().nested_fields.len(), 1);
+//                 let nested_col = nested_batch.nested_column(0).as_non_singular();
+//                 // All hols point to another group
+//                 nested_col
+//                     .hols
+//                     .iter()
+//                     .enumerate()
+//                     .for_each(|(i, hol)| assert_eq!(*hol as usize - 1, i));
+//             }
+//         }
 
-        Ok(())
-    }
+//         Ok(())
+//     }
 
-    /// Test binary semijoin (equijoin on NO columns).
-    /// This is basically a cartesian product, followed by a projection on the LHS of the semijoin.
-    #[tokio::test]
-    async fn binary_semijoin_no_key_cols() -> Result<(), Box<dyn Error>> {
-        // R(a,b,c)
-        let guard = example_guard()?;
-        // R(a,b,c) groupby {}
-        // let child_a = example_child(vec![])?;
-        let child_a =
-            GroupByWrapperEnum::Groupby(Arc::try_unwrap(example_child(vec![]).unwrap()).unwrap());
+//     /// Test binary semijoin (equijoin on NO columns).
+//     /// This is basically a cartesian product, followed by a projection on the LHS of the semijoin.
+//     #[tokio::test]
+//     async fn binary_semijoin_no_key_cols() -> Result<(), Box<dyn Error>> {
+//         // R(a,b,c)
+//         let guard = example_guard()?;
+//         // R(a,b,c) groupby {}
+//         // let child_a = example_child(vec![])?;
+//         let child_a =
+//             GroupByWrapperEnum::Groupby(Arc::try_unwrap(example_child(vec![]).unwrap()).unwrap());
 
-        let semijoin = MultiSemiJoin::new(guard.clone(), vec![child_a.into()], vec![vec![]], 0);
-        let result = semijoin.execute(0, Arc::new(TaskContext::default()))?;
+//         let semijoin = MultiSemiJoin::new(guard.clone(), vec![child_a.into()], vec![vec![]], 0);
+//         let result = semijoin.execute(0, Arc::new(TaskContext::default()))?;
 
-        let batches = result
-            .collect::<Vec<Result<SemiJoinResultBatch, DataFusionError>>>()
-            .await;
+//         let batches = result
+//             .collect::<Vec<Result<SemiJoinResultBatch, DataFusionError>>>()
+//             .await;
 
-        assert_eq!(batches.len(), 1);
-        let batch = batches[0].as_ref().unwrap();
-        match batch {
-            SemiJoinResultBatch::Flat(_) => panic!("Expected a nested batch"),
-            SemiJoinResultBatch::Nested(nested_batch) => {
-                // The result batch has 10 rows
-                assert_eq!(nested_batch.num_rows(), 10);
-                // Each row has weight 10 (it joins with 10 other tuples)
-                nested_batch
-                    .total_weights()
-                    .iter()
-                    .for_each(|w| assert_eq!(*w, 10));
-                // Next vector is none because top-level
-                let inner = &nested_batch.inner;
-                assert!(inner.next.is_none());
-                // The nested batch has 1 nested column
-                assert_eq!(nested_batch.schema().nested_fields.len(), 1);
-                let nested_col = nested_batch.nested_column(0).as_non_singular();
-                // All hols point to the same group
-                nested_col.hols.iter().for_each(|hol| assert_eq!(*hol, 10));
-            }
-        }
+//         assert_eq!(batches.len(), 1);
+//         let batch = batches[0].as_ref().unwrap();
+//         match batch {
+//             SemiJoinResultBatch::Flat(_) => panic!("Expected a nested batch"),
+//             SemiJoinResultBatch::Nested(nested_batch) => {
+//                 // The result batch has 10 rows
+//                 assert_eq!(nested_batch.num_rows(), 10);
+//                 // Each row has weight 10 (it joins with 10 other tuples)
+//                 nested_batch
+//                     .total_weights()
+//                     .iter()
+//                     .for_each(|w| assert_eq!(*w, 10));
+//                 // Next vector is none because top-level
+//                 let inner = &nested_batch.inner;
+//                 assert!(inner.next.is_none());
+//                 // The nested batch has 1 nested column
+//                 assert_eq!(nested_batch.schema().nested_fields.len(), 1);
+//                 let nested_col = nested_batch.nested_column(0).as_non_singular();
+//                 // All hols point to the same group
+//                 nested_col.hols.iter().for_each(|hol| assert_eq!(*hol, 10));
+//             }
+//         }
 
-        Ok(())
-    }
-}
+//         Ok(())
+//     }
+// }

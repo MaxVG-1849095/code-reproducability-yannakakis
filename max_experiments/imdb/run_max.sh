@@ -4,7 +4,7 @@ root_dir="../../"
 parquet_data="$root_dir/benchmarks/imdb/parquet-zstd"
 out_folder="./output" # non-existing output folder
 timings="timings.csv"
-plan="./query_plans/query7_3.json"
+plan="./query_plans/query9.json"
 repetitions=10
 
 # make timings file
@@ -16,6 +16,7 @@ echo "duration(µs),method,variant,query" > $timings
 # so we need to specify the toolchain manually
 
 # Run all stats-ceb queries in release mode, with 10 repetitions
-cargo +nightly run --release --manifest-path="../../intermediate_to_df_plan/Cargo.toml" --bin exec_ir_plans -- --plans "$plan" --data "$parquet_data" -o "$out_folder" -t $timings --repetitions $repetitions
+## --release eventually !
+RUST_BACKTRACE=full cargo +nightly run --manifest-path="../../intermediate_to_df_plan/Cargo.toml" --bin exec_ir_plans -- --plans "$plan" --data "$parquet_data" -o "$out_folder" -t $timings --repetitions $repetitions
 
 

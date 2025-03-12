@@ -25,7 +25,7 @@ use datafusion::{
 };
 use regex::Regex;
 use yannakakis_join_implementation::yannakakis::{
-    flatten::Flatten, groupby::GroupBy, multisemijoin::MultiSemiJoin, repartitionshredded::{GroupByWrapper, GroupByWrapperEnum, MultiSemiJoinWrapper, RepartitionGroupBy, RepartitionMultiSemiJoin},
+    flatten::Flatten, groupby::GroupBy, multisemijoin::MultiSemiJoin, repartitionshredded::{MultiSemiJoinWrapper, RepartitionMultiSemiJoin}, unnest::Unnest,
 };
 
 use crate::{
@@ -80,19 +80,19 @@ impl ToPhysicalNode for intermediate_plan::YannakakisNode {
             node: &intermediate_plan::GroupByNode,
             catalog: &Catalog,
             alternative_flatten: bool,
-        ) -> Result<(DFSchema, Arc<GroupByWrapperEnum>), DataFusionError> {
+            id: usize,
+        ) -> Result<(DFSchema, Arc<GroupBy>), DataFusionError> {
             let group_on = node.group_on.clone();
             let (child_schema, child) =
                 multisemijoin_to_plan(&node.child, catalog, alternative_flatten, group_on[0]).await?;
-
-            let mut grpby: GroupByWrapperEnum;
+            let mut grpby: GroupBy;
 
             if node.partitioned{
-                grpby = GroupByWrapperEnum::RepartitionGroupBy(RepartitionGroupBy::new(child.into(), group_on));
+                grpby = GroupBy::new(child.into(), group_on, node.id);
                 grpby.set_partitioned(node.partitioned);
             }
             else{
-                grpby = GroupByWrapperEnum::Groupby(GroupBy::new(child.into(), group_on));
+                grpby = GroupBy::new(child.into(), group_on, node.id);
             }
 
             Ok((child_schema, Arc::new(grpby))) //wrapped into an enom object 
@@ -116,13 +116,20 @@ impl ToPhysicalNode for intermediate_plan::YannakakisNode {
             
             for child in &node.children {
                 let (child_schema, child) =
-                    groupby_to_plan(child, catalog, alternative_flatten).await?;
+                    groupby_to_plan(child, catalog, alternative_flatten, node.id).await?;
                 schema.merge(&child_schema);
                 children.push(child);
             }
             let msj: Box<dyn MultiSemiJoinWrapper>;
+            let partition_key;
+            if node.id == 1{
+                partition_key = 1;
+            }
+            else{
+                partition_key = 0;
+            }
             if node.partitioned{
-                msj = Box::new(RepartitionMultiSemiJoin::try_new(guard, children, node.equijoin_keys.clone(), node.id).unwrap());
+                msj = Box::new(RepartitionMultiSemiJoin::try_new(guard, children, node.equijoin_keys.clone(), node.id, partition_key).unwrap());
             }
             else{
                 msj = Box::new(MultiSemiJoin::new(guard, children, node.equijoin_keys.clone(), node.id));
@@ -142,7 +149,7 @@ impl ToPhysicalNode for intermediate_plan::YannakakisNode {
                 Arc::new(Flatten::new_alternative(root.into())),
             ))
         } else {
-            Ok((Arc::new(dfschema), Arc::new(Flatten::new(root.into()))))
+            Ok((Arc::new(dfschema), Arc::new(Unnest::new(root.into()))))
         }
     }
 }
@@ -246,13 +253,14 @@ impl ToPhysicalNode for intermediate_plan::ProjectionNode {
             .collect::<Result<Vec<_>, _>>()?;
 
         // Create physical expressions for the projections
-        let exprs = projection_idx
+        let mut exprs = projection_idx
             .iter()
             .map(|(idx, field_name)| {
                 let col: Arc<dyn PhysicalExpr> = Arc::new(Column::new(field_name, *idx));
                 (col, field_name.clone())
             })
             .collect::<Vec<_>>();
+        
 
         let proj = ProjectionExec::try_new(exprs, child)?;
 
@@ -549,7 +557,6 @@ impl ToPhysicalNode for intermediate_plan::SequentialScanNode {
 
 #[async_trait]
 impl ToPhysicalNode for intermediate_plan::RepartitionExecNode {
-
     async fn to_execution_plan(
         &self,
         catalog: &Catalog,
@@ -567,7 +574,7 @@ impl ToPhysicalNode for intermediate_plan::RepartitionExecNode {
 
         // let partitioning = Partitioning::RoundRobinBatch(num_partitions); 
 
-        let column_expr = Arc::new(Column::new("id", partition_key));//TODO: change to hash partitioning on join key, this way we can repartition correctly
+        let column_expr = Arc::new(Column::new("id", self.partition_on));//TODO: change to hash partitioning on join key, this way we can repartition correctly
         let partitioning = Partitioning::Hash(vec![column_expr], num_partitions);
 
         let repartition = datafusion::physical_plan::repartition::RepartitionExec::try_new(

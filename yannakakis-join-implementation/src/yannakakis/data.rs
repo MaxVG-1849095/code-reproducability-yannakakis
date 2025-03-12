@@ -310,6 +310,7 @@ impl NestedColumn {
             NestedColumn::NonSingular(n) => &n.weights,
         }
     }
+    
 }
 
 /// A singular nested column
@@ -372,6 +373,16 @@ impl NonSingularNestedColumn {
             hols: Vec::new(),
             weights: Vec::new(),
             data: Arc::new(NestedRel::empty_old(schema)),
+        }
+    }
+
+    pub fn clone_data(&self) -> NestedRel {
+        NestedRel {
+            schema: self.data.schema.clone(),
+            next: self.data.next.clone(),
+            regular_cols: self.data.regular_cols.clone(),
+            nested_cols: self.data.nested_cols.clone(),
+            total_weights: self.data.total_weights.clone(),
         }
     }
 
@@ -600,9 +611,12 @@ impl NestedRel {
             .expect("Unable to iterate through linked list: next vector is None");
 
         std::iter::successors(Some(hol_ptr), move |&ptr| {
-            if ptr == 0 {
+            if ptr == 0 || ptr as usize > next.len() {
                 None
             } else {
+                if(ptr as usize) > next.len() {
+                    println!("------Invalid pointer----------: {}", ptr);
+                }
                 Some(next[(ptr - 1) as usize]) // -1 because pointer is the actual position + 1 (0 is reserved for EOL)
             }
         })
@@ -692,6 +706,10 @@ impl NestedBatch {
         self.inner.regular_column(i)
     }
 
+    pub fn num_regular_column(&self) -> usize {
+        self.inner.regular_cols.len()
+    }
+
     /// Retrieves the i-th nested column of the relation
     #[inline]
     pub fn nested_column(&self, i: usize) -> &NestedColumn {
@@ -703,6 +721,10 @@ impl NestedBatch {
     pub fn num_rows(&self) -> usize {
         // We have at least one nested column
         self.inner.nested_cols[0].num_rows()
+    }
+
+    pub fn num_rows_flat(&self) -> usize {
+        self.inner.regular_cols[0].len()
     }
 
     // /// The total weights of the rows in the nested batch
@@ -815,7 +837,7 @@ impl SemiJoinResultBatch {
     pub fn num_rows(&self) -> usize {
         match self {
             SemiJoinResultBatch::Flat(batch) => batch.num_rows(),
-            SemiJoinResultBatch::Nested(nested) => nested.num_rows(),
+            SemiJoinResultBatch::Nested(nested) => nested.num_rows_flat(), // ! i changed this from num_rows to num_rows_flat
         }
     }
 

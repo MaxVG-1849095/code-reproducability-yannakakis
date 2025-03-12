@@ -28,7 +28,6 @@ use std::sync::Arc;
 use crate::take::weighted_u32::take_weighted;
 use crate::yannakakis::data::Idx;
 use crate::yannakakis::multisemijoin::SendableSemiJoinResultBatchStream;
-use crate::yannakakis::repartitionshredded::GroupByWrapper;
 use crate::yannakakis::util::write_metrics_as_json;
 
 use super::data::Weight;
@@ -188,10 +187,15 @@ impl ExecutionPlan for Flatten {
 
         // Get stream of SemiJoinResultBatches
         let batches = self.child.execute(partition, context)?;
+        
         let yann_schema = &self.schema;
 
+        // println!("Flatten: schema: {:?}", yann_schema);
         // Flatten each batch, resulting in a stream of RecordBatches
-        flatten_batches(batches, yann_schema.clone(), metrics, self.alternative)
+        let a = flatten_batches(batches, yann_schema.clone(), metrics, self.alternative);
+        // println!("Done flattening schema: {:?}", yann_schema);
+
+        a
     }
 }
 
@@ -246,7 +250,11 @@ fn take_all_weighted(
     debug_assert_eq!(values.len(), weights.len());
     // No row_ids are needed!
     let row_ids: Vec<Idx> = (0..weights.len() as Idx).collect();
-    take_weighted(values, &row_ids, weights, output_size)
+    let v = take_weighted(values, &row_ids, weights, output_size);
+    if v.is_err() {
+        println!("error in take_weighted");
+    }
+    v
 }
 
 // #[cfg(test)]

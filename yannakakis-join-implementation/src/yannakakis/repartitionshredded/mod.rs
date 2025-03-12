@@ -1,12 +1,14 @@
 // Implementation of the repartitionexec operator for shredded records, implemented to partition data calculated via multisemijoin
 
 use core::hash;
+use std::num;
 use std::task::{Context, Poll};
 use std::{pin::Pin, sync::Arc};
 
 use datafusion::arrow::array::{
-    ArrayRef, Int32Array, RecordBatch, UInt32Array, UInt64Array, UInt8Array,
+    ArrayRef, Datum, Int32Array, Int64Array, RecordBatch, UInt32Array, UInt64Array, UInt8Array
 };
+use datafusion::arrow::compute::kernels::partition;
 use datafusion::arrow::compute::take;
 use datafusion::common::hash_utils::{self, create_hashes};
 use datafusion::execution::memory_pool::MemoryReservation;
@@ -25,9 +27,11 @@ use futures::{FutureExt, Stream, StreamExt, TryStreamExt};
 use rand::prelude::Distribution;
 
 use crate::yannakakis::multisemijoin::MultiSemiJoinStreamAdapter;
-
-use super::data::SemiJoinResultBatch;
+use crate::yannakakis::unnest;
+use super::data::{Idx, NestedColumn, NonSingularNestedColumn, SemiJoinResultBatch, SingularNestedColumn};
+use super::kernel::take_nested_column_inplace;
 use super::multisemijoin::MultiSemiJoinBatchStream;
+use super::sel::Sel;
 use super::{
     data::{GroupedRelRef, NestedBatch, NestedSchemaRef},
     groupby::GroupBy,
@@ -68,8 +72,7 @@ struct RepartitionExecState {
 }
 
 impl RepartitionExecState {
-    fn new(input: Arc<MultiSemiJoin>, context: Arc<TaskContext>) -> Self {
-        eprintln!("RepartitionExecState new");
+    fn new(input: Arc<MultiSemiJoin>, context: Arc<TaskContext>, repartition_key: usize) -> Self {
         let num_input_partitions = input.guard_partition_count();
         let (input_channels, output_channels) = {
             //only the preserve_order = false route has been implemented for now
@@ -119,12 +122,15 @@ impl RepartitionExecState {
             let input_task = SpawnedTask::spawn(RepartitionMultiSemiJoin::pull_from_input(
                 Arc::clone(&input),
                 i,
-                channels_in,
+                channels_in.clone(),
                 Arc::clone(&context),
+                repartition_key,
             ));
 
             let wait_for_task =
-                SpawnedTask::spawn(RepartitionMultiSemiJoin::wait_for_task(input_task));
+                SpawnedTask::spawn(RepartitionMultiSemiJoin::wait_for_task(input_task,
+                channels_in.into_iter().map(|(partition, (tx, _reservation))| (partition, tx)).collect()
+            ));
             spawned_tasks.push(wait_for_task);
         }
 
@@ -153,6 +159,7 @@ enum MsjBatchPartitionerState {
         random_state: ahash::RandomState,
         num_partitions: usize,
         hash_buffer: Vec<u64>,
+        partition_key: usize,
     },
     RoundRobin {
         num_partitions: usize,
@@ -161,12 +168,17 @@ enum MsjBatchPartitionerState {
 }
 
 impl MsjBatchPartitioner {
-    pub fn try_new(num_partitions: usize, partition_id: usize) -> Result<Self, DataFusionError> {
+    pub fn try_new(
+        num_partitions: usize,
+        partition_id: usize,
+        partition_key: usize,
+    ) -> Result<Self, DataFusionError> {
         let state = match partition_id {
             0 => MsjBatchPartitionerState::Hash {
                 random_state: ahash::RandomState::with_seeds(0, 0, 0, 0),
                 num_partitions,
                 hash_buffer: vec![],
+                partition_key: partition_key,
             },
             1 => MsjBatchPartitionerState::RoundRobin {
                 num_partitions,
@@ -192,10 +204,11 @@ impl MsjBatchPartitioner {
     where
         F: FnMut(usize, SemiJoinResultBatch) -> Result<(), DataFusionError>,
     {
-        self.partition_iter(batch, partition)?.try_for_each(|res| match res {
-            Ok((partition, batch)) => f(partition, batch),
-            Err(e) => Err(e),
-        })
+        self.partition_iter(batch, partition)?
+            .try_for_each(|res| match res {
+                Ok((partition, batch)) => f(partition, batch),
+                Err(e) => Err(e),
+            })
     }
 
     fn partition_iter(
@@ -221,56 +234,20 @@ impl MsjBatchPartitioner {
                 random_state,
                 num_partitions,
                 hash_buffer,
+                partition_key,
             } => {
                 let num_partitions = *num_partitions;
                 match batch {
                     SemiJoinResultBatch::Flat(val) => {
-                        let column = val.column(0);
-
-                        // ! old code
-                        //let mut matrix: Vec<Vec<u32>> = vec![vec![]; num_partitions]; // matrix to store the indices of the rows for each partition
-                        
-                        // println!("column data: {:?}", column);
-                        // println!("column data type: {:?}", column.data_type());
-                        // let mut int_array;
-                        // if column.data_type().is_numeric() {
-                        //     //get the column that we hash on //! needs to be improved to handle more than just int32 via pattern matching
-                        //     int_array = column.as_any().downcast_ref::<Int32Array>().unwrap();
-                        // } else {
-                        //     return Err(DataFusionError::NotImplemented(
-                        //             "Hash partitioning not implemented for MsjBatchPartitioner on data type that is not numeric".to_string(),
-                        //        ))?;
-                        // }
-                        // calculate hashes
-                        // for i in 0..int_array.len() {
-                        //     let key_value = int_array.value(i);
-                        //     let hash = key_value as u64 % num_partitions as u64;
-                        //     // println!("value: {}, hash: {}", key_value, hash);
-                        //     matrix[hash as usize].push(i.try_into().unwrap());
-                        // }
-
-                        // create_hashes(, random_state, hash_buffer);
-                        // let mut batches: Vec<SemiJoinResultBatch> = Vec::new();
-
-                        // for i in 0..num_partitions {
-                        //     //rebuild batches
-                        //     let new_columns: Vec<ArrayRef> = val
-                        //         .columns()
-                        //         .iter()
-                        //         .map(|column| {
-                        //             let indices =
-                        //                 Arc::new(UInt32Array::from(matrix[i].clone())) as ArrayRef;
-                        //             let new_column = take(column.as_ref(), &indices, None)?;
-                        //             Ok::<_, DataFusionError>(new_column)
-                        //         })
-                        //         .collect::<Result<Vec<_>, _>>()?;
-                        //     let new_batch = SemiJoinResultBatch::Flat(RecordBatch::try_new(
-                        //         val.schema().clone(),
-                        //         new_columns,
-                        //     )?);
-                        //     batches.push(new_batch);
-                        // }
-                        // ! end of old code
+                        println!("partition key: {} in id", partition_key);
+                        let column = val.column(*partition_key);
+                        // println!("val column count: {}", val.num_columns());
+                        // println!(
+                        //     "[Flat] val num rows: {} on partition {}",
+                        //     val.num_rows(),
+                        //     partition
+                        // );
+                        // println!("batch: {:?}", val);
                         hash_buffer.clear();
                         hash_buffer.resize(val.num_rows(), 0);
                         let array_ref = column.clone();
@@ -280,11 +257,22 @@ impl MsjBatchPartitioner {
                         let mut indices: Vec<_> = (0..num_partitions)
                             .map(|_| Vec::with_capacity(val.num_rows()))
                             .collect();
-                        
-                        for(index, hash) in hash_buffer.iter().enumerate(){
+
+                        for (index, hash) in hash_buffer.iter().enumerate() {
                             indices[(hash % num_partitions as u64) as usize].push(index as u32);
                         }
+
+
+                        //decrease indices size //! debugging purposes!
+                        // for i in 0..num_partitions {
+                        //     if indices[i].len() > 2 {
+                        //         indices[i] = indices[i][0..1].to_vec();
+                        //     }
+                        // }
+
+                        //vector containing the rebuilt batches
                         let mut batches: Vec<SemiJoinResultBatch> = Vec::new();
+                        //for each partition, create a new batch
                         for i in 0..num_partitions {
                             //rebuild batches
                             let new_columns: Vec<ArrayRef> = val
@@ -301,47 +289,113 @@ impl MsjBatchPartitioner {
                                 val.schema().clone(),
                                 new_columns,
                             )?);
+                            let nb = new_batch.clone();
+                            match nb {
+                                SemiJoinResultBatch::Flat(val) => {
+                                    // println!("[Flat]nb num rows: {} on partition {}", val.num_rows(), partition);
+                                }
+                                _ => {}
+                            }
+                            // println!("-----\noriginal batch: {:?}\n batch {}: {:?}\n-----", val, i, new_batch);
                             batches.push(new_batch);
+                            
                         }
-                        
-
-                        
-
-                        return Ok(batches
-                            .into_iter()
-                            .enumerate()
-                            .map(|(i, batch)| Ok((i, batch))));
+                        return Ok(Box::new(
+                            batches
+                                .into_iter()
+                                .enumerate()
+                                .map(|(i, batch)| Ok((i, batch))),
+                        )
+                            as Box<
+                                dyn Iterator<
+                                        Item = Result<
+                                            (usize, SemiJoinResultBatch),
+                                            DataFusionError,
+                                        >,
+                                    > + Send,
+                            >);
                     }
                     SemiJoinResultBatch::Nested(val) => {
-                        // matrix to store the indices of the rows for each partition
-                        let mut matrix: Vec<Vec<u32>> = vec![vec![]; num_partitions];
-
-                        let column = val.regular_column(0);
-
-                        let mut int_array;
-                        if column.data_type().is_numeric() {
-                            //get the column that we hash on //! needs to be improved to handle more than just int32 via pattern matching
-                            int_array = column.as_any().downcast_ref::<Int32Array>().unwrap();
-                        } else {
-                            return Err(DataFusionError::NotImplemented(
-                                    "Hash partitioning not implemented for MsjBatchPartitioner on data type that is not numeric".to_string(),
-                               ))?;
-                        }
-
-                        // calculate hashes
-                        for i in 0..int_array.len() {
-                            let key_value = int_array.value(i);
-                            let hash = key_value as u64 % num_partitions as u64;
-                            // println!("from partition {}, value: {}, hash: {}",partition, key_value, hash);
-                            matrix[hash as usize].push(i.try_into().unwrap());
-                        }
+                        // println!("partition key: {} in id", partition_key);
+                        let column = val.regular_column(*partition_key);
+                    
                         
-                        //rebuild batches
-                        for i in 0..num_partitions{
-                            //take from val the indices in matrix[i]
-                            let indices = Arc::new(UInt32Array::from(matrix[i].clone())) as ArrayRef;
-                            // let new_batch = val.take(&indices)?;
+
+                        hash_buffer.clear();
+                        hash_buffer.resize(val.num_rows(), 0);
+                        let array_ref = column.clone();
+                        create_hashes(&[array_ref], random_state, hash_buffer)?;
+
+                        //init indices
+                        let mut indices: Vec<_> = (0..num_partitions)
+                            .map(|_| Vec::with_capacity(val.num_rows()))
+                            .collect();
+                        //fill indices, based on calculated hash
+                        for (index, hash) in hash_buffer.iter().enumerate() {
+                            indices[(hash % num_partitions as u64) as usize].push(index as u32);
                         }
+                        //vector containing the rebuilt batches
+                        let mut batches: Vec<SemiJoinResultBatch> = Vec::new();
+                        //rebuild a batch for each partition
+                        for i in 0..num_partitions {
+                            let arr: Vec<u32> = indices[i].iter().map(|x| *x as u32).collect();
+                            // let arr: Sel = Sel::new(arr);
+
+                            let schema = val.schema().clone();
+
+                            // let v = val.clone();
+                            // let mut inner_cols = val.inner.nested_cols;
+                            //rebuild batches
+                            // println!("inner cols len: {}", inner_cols.len());
+                            let mut inner_cols_final: Vec<NestedColumn> = Vec::new();
+                            for col in val.inner.nested_cols.iter() {
+                                // take_nested_column_inplace(col, &arr);
+                                let c = take_rows_from_nestedcol(col, arr.as_ref())?;
+                                inner_cols_final.push(c);
+                            }
+
+                            // println!("sel len: {}", sel.len());
+
+                            let regular_cols = val
+                                .inner
+                                .regular_cols
+                                .iter()
+                                .map(|column| {
+                                    let indices =
+                                        Arc::new(UInt32Array::from(indices[i].clone())) as ArrayRef;
+                                    let new_column = take(column.as_ref(), &indices, None)?;
+                                    Ok::<_, DataFusionError>(new_column)
+                                })
+                                .collect::<Result<Vec<_>, _>>()?;
+
+                            let new_batch = SemiJoinResultBatch::Nested(NestedBatch::new(
+                                schema,
+                                regular_cols,
+                                inner_cols_final,
+                            ));
+                            // println!("-----\n-----\noriginal batch:\n {:?}\n+++++\n new batch for partition {}:\n {:?}\n-----\n-----", val, i, new_batch);
+
+                            batches.push(new_batch);
+                        }
+
+                        // return Ok(batches
+                        //     .into_iter()
+                        //     .enumerate()
+                        //     .map(|(i, batch)| Ok((i, batch))));
+                        return Ok(Box::new(
+                            batches
+                                .into_iter()
+                                .enumerate()
+                                .map(|(i, batch)| Ok((i, batch))),
+                        )
+                            as Box<
+                                dyn Iterator<
+                                        Item = Result<
+                                            (usize, SemiJoinResultBatch),
+                                            DataFusionError,
+                                        >,
+                                    > + Send,
+                            >);
                     }
                 }
 
@@ -367,10 +421,54 @@ pub trait MultiSemiJoinWrapper: Debug + Send + Sync {
     fn as_json(&self, output: &mut String) -> Result<(), std::fmt::Error>;
     fn collect_metrics(&self, output_buffer: &mut String, indent: usize);
     fn guard(&self) -> &Arc<dyn ExecutionPlan>;
-    fn children(&self) -> &[Arc<GroupByWrapperEnum>];
+    fn children(&self) -> &[Arc<GroupBy>];
     fn semijoin_keys(&self) -> &Vec<Vec<usize>>;
     fn partitioned(&self) -> bool;
     fn id(&self) -> usize;
+}
+
+/// Create new `Vec<u32>` by taking the elements in `data` at the positions in `indices`.
+/// # Panics
+/// Panics if an index in `indices` is out of bounds for `data`.
+#[inline(always)]
+fn take_unnest(data: &[u32], indices: &[Idx]) -> Result<Vec<u32>, DataFusionError> {
+    let mut result = Vec::with_capacity(indices.len());
+    for idx in indices {
+        result.push(unsafe { *data.get_unchecked(*idx as usize) });
+    }
+    Ok(result)
+}
+
+/// Create new [NestedColumn] by taking the rows in `nestedcol` at the positions in `row_ids`.
+/// # Panics
+/// Panics if an index in `row_ids` is out of bounds for `nestedcol`.
+#[inline(always)]
+pub fn take_rows_from_nestedcol(
+    nestedcol: &NestedColumn,
+    row_ids: &[Idx],
+) -> Result<NestedColumn, DataFusionError> {
+    match nestedcol {
+        NestedColumn::Singular(s_nestedcol) => {
+            let new_weights = take_unnest(&s_nestedcol.weights, row_ids)?;
+            let nestedcol = SingularNestedColumn {
+                weights: new_weights,
+            };
+            Ok(NestedColumn::Singular(nestedcol))
+        }
+        NestedColumn::NonSingular(ns_nestedcol) => {
+            let new_weights = take_unnest(&ns_nestedcol.weights, row_ids)?;
+            let new_hols = take_unnest(&ns_nestedcol.hols, row_ids)?;
+            let new_data = ns_nestedcol.clone_data(); // ! changed this to make a deep copy of the data
+
+            let nestedcol = NonSingularNestedColumn {
+                weights: new_weights,
+                hols: new_hols,
+                data: Arc::new(new_data), // clone arc = cheap
+            };
+
+            Ok(NestedColumn::NonSingular(nestedcol))
+        }
+    }
 }
 
 //repartitionexec operator to be placed on top of a multisemijoin
@@ -384,16 +482,17 @@ pub struct RepartitionMultiSemiJoin {
     partitions: usize,
     //partitioning scheme
     //TODO: implement partitioning scheme from datafusion (the way repartitionexec does it)
-    // partitioning: Partitioning
+    partition_key: usize,
 }
 
 impl RepartitionMultiSemiJoin {
     //create new repartitionexec operator, also creating the necessary multisemijoin operator
     pub fn new(
         guard: Arc<dyn ExecutionPlan>,
-        children: Vec<Arc<GroupByWrapperEnum>>,
+        children: Vec<Arc<GroupBy>>,
         equijoin_keys: Vec<Vec<(usize, usize)>>,
         id: usize,
+        partition_key: usize,
     ) -> Self {
         // println!("RepartitionMultiSemiJoin new");
         let guardpartitions = guard.output_partitioning().partition_count();
@@ -401,21 +500,24 @@ impl RepartitionMultiSemiJoin {
             state: Default::default(),
             child: Arc::new(MultiSemiJoin::new(guard, children, equijoin_keys, id)),
             partitions: guardpartitions,
+            partition_key: partition_key,
         }
     }
 
     //try to make new repartitionexec
     pub fn try_new(
         guard: Arc<dyn ExecutionPlan>,
-        children: Vec<Arc<GroupByWrapperEnum>>,
+        children: Vec<Arc<GroupBy>>,
         equijoin_keys: Vec<Vec<(usize, usize)>>,
         id: usize,
+        partition_key: usize,
     ) -> Result<Self, DataFusionError> {
         let guardpartitions = guard.output_partitioning().partition_count();
         Ok(Self {
             state: Default::default(), //for now, just add a default value, it will be created later on in the execute function (get_or_init)
             child: Arc::new(MultiSemiJoin::new(guard, children, equijoin_keys, id)),
             partitions: guardpartitions,
+            partition_key: partition_key,
         })
     }
 
@@ -433,19 +535,19 @@ impl RepartitionMultiSemiJoin {
         let rep_state = Arc::clone(&self.state);
         let schema = self.child.schema().clone();
         let input = Arc::clone(&self.guard());
-        let guard_clone = self.child.guard().clone();
         let contextclone = context.clone();
         let child = Arc::clone(&self.child);
+        let rep_key = self.partition_key;
 
         // println!("repartitionmsj execute");
-
+        //create stream object to be returned
         let stream = futures::stream::once(async move {
             let num_input_partitions = input.output_partitioning().partition_count();
-            //this is where the stream object to be returned should be created
+            //create or initialize the state object
             let state = rep_state
                 .get_or_init(|| async move {
                     //create or initialize the state object
-                    Mutex::new(RepartitionExecState::new(child, contextclone))
+                    Mutex::new(RepartitionExecState::new(child, contextclone, rep_key))
                 })
                 .await;
 
@@ -453,6 +555,7 @@ impl RepartitionMultiSemiJoin {
             //test block
             // println!("repartitionmsj test block");
 
+            //retrieve the output channel relevant to the partition
             let (mut output_channel, reservation, abort_helper) = {
                 let mut state = state.lock();
 
@@ -467,9 +570,10 @@ impl RepartitionMultiSemiJoin {
                 MsjRepartitionStream {
                     num_input_partitions,
                     num_input_partitions_processed: 0,
-                    input: output_channel.swap_remove(0),
+                    input: output_channel.swap_remove(0), //retrieve 0th element from output channel so we don't have a vec
                     schema,
                     reservation,
+                    drop_helper: abort_helper,
                 },
             )
                 as SendableSemiJoinResultBatchStream)
@@ -494,12 +598,13 @@ impl RepartitionMultiSemiJoin {
         let contextclone = context.clone();
         let childguard = self.child.guard().clone();
         let child = Arc::clone(&self.child);
+        let rep_key = self.partition_key;
         let stream = futures::stream::once(async move {
             //this is where the stream object to be returned should be created
             let state = rep_state
                 .get_or_init(|| async move {
                     //create or initialize the state object
-                    Mutex::new(RepartitionExecState::new(child, contextclone))
+                    Mutex::new(RepartitionExecState::new(child, contextclone, rep_key))
                 })
                 .await;
 
@@ -529,12 +634,13 @@ impl RepartitionMultiSemiJoin {
             ),
         >,
         context: Arc<TaskContext>,
+        repartition_key: usize,
     ) -> Result<(), DataFusionError> {
         println!("pull from input on partition {}", partition);
         let mut input_stream = input.execute(partition, context)?;
         let num_outputs = output_channnels.len();
-        println!("num outputs: {}", num_outputs);
-        let mut partitioner = MsjBatchPartitioner::try_new(num_outputs, 0)?; // ! num partitions obviously should not be a hardcoded 2
+        // println!("num outputs: {}", num_outputs);
+        let mut partitioner = MsjBatchPartitioner::try_new(num_outputs, 0, repartition_key)?; // ! num partitions obviously should not be a hardcoded 2
 
         loop {
             //get batch from input stream, break the loop if there is no next
@@ -545,17 +651,6 @@ impl RepartitionMultiSemiJoin {
                 None => break,
             };
 
-            //print if batch is flat or nested
-            // match batch {
-            //     SemiJoinResultBatch::Flat(val) => {
-            //         println!("flat batch");
-
-            //     }
-            //     SemiJoinResultBatch::Nested(val) => {
-            //         println!("nested batch");
-            //         //get nestedbatch
-            //     }
-            // }
             for res in partitioner.partition_iter(batch, partition)? {
                 let (partition_send, batch) = res?;
                 // println!(
@@ -565,7 +660,10 @@ impl RepartitionMultiSemiJoin {
 
                 // println!("schema: {}", rbatch.schema());
                 // println!("num rows: {}", rbatch.num_rows());
-                if let Some((input_channel, reservation)) = output_channnels.get_mut(&partition_send) {
+                //choose the output channel to send to, if we set this to 0 we will send everything to the first partition
+                if let Some((input_channel, reservation)) =
+                    output_channnels.get_mut(&partition_send)
+                {
                     //this partition is the partition we are sending to
                     let size = batch.get_array_memory_size();
                     reservation.lock().try_grow(size)?;
@@ -576,15 +674,29 @@ impl RepartitionMultiSemiJoin {
                     }
                 }
             }
-            //choose the output channel to send to, if we set this to 0 we will send everything to the first partition
         }
-
+        println!("pull from input on partition {} done", partition);
         Ok(()) //success
     }
 
     //function to wait for a given input task
-    async fn wait_for_task(input_task: SpawnedTask<Result<(), DataFusionError>>) {
-        input_task.join().await;
+    async fn wait_for_task(input_task: SpawnedTask<Result<(), DataFusionError>>, txs: HashMap<usize, DistributionSender<MaybeNestedBatch>>) {
+        // input_task.join().await;
+        match input_task.join().await{
+            Ok(_) => {
+                for (i, tx) in txs {
+                    tx.send(None).await.expect("send none");
+                    // println!("sent none to {}", i);
+                }
+            },
+            Err(e) => {
+                let e = Arc::new(e);
+                for (_, tx) in txs {
+                    let err = Err(DataFusionError::Context("error".to_string(), Box::new(DataFusionError::External(Box::new(Arc::clone(&e))))));
+                    tx.send(Some(err)).await.expect("send none");
+                }
+            },
+        }
     }
 }
 
@@ -614,7 +726,7 @@ impl MultiSemiJoinWrapper for RepartitionMultiSemiJoin {
         self.child.guard()
     }
 
-    fn children(&self) -> &[Arc<GroupByWrapperEnum>] {
+    fn children(&self) -> &[Arc<GroupBy>] {
         self.child.children()
     }
     fn semijoin_keys(&self) -> &Vec<Vec<usize>> {
@@ -637,13 +749,16 @@ struct MsjRepartitionStream {
     //channels that have finished sending to this output channel
     num_input_partitions_processed: usize,
 
-    //input channel for each partition
+    //output channel for each partition
     input: DistributionReceiver<MaybeNestedBatch>,
 
     //schema
     schema: NestedSchemaRef,
 
     reservation: SharedMemoryReservation,
+
+    #[allow(dead_code)]
+    drop_helper: Arc<Vec<SpawnedTask<()>>>,
 }
 
 impl Stream for MsjRepartitionStream {
@@ -695,166 +810,7 @@ impl MultiSemiJoinBatchStream for MsjRepartitionStream {
     }
 }
 
-#[derive(Debug)]
-pub enum GroupByWrapperEnum {
-    RepartitionGroupBy(RepartitionGroupBy),
-    Groupby(GroupBy),
-}
 
-pub trait GroupByWrapper: Debug + Send + Sync {
-    fn schema(&self) -> &NestedSchemaRef;
-    async fn materialize(
-        &self,
-        context: Arc<TaskContext>,
-        partition: usize,
-    ) -> Result<GroupedRelRef, DataFusionError>;
-    fn child(&self) -> &Arc<dyn MultiSemiJoinWrapper>;
-    fn metrics(&self) -> MetricsSet;
-    fn as_json(&self, output: &mut String) -> Result<(), std::fmt::Error>;
-    fn collect_metrics(&self, output_buffer: &mut String, indent: usize);
-    fn group_on(&self) -> &[usize];
-    fn partitioned(&self) -> bool;
-    fn set_partitioned(&mut self, partitioned: bool);
-}
-
-#[derive(Debug)]
-pub struct RepartitionGroupBy {
-    child: GroupBy,
-    partitions: usize,
-}
-
-impl RepartitionGroupBy {
-    pub fn new(child: Arc<dyn MultiSemiJoinWrapper>, group_on: Vec<usize>) -> Self {
-        let child = GroupBy::new(child, group_on);
-        println!("RepartitionGroupBy new");
-        Self {
-            child,
-            partitions: 0,
-        }
-    }
-
-    pub fn child(&self) -> &GroupBy {
-        &self.child
-    }
-}
-
-impl GroupByWrapper for RepartitionGroupBy {
-    fn schema(&self) -> &NestedSchemaRef {
-        self.child.schema()
-    }
-
-    async fn materialize(
-        &self,
-        context: Arc<TaskContext>,
-        partition: usize,
-    ) -> Result<GroupedRelRef, DataFusionError> {
-        println!("RepartitionGroupBy materialize on partition {}", partition);
-        self.child.materialize(context, partition).await
-    }
-
-    fn child(&self) -> &Arc<dyn MultiSemiJoinWrapper> {
-        self.child.child()
-    }
-
-    fn metrics(&self) -> MetricsSet {
-        self.child.metrics()
-    }
-
-    fn as_json(&self, output: &mut String) -> Result<(), std::fmt::Error> {
-        self.child.as_json(output)
-    }
-
-    fn collect_metrics(&self, output_buffer: &mut String, indent: usize) {
-        self.child.collect_metrics(output_buffer, indent)
-    }
-
-    fn group_on(&self) -> &[usize] {
-        self.child.group_on()
-    }
-
-    fn partitioned(&self) -> bool {
-        self.child.partitioned()
-    }
-
-    fn set_partitioned(&mut self, partitioned: bool) {
-        self.child.set_partitioned(partitioned)
-    }
-}
-
-impl GroupByWrapper for GroupByWrapperEnum {
-    fn schema(&self) -> &NestedSchemaRef {
-        match self {
-            GroupByWrapperEnum::RepartitionGroupBy(repartition) => repartition.schema(),
-            GroupByWrapperEnum::Groupby(groupby) => groupby.schema(),
-        }
-    }
-
-    async fn materialize(
-        &self,
-        context: Arc<TaskContext>,
-        partition: usize,
-    ) -> Result<GroupedRelRef, DataFusionError> {
-        match self {
-            GroupByWrapperEnum::RepartitionGroupBy(repartition) => {
-                repartition.materialize(context, partition).await
-            }
-            GroupByWrapperEnum::Groupby(groupby) => groupby.materialize(context, partition).await,
-        }
-    }
-
-    fn child(&self) -> &Arc<dyn MultiSemiJoinWrapper> {
-        match self {
-            GroupByWrapperEnum::RepartitionGroupBy(repartition) => repartition.child().child(),
-            GroupByWrapperEnum::Groupby(groupby) => groupby.child(),
-        }
-    }
-
-    fn metrics(&self) -> MetricsSet {
-        match self {
-            GroupByWrapperEnum::RepartitionGroupBy(repartition) => repartition.metrics(),
-            GroupByWrapperEnum::Groupby(groupby) => groupby.metrics(),
-        }
-    }
-
-    fn as_json(&self, output: &mut String) -> Result<(), std::fmt::Error> {
-        match self {
-            GroupByWrapperEnum::RepartitionGroupBy(repartition) => repartition.as_json(output),
-            GroupByWrapperEnum::Groupby(groupby) => groupby.as_json(output),
-        }
-    }
-
-    fn collect_metrics(&self, output_buffer: &mut String, indent: usize) {
-        match self {
-            GroupByWrapperEnum::RepartitionGroupBy(repartition) => {
-                repartition.collect_metrics(output_buffer, indent)
-            }
-            GroupByWrapperEnum::Groupby(groupby) => groupby.collect_metrics(output_buffer, indent),
-        }
-    }
-
-    fn group_on(&self) -> &[usize] {
-        match self {
-            GroupByWrapperEnum::RepartitionGroupBy(repartition) => repartition.group_on(),
-            GroupByWrapperEnum::Groupby(groupby) => groupby.group_on(),
-        }
-    }
-
-    fn partitioned(&self) -> bool {
-        match self {
-            GroupByWrapperEnum::RepartitionGroupBy(repartition) => repartition.partitioned(),
-            GroupByWrapperEnum::Groupby(groupby) => groupby.partitioned(),
-        }
-    }
-
-    fn set_partitioned(&mut self, partitioned: bool) {
-        match self {
-            GroupByWrapperEnum::RepartitionGroupBy(repartition) => {
-                repartition.set_partitioned(partitioned)
-            }
-            GroupByWrapperEnum::Groupby(groupby) => groupby.set_partitioned(partitioned),
-        }
-    }
-}
 
 #[cfg(test)]
 
@@ -948,7 +904,7 @@ mod tests {
     #[tokio::test]
     async fn test_state_creation() -> Result<(), Box<dyn Error>> {
         let guard = example_guard().unwrap();
-        let repartition = RepartitionMultiSemiJoin::new(guard, vec![], vec![], 0);
+        let repartition = RepartitionMultiSemiJoin::new(guard, vec![], vec![], 0, 0);
 
         let context = Arc::new(TaskContext::default());
 

@@ -61,6 +61,7 @@ type OnceFutPending<T> = Shared<BoxFuture<'static, SharedResult<Arc<T>>>>;
 /// A [`OnceFut`] represents a shared asynchronous computation, that will be evaluated
 /// once for all [`Clone`]'s, with [`OnceFut::get`] providing a non-consuming interface
 /// to drive the underlying [`Future`] to completion
+#[derive(Debug)]
 pub(crate) struct OnceFut<T> {
     state: OnceFutState<T>,
 }
@@ -73,6 +74,7 @@ impl<T> Clone for OnceFut<T> {
     }
 }
 
+#[derive(Debug)]
 enum OnceFutState<T> {
     Pending(OnceFutPending<T>),
     Ready(SharedResult<Arc<T>>),

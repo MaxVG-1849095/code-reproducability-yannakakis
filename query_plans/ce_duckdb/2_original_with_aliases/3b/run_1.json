@@ -1,0 +1,70 @@
+{
+   "name":  "Query", 
+   "result": 0.345960,
+   "timing": 0.345960,
+   "cardinality": 0,
+   "extra-info": "select * from dblp5, dblp8, dblp9 where dblp8.s = dblp9.d and dblp5.s = dblp8.d ;", 
+   "timings": [
+
+   ],
+   "children": [
+    {
+      "name": "RESULT_COLLECTOR",
+      "timing":0.006502,
+      "cardinality":0,
+      "extra_info": "",
+      "children": [
+       {
+         "name": "PROJECTION",
+         "timing":0.000126,
+         "cardinality":1115090,
+         "extra_info": "dblp5.s\ndblp5.d\ndblp8.s\ndblp8.d\ndblp9.s\ndblp9.d\n",
+         "children": [
+          {
+            "name": "HASH_JOIN",
+            "timing":0.184448,
+            "cardinality":1115090,
+            "extra_info": "INNER\ndblp5.s = dblp8.d\n\n[INFOSEPARATOR]\nBuild Min: 1247097\nBuild Max: 1285431\n\n[INFOSEPARATOR]\nEC: 1197643\n",
+            "children": [
+             {
+               "name": "SEQ_SCAN ",
+               "timing":0.000379,
+               "cardinality":38335,
+               "extra_info": "dblp5\n[INFOSEPARATOR]\ns\nd\n[INFOSEPARATOR]\nFilters: s>=1247097 AND s<=1285431 AND s IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 2141839",
+               "children": [
+               ]
+             }
+,
+             {
+               "name": "HASH_JOIN",
+               "timing":0.046135,
+               "cardinality":1115090,
+               "extra_info": "INNER\ndblp8.s = dblp9.d\n\n[INFOSEPARATOR]\nBuild Min: 1206437\nBuild Max: 1245700\n\n[INFOSEPARATOR]\nEC: 1135705\n",
+               "children": [
+                {
+                  "name": "SEQ_SCAN ",
+                  "timing":0.000262,
+                  "cardinality":39264,
+                  "extra_info": "dblp8\n[INFOSEPARATOR]\ns\nd\n[INFOSEPARATOR]\nFilters: s<=1245700 AND s IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 2134666",
+                  "children": [
+                  ]
+                }
+,
+                {
+                  "name": "SEQ_SCAN ",
+                  "timing":0.001946,
+                  "cardinality":1115090,
+                  "extra_info": "dblp9\n[INFOSEPARATOR]\nd\ns\n[INFOSEPARATOR]\nEC: 1115090",
+                  "children": [
+                  ]
+                }
+               ]
+             }
+            ]
+          }
+         ]
+       }
+      ]
+    }
+   ]
+}

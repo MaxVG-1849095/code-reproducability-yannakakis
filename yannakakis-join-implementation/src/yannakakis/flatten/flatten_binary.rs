@@ -33,15 +33,16 @@ pub(super) fn flatten_batch(
     let result = match batch {
         SemiJoinResultBatch::Flat(recordbatch) => recordbatch,
         SemiJoinResultBatch::Nested(nestedbatch) => {
+
+            // println!("flattening nested batch");
             // Compute total number of rows in flat output batch,
             // which is the sum of the total weights in the nested batch
             let weights = nestedbatch.total_weights();
             let sum_of_weights = weights.iter().sum::<u32>() as usize;
-
             // Buffer for storing output arrays
             let n_cols = output_schema.n_unnest_fields();
             let mut output_buffer: Vec<ArrayRef> = Vec::with_capacity(n_cols);
-
+            // println!("unnested fields");
             // Fill output with data from regular fields
             let guard_take_timer = metrics.guard_take_time.timer();
             let regular_fields = &nestedbatch.schema().regular_fields;
@@ -50,6 +51,7 @@ pub(super) fn flatten_batch(
                 output_buffer.push(take_all_weighted(col, &weights, sum_of_weights)?);
             }
             guard_take_timer.done();
+            // println!("after guard timer");
 
             let unnest_time = metrics.unnest_time.timer();
 
@@ -59,6 +61,7 @@ pub(super) fn flatten_batch(
                 let nestedcol_schema = &batch_schema.nested_fields[0];
                 if !nestedcol_schema.is_singular() {
                     let nestedcol = nestedbatch.nested_column(0).as_non_singular();
+
                     unnest_non_singular(
                         nestedcol,
                         nestedcol_schema,
@@ -74,7 +77,14 @@ pub(super) fn flatten_batch(
 
             // Duplicate output columns for join columns
             let timer = metrics.clone_join_columns_time.timer();
-            let batch = output_schema.build_batch(&mut output_buffer)?;
+            let batch = output_schema.build_batch(&mut output_buffer);
+            if batch.is_err(){
+                for col in output_buffer.iter(){
+                    println!("col len: {}", col.len());
+                }
+                println!("error in build_batch");
+            }
+            let batch = batch?;
             timer.done();
             batch
         }
@@ -98,9 +108,13 @@ fn unnest_non_singular(
     weights_buffer: &mut Vec<Weight>,
 ) -> Result<(), ArrowError> {
     if schema.nested_fields.len() == 0 {
-        unnest_final_level(nested, schema, output_buffer, ptrs)
+        let v = unnest_final_level(nested, schema, output_buffer, ptrs);
+        if v.is_err(){
+            println!("error in unnest_final_level");
+        }
+        v
     } else {
-        unnest_intermediate_level(
+        let v = unnest_intermediate_level(
             nested,
             schema,
             output_buffer,
@@ -108,7 +122,11 @@ fn unnest_non_singular(
             ptrs,
             row_ids,
             weights_buffer,
-        )
+        );
+        if v.is_err(){
+            println!("error in unnest_intermediate_level");
+        }
+        v
     }
 }
 
@@ -138,6 +156,9 @@ fn unnest_intermediate_level(
 
     // Follow hol_ptrs to collect row_ids.
     for ptr in ptrs {
+        // if ptr > &1262675{
+            // println!("gonna crash");
+        // }
         for row_id in nestedcol.iterate_linked_list(*ptr) {
             row_ids.push(row_id);
         }
@@ -208,14 +229,40 @@ fn unnest_final_level(
     // Follow hol_ptrs to collect row_ids
     let row_ids = UInt32Array::from_iter_values(
         ptrs.iter()
-            .flat_map(|hol_ptr| nested.iterate_linked_list(*hol_ptr)),
+            .flat_map(|hol_ptr|{
+                // if hol_ptr > &1262675{
+                //     println!("gonna crash 2");
+                // }
+                nested.iterate_linked_list(*hol_ptr)  
+            } ),
     );
+
+    // let mut t = false;
+    // let l = nested.regular_column(0).len() as u32;
+    // let m = row_ids.iter().max().flatten().unwrap_or(0);
+    // // println!("l: {}, row_ids max: {}", l, m);
+    // if l <  m{
+    //     println!("l: {}, row_ids max: {}", l, m);
+    //     println!("-----going to crash-----");
+    //     t = true;
+    // }
+
+    // //trim all values in row_ids to be less than l
+    // let row_ids = UInt32Array::from_iter_values(
+    //     row_ids.iter().map(|x| x.unwrap() as u32).filter(|x| x < &l)
+    // );
+
 
     // No weights need to be computed: all rows have weight 1.
 
     // For each regular attribute of the nested column, compute output array
     for i in 0..schema.regular_fields.fields().len() {
         let col = nested.regular_column(i);
+        
+        // if(t){
+        //     println!("col len: {}", col.len());
+        // }
+        
         output_buffer.push(datafusion::arrow::compute::take(
             col.as_ref(),
             &row_ids,
@@ -223,7 +270,13 @@ fn unnest_final_level(
                 check_bounds: false,
             }),
         )?);
+
+        
     }
+
+    // if(t){
+    //     println!("arrow error?")
+    // }
 
     // No further unnesting is needed, as we have reached the final level.
 

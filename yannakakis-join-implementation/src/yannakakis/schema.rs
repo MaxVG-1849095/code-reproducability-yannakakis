@@ -7,7 +7,6 @@ use datafusion::arrow::{
     datatypes::{FieldRef, Schema, SchemaRef},
 };
 
-use crate::yannakakis::repartitionshredded::GroupByWrapper;
 use super::repartitionshredded::MultiSemiJoinWrapper;
 // use super::repartitionshredded::GroupByWrapperEnum;
 

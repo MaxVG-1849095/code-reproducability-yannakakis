@@ -15,6 +15,7 @@ use datafusion::execution::TaskContext;
 use datafusion::physical_plan::metrics::ExecutionPlanMetricsSet;
 use datafusion::physical_plan::metrics::MetricsSet;
 
+use crate::sel;
 use crate::yannakakis::util::write_metrics_as_json;
 
 // use super::multisemijoin::MultiSemiJoin;
@@ -29,7 +30,6 @@ use super::data::SemiJoinResultBatch;
 use super::data::SingularNestedColumn;
 use super::data::Weight;
 // use super::multisemijoin::MultiSemiJoinStream;
-use super::repartitionshredded::GroupByWrapper;
 use super::repartitionshredded::MultiSemiJoinWrapper;
 
 /// Operator that groups the result of a [MultiSemiJoin] on a given tuple of key columns.
@@ -53,13 +53,16 @@ pub struct GroupBy {
     metrics: ExecutionPlanMetricsSet,
 
     partitioned: bool,
+
+    // id for debugging purposes
+    id: usize,
 }
 
 impl GroupBy {
     /// Create a new [`GroupBy`].
     /// `group_on` are the indexes of the *regular* columns in `child.schema()` that we want to group by.
     /// Grouping on any (possibly empty and not necessarily strict) subset of the regular fields is allowed.
-    pub fn new(child: Arc<dyn MultiSemiJoinWrapper>, group_on: Vec<usize>) -> Self {
+    pub fn new(child: Arc<dyn MultiSemiJoinWrapper>, group_on: Vec<usize>, id: usize) -> Self {
         let child_schema = child.schema();
         let number_of_regular_fields = child_schema.regular_fields.fields().len();
 
@@ -86,6 +89,7 @@ impl GroupBy {
             schema,
             metrics: ExecutionPlanMetricsSet::new(),
             partitioned:false,
+            id,
         }
     }
 
@@ -95,23 +99,15 @@ impl GroupBy {
         &self.schema
     }
 
-}
-
-impl GroupByWrapper for GroupBy {
-    fn schema(&self) -> &NestedSchemaRef {
-        &self.schema
-    }
-
     /// Compute the result of the groupby operation.
     /// This is guaranteed to be linear in the size of the input MultiSemijoin relation.
-    async fn materialize(
+    pub async fn materialize(
         &self,
         context: Arc<TaskContext>,
         partition: usize
     ) -> Result<GroupedRelRef, DataFusionError> {
-        println!("Groupby materialize on partition {}", partition);
         // Init metrics and start timer
-        let metrics = GroupByMetrics::new(0, &self.metrics);
+        let metrics = GroupByMetrics::new(partition, &self.metrics);
         let materialize_timer = metrics.materialize_total_time.timer();
 
         let collect_timer = metrics.semijoin_collect_time.timer();
@@ -135,7 +131,11 @@ impl GroupByWrapper for GroupBy {
         metrics.input_rows.add(total_rows);
         metrics.input_batches.add(batches.len());
 
-        println!("Groupby materialize on partition {} with {} rows", partition, total_rows);
+        println!("Groupby materialize on partition {}, id {}, with {} rows", partition, self.id, total_rows);
+
+        // for (i, batch) in batches.iter().enumerate() {
+        //     println!("Batch in partition {} id: {} \n {:?}", i, self.id, batch);
+        // }
 
         // Measure total time spent by grouping the input tuples
         let groupby_timer = metrics.groupby_time.timer();
@@ -168,7 +168,6 @@ impl GroupByWrapper for GroupBy {
                 &metrics,
             ))
         };
-
         nested_state_building_timer.done();
 
         let result = grouped_rel_builder.finish(self.schema.clone(), grouped_col_inner_data, false);
@@ -180,17 +179,17 @@ impl GroupByWrapper for GroupBy {
     
 
     /// Get groupby input.
-    fn child(&self) -> &Arc<dyn MultiSemiJoinWrapper> {
+    pub fn child(&self) -> &Arc<dyn MultiSemiJoinWrapper> {
         &self.child
     }
 
-    fn metrics(&self) -> MetricsSet {
+    pub fn metrics(&self) -> MetricsSet {
         self.metrics.clone_inner()
     }
 
     /// Get a JSON representation of the GroupBy node and all its descendants ([MultiSemiJoin] & [GroupBy]), including their metrics.
     /// The JSON representation is a string, without newlines, and is appended to `output`.
-    fn as_json(&self, output: &mut String) -> Result<(), std::fmt::Error> {
+    pub fn as_json(&self, output: &mut String) -> Result<(), std::fmt::Error> {
         use std::fmt::Write;
 
         write!(output, "{{ \"operator\": \"GROUPBY\"")?;
@@ -206,7 +205,7 @@ impl GroupByWrapper for GroupBy {
 
     /// Collect metrics from this GroupBy node and all its descendants as a pretty-printed string.
     /// The string is appended to `output_buffer` with an indentation of `indent` spaces.
-    fn collect_metrics(&self, output_buffer: &mut String, indent: usize) {
+    pub fn collect_metrics(&self, output_buffer: &mut String, indent: usize) {
         use std::fmt::Write;
 
         (0..indent).for_each(|_| output_buffer.push(' '));
@@ -217,18 +216,20 @@ impl GroupByWrapper for GroupBy {
         self.child.collect_metrics(output_buffer, indent + 4);
     }
 
-    fn group_on(&self) -> &[usize] {
+    pub fn group_on(&self) -> &[usize] {
         &self.group_on
     }
     
-    fn partitioned(&self) -> bool {
+    pub fn partitioned(&self) -> bool {
         self.partitioned
     }
     
-    fn set_partitioned(&mut self, partitioned: bool) {
+    pub fn set_partitioned(&mut self, partitioned: bool) {
         self.partitioned = partitioned;
     }
+
 }
+
 
 
 /// The [GroupBy] operator creates a new [GroupedRel] object that has a single nested column.
@@ -556,7 +557,7 @@ mod tests {
         let regular_fields = schema.regular_fields.project(&group_columns)?;
 
         // Groupby {a,b,c} on column "a"
-        let groupby = GroupBy::new(Arc::new(semijoin) as Arc<dyn MultiSemiJoinWrapper>, group_columns.clone());
+        let groupby = GroupBy::new(Arc::new(semijoin) as Arc<dyn MultiSemiJoinWrapper>, group_columns.clone(), 0);
         assert_eq!(groupby.group_on, group_columns);
         assert_eq!(groupby.nest_on, nest_columns);
 
@@ -581,7 +582,7 @@ mod tests {
         let regular_fields = schema.regular_fields.project(&group_columns)?;
 
         // Groupby {a,b,c} on {}
-        let groupby = GroupBy::new(Arc::new(semijoin) as Arc<dyn MultiSemiJoinWrapper>, group_columns.clone());
+        let groupby = GroupBy::new(Arc::new(semijoin) as Arc<dyn MultiSemiJoinWrapper>, group_columns.clone(), 0);
         assert_eq!(groupby.group_on, group_columns);
         assert_eq!(groupby.nest_on, nest_columns);
 
@@ -611,7 +612,7 @@ mod tests {
         let semijoin = example_input().unwrap();
 
         // Groupby on column out of bounds
-        GroupBy::new(Arc::new(semijoin) as Arc<dyn MultiSemiJoinWrapper>, vec![4]); // should panic
+        GroupBy::new(Arc::new(semijoin) as Arc<dyn MultiSemiJoinWrapper>, vec![4], 0); // should panic
     }
 
     /// Groupby on *all* columns.
@@ -627,7 +628,7 @@ mod tests {
         let regular_fields = schema.regular_fields.project(&group_columns)?;
 
         // Groupby {a,b,c} on {a,b,c}
-        let groupby = GroupBy::new(Arc::new(semijoin) as Arc<dyn MultiSemiJoinWrapper>, group_columns.clone());
+        let groupby = GroupBy::new(Arc::new(semijoin) as Arc<dyn MultiSemiJoinWrapper>, group_columns.clone(), 0);
         assert_eq!(groupby.group_on, group_columns);
         assert_eq!(groupby.nest_on, nest_columns);
 
@@ -656,7 +657,7 @@ mod tests {
         let semijoin = example_input()?;
 
         // GroupBy on column "a" (a=1 for all rows)
-        let groupby = GroupBy::new(Arc::new(semijoin) as Arc<dyn MultiSemiJoinWrapper>, vec![0]);
+        let groupby = GroupBy::new(Arc::new(semijoin) as Arc<dyn MultiSemiJoinWrapper>, vec![0], 0);
         let context: Arc<TaskContext> = Arc::new(TaskContext::default());
         let groupby_state_ref = groupby.materialize(context, 0).await?;
         let groupby_state = groupby_state_ref
@@ -720,7 +721,7 @@ mod tests {
         let semijoin = MultiSemiJoin::new(Arc::new(memoryexec), vec![], vec![], 0);
 
         // GroupBy on column "a" (a=1 for all rows)
-        let groupby = GroupBy::new(Arc::new(semijoin) as Arc<dyn MultiSemiJoinWrapper>, vec![0]);
+        let groupby = GroupBy::new(Arc::new(semijoin) as Arc<dyn MultiSemiJoinWrapper>, vec![0], 0);
         let context: Arc<TaskContext> = Arc::new(TaskContext::default());
         let groupby_state_ref = groupby.materialize(context, 0).await?;
         let groupby_state = groupby_state_ref
@@ -759,7 +760,7 @@ mod tests {
         let semijoin = example_input()?;
 
         // GroupBy on column "a" (a=1 for all rows)
-        let groupby = GroupBy::new(Arc::new(semijoin) as Arc<dyn MultiSemiJoinWrapper>, vec![1]);
+        let groupby = GroupBy::new(Arc::new(semijoin) as Arc<dyn MultiSemiJoinWrapper>, vec![1], 0);
         let context: Arc<TaskContext> = Arc::new(TaskContext::default());
         let groupby_state_ref = groupby.materialize(context, 0).await?;
         let groupby_state = groupby_state_ref
@@ -782,7 +783,7 @@ mod tests {
         let semijoin = example_input()?;
 
         // GroupBy on columns "a" and "b" (all (a,b) tuples are distinct)
-        let groupby = GroupBy::new(Arc::new(semijoin) as Arc<dyn MultiSemiJoinWrapper>, vec![0, 1]);
+        let groupby = GroupBy::new(Arc::new(semijoin) as Arc<dyn MultiSemiJoinWrapper>, vec![0, 1], 0);
         let context: Arc<TaskContext> = Arc::new(TaskContext::default());
         let groupby_state_ref = groupby.materialize(context, 0).await?;
         let groupby_state = groupby_state_ref
@@ -807,7 +808,7 @@ mod tests {
         let semijoin = example_input()?;
 
         // GroupBy on columns a,b,c (all (a,b,c) tuples are distinct)
-        let groupby = GroupBy::new(Arc::new(semijoin) as Arc<dyn MultiSemiJoinWrapper>, vec![0, 1, 2]);
+        let groupby = GroupBy::new(Arc::new(semijoin) as Arc<dyn MultiSemiJoinWrapper>, vec![0, 1, 2], 0);
         let context: Arc<TaskContext> = Arc::new(TaskContext::default());
         let groupby_state_ref = groupby.materialize(context, 0).await?;
         let groupby_state = groupby_state_ref
@@ -844,7 +845,7 @@ mod tests {
         let semijoin = MultiSemiJoin::new(Arc::new(memoryexec), vec![], vec![], 0);
 
         // GroupBy on column "a" (a=1 for all rows)
-        let groupby = GroupBy::new(Arc::new(semijoin) as Arc<dyn MultiSemiJoinWrapper>, vec![0]);
+        let groupby = GroupBy::new(Arc::new(semijoin) as Arc<dyn MultiSemiJoinWrapper>, vec![0], 0);
         let context: Arc<TaskContext> = Arc::new(TaskContext::default());
         let groupby_state_ref = groupby.materialize(context, 0).await?;
         let groupby_state = groupby_state_ref
