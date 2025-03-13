@@ -331,6 +331,7 @@ impl MsjBatchPartitioner {
                         let mut batches: Vec<SemiJoinResultBatch> = Vec::new();
                         let mut batchindices: Vec<usize> = Vec::new();
                         //rebuild a batch for each partition
+                        // TODO: optimize creation by first creating the flat columns and skipping loop if this is empty
                         for i in 0..num_partitions {
                             let arr: Vec<u32> = indices[i].iter().map(|x| *x as u32).collect();
                             // let arr: Sel = Sel::new(arr);
