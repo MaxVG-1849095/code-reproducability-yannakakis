@@ -793,6 +793,7 @@ impl DefaultNullableSingularGroupedRel {
     }
 }
 
+
 impl GroupedRel for DefaultNullableSingularGroupedRel {
     fn schema(&self) -> &NestedSchemaRef {
         &self.schema

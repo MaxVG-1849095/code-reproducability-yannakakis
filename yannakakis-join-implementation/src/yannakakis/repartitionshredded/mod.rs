@@ -284,15 +284,14 @@ impl MsjBatchPartitioner {
                                 new_columns,
                             )?);
                             // println!(
-                            //     "-----\nmsj id {}, original batch: {:?}\n batch {}: {:?}\n-----",
+                            //     "-----\n[MSJREP PRINT]\nmsj id {}, original batch: {:?}\n batch {}: {:?}\n-----",
                             //     msj_id, val, i, new_batch
                             // );
                             //if the batch's reguar columns are not empty, add it to output otherwise we skip it
                             if new_batch.num_rows() > 0 {
                                 batches.push(new_batch);
                                 batchindices.push(i);
-                            }
-                            else{
+                            } else {
                                 // println!("empty batch");
                             }
                         }
@@ -337,12 +336,6 @@ impl MsjBatchPartitioner {
                             // let arr: Sel = Sel::new(arr);
 
                             let schema = val.schema().clone();
-                            let mut inner_cols_final: Vec<NestedColumn> = Vec::new();
-                            for col in val.inner.nested_cols.iter() {
-                                // take_nested_column_inplace(col, &arr);
-                                let c = take_rows_from_nestedcol(col, arr.as_ref())?;
-                                inner_cols_final.push(c);
-                            }
 
                             let regular_cols = val
                                 .inner
@@ -356,17 +349,26 @@ impl MsjBatchPartitioner {
                                 })
                                 .collect::<Result<Vec<_>, _>>()?;
 
+                            if regular_cols.iter().any(|col| col.len() == 0) { //if any of the regular columns is empty, skip this partition
+                                continue;
+                            }
+                            let mut inner_cols_final: Vec<NestedColumn> = Vec::new();
+                            for col in val.inner.nested_cols.iter() {
+                                // take_nested_column_inplace(col, &arr);
+                                let c = take_rows_from_nestedcol(col, arr.as_ref())?;
+                                inner_cols_final.push(c);
+                            }
+
                             let new_batch = SemiJoinResultBatch::Nested(NestedBatch::new(
                                 schema,
                                 regular_cols,
                                 inner_cols_final,
                             ));
-                            // println!("-----\n-----\nmsj {} original batch:\n {:?}\n+++++\n new batch for partition {}:\n {:?}\n-----\n-----",msj_id, val, i, new_batch);
+                            // println!("-----\n[MSJREP PRINT]\n-----\nmsj {} original batch:\n {:?}\n+++++\n new batch for partition {}:\n {:?}\n-----\n-----",msj_id, val, i, new_batch);
                             if new_batch.num_rows() > 0 {
                                 batches.push(new_batch);
                                 batchindices.push(i);
-                            }
-                            else{
+                            } else {
                                 // println!("empty batch");
                             }
                         }
@@ -447,12 +449,13 @@ pub fn take_rows_from_nestedcol(
         NestedColumn::NonSingular(ns_nestedcol) => {
             let new_weights = take_unnest(&ns_nestedcol.weights, row_ids)?;
             let new_hols = take_unnest(&ns_nestedcol.hols, row_ids)?;
-            let new_data = ns_nestedcol.clone_data(); // ! changed this to make a deep copy of the data
+            // let new_data = ns_nestedcol.clone_data(); // ! changed this to make a deep copy of the data
 
             let nestedcol = NonSingularNestedColumn {
                 weights: new_weights,
                 hols: new_hols,
-                data: Arc::new(new_data), // clone arc = cheap
+                data: ns_nestedcol.data.clone(), // clone arc = cheap,
+                // data: Arc::new(new_data), // clone data = expensive
             };
 
             Ok(NestedColumn::NonSingular(nestedcol))

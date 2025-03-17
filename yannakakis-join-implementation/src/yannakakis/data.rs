@@ -813,6 +813,7 @@ pub trait GroupedRel: Send + Sync {
 
     /// Returns the number of rows in the [GroupedRel].
     fn is_empty(&self) -> bool;
+    
 }
 
 pub type GroupedRelRef = Arc<dyn GroupedRel>;

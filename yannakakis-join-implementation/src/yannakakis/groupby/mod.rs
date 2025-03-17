@@ -133,9 +133,6 @@ impl GroupBy {
 
         println!("Groupby materialize on partition {}, id {}, with {} rows", partition, self.id, total_rows);
 
-        // for (i, batch) in batches.iter().enumerate() {
-        //     println!("Batch in partition {} id: {} \n {:?}", i, self.id, batch);
-        // }
 
         // Measure total time spent by grouping the input tuples
         let groupby_timer = metrics.groupby_time.timer();
@@ -143,7 +140,7 @@ impl GroupBy {
             &self.group_on,
             &self.schema,
             total_rows,
-            RandomState::new(),
+            RandomState::with_seeds(0,0,0,0), //TODO: change this to check if seed does anything!
             false, //TODO: must be removed when flag is removed
         );
         grouped_rel_builder.build(&batches);
@@ -152,6 +149,7 @@ impl GroupBy {
 
         let nested_state_building_timer = metrics.nested_state_building_time.timer();
         let nested_column_schema = &self.schema.nested_fields[0]; // Guaranteed to be valid since the output schema has exactly one nested column
+        // println!("nested_column_schema: {:?}", nested_column_schema);
         let grouped_col_inner_data = if nested_column_schema.is_singular() {
             // When the resulting [GroupedRel] object is singular we do not need to concatenate
             // any of the non-group columns: those will never be needed.
@@ -172,6 +170,7 @@ impl GroupBy {
 
         let result = grouped_rel_builder.finish(self.schema.clone(), grouped_col_inner_data, false);
 
+        
         materialize_timer.done();
 
         Ok(result)
@@ -254,6 +253,7 @@ fn create_nested_col_inner_data(
     // In this new implementation, I have therefore reverted to arrow::compute::concat, which is what also the HashJoin uses.
     // This works for *any* kind of array (also string etc).
 
+    
     // Regular columns that will now be nested need to be concatenated
     let mut regular_cols = Vec::with_capacity(nest_on.len());
     for i in 0..nest_on.len() {
@@ -315,7 +315,10 @@ fn create_nested_col_inner_data(
         nested_cols.push(nested_col);
     }
     timer.done();
-
+    // println!("\n----------------------\n");
+    // println!("input batches: {:?}", batches);
+    // println!("made nested column data\n regular_cols: {:?}\n nested_cols: {:?}", regular_cols, nested_cols);
+    // println!("\n----------------------\n");
     // Create the NestedRel
     NestedRel::new_no_next(nested_column_schema.clone(), regular_cols, nested_cols)
 }
@@ -336,7 +339,21 @@ pub fn concat_non_singular_nested_columns(
     }
 
     // We may now assume it is non-empty therefore colums[0] is valid
-    let data = columns[0].data.clone();
+    // ! this is what causes the crash
+    // let data = columns[0].data.clone();
+
+    // find longest column data and use that 
+    let mut max_len = 0;
+    let mut max_len_idx = 0;
+    for (i, col) in columns.iter().enumerate() {
+        if col.data.regular_cols[0].len() > max_len {
+            max_len = col.data.regular_cols[0].len();
+            max_len_idx = i;
+        }
+        // println!("current checking id: {:?}, len: {:?},data: {:?},  max_len: {:?}, max_len_idx: {:?}",i,col.data.regular_cols[0].len(), col.data.regular_cols,max_len, max_len_idx);
+    }
+    let data = columns[max_len_idx].data.clone();
+
     let mut weights: Vec<Weight> = Vec::with_capacity(total_rows);
     for col in columns {
         weights.extend_from_slice(&col.weights);
@@ -345,6 +362,9 @@ pub fn concat_non_singular_nested_columns(
     for col in columns {
         hols.extend_from_slice(&col.hols);
     }
+    // println!("----------------------");
+    // println!("concat_non_singular_nested_columns: original: {:?}, \n---\n hols: {:?}, \n---\n weights: {:?}, \n---\ndata: {:?}", columns, hols, weights, data);
+    // println!("----------------------");
 
     NestedColumn::NonSingular(NonSingularNestedColumn {
         hols,
