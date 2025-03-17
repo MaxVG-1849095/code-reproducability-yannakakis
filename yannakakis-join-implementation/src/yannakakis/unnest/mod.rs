@@ -399,14 +399,14 @@ pub fn take_rows_from_nestedcol(
         NestedColumn::NonSingular(ns_nestedcol) => {
             let new_weights = take(&ns_nestedcol.weights, row_ids)?;
             let new_hols = take(&ns_nestedcol.hols, row_ids)?;
-            let new_data = ns_nestedcol.clone_data(); // ! changed this to make a deep copy of the data
+            // let new_data = ns_nestedcol.clone_data(); // ! changed this to make a deep copy of the data
 
 
             let nestedcol = NonSingularNestedColumn {
                 weights: new_weights,
                 hols: new_hols,
-                // data: ns_nestedcol.data.clone(), // clone arc = cheap
-                data: Arc::new(new_data),
+                data: ns_nestedcol.data.clone(), // clone arc = cheap
+                // data: Arc::new(new_data),
             };
 
             Ok(NestedColumn::NonSingular(nestedcol))

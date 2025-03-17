@@ -176,7 +176,7 @@ async fn exec_plan(
         }
         let (results, duration) = time_execution(plan.clone(), task_ctx.clone()).await?;
 
-        println!("{}", pretty_format_batches(&results)?.to_string());
+        // println!("{}", pretty_format_batches(&results)?.to_string());
         //print amount of rows
         // println!("Rows: {}", results[0].num_rows());
         let mut results_count = 0;
