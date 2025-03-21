@@ -176,7 +176,7 @@ async fn exec_plan(
         }
         let (results, duration) = time_execution(plan.clone(), task_ctx.clone()).await?;
 
-        // println!("{}", pretty_format_batches(&results)?.to_string());
+        println!("{}", pretty_format_batches(&results)?.to_string());
         //print amount of rows
         // println!("Rows: {}", results[0].num_rows());
         let mut results_count = 0;
@@ -219,6 +219,12 @@ async fn exec_plan(
         }
     }
 
+    //write all durations in a single line
+    let mut durations_str = String::new();
+    for duration in &durations {
+        durations_str.push_str(&format!("{:?},", duration));
+    }
+    println!("Durations: {}", durations_str);
     // write average duration
     let avg_duration = durations.iter().sum::<Duration>() / repetitions as u32;
     println!("Average execution time: {:?}", avg_duration);

@@ -340,19 +340,19 @@ pub fn concat_non_singular_nested_columns(
 
     // We may now assume it is non-empty therefore colums[0] is valid
     // ! this is what causes the crash
-    // let data = columns[0].data.clone();
+    let data = columns[0].data.clone();
 
-    // find longest column data and use that 
-    let mut max_len = 0;
-    let mut max_len_idx = 0;
-    for (i, col) in columns.iter().enumerate() {
-        if col.data.regular_cols[0].len() > max_len {
-            max_len = col.data.regular_cols[0].len();
-            max_len_idx = i;
-        }
-        // println!("current checking id: {:?}, len: {:?},data: {:?},  max_len: {:?}, max_len_idx: {:?}",i,col.data.regular_cols[0].len(), col.data.regular_cols,max_len, max_len_idx);
-    }
-    let data = columns[max_len_idx].data.clone();
+    // find longest column data and use that // ! this is not correct, only a solution for a specific run on specific data
+    // let mut max_len = 0;
+    // let mut max_len_idx = 0;
+    // for (i, col) in columns.iter().enumerate() {
+    //     if col.data.regular_cols[0].len() > max_len {
+    //         max_len = col.data.regular_cols[0].len();
+    //         max_len_idx = i;
+    //     }
+    //     // println!("current checking id: {:?}, len: {:?},data: {:?},  max_len: {:?}, max_len_idx: {:?}",i,col.data.regular_cols[0].len(), col.data.regular_cols,max_len, max_len_idx);
+    // }
+    // let data = columns[max_len_idx].data.clone();
 
     let mut weights: Vec<Weight> = Vec::with_capacity(total_rows);
     for col in columns {

@@ -5,7 +5,7 @@ parquet_data="$root_dir/benchmarks/imdb/parquet-zstd"
 out_folder="./output" # non-existing output folder
 timings="timings.csv"
 plan="./query_plans/query9_1.json"
-repetitions=10
+repetitions=5
 
 # make timings file
 touch $timings

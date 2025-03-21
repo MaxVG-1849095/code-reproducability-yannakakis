@@ -1,17 +1,17 @@
 {
-    "execution_time": 2.984075,
+    "execution_time": 0.34596,
     "root": {
-        "name": "AGGREGATE",
-        "execution_time": 0.026639,
-        "actual_rows": 1,
+        "name": "PROJECTION",
+        "execution_time": 0.000126,
+        "actual_rows": 1115090,
         "estimated_cardinality": null,
         "children": [
             {
                 "name": "YANNAKAKIS",
                 "root": {
                     "name": "MULTISEMIJOIN",
-                    "partitioned": true,
-                    "id": 0,
+                    "partitioned": false,
+                    "id": 5,
                     "equijoin_keys": [
                         [
                             [
@@ -23,21 +23,25 @@
                     "guard": {
                         "name": "REPARTITION",
                         "num_partitions": 1,
-                        "partition_on": 0,
                         "partitioning": "unknown",
+                        "partition_on": 0,
                         "children": [
                             {
                                 "name": "SEQUENTIALSCAN",
-                                "execution_time": 0.120606,
-                                "actual_rows": 14834998,
-                                "estimated_cardinality": 14835720,
+                                "execution_time": 0.000379,
+                                "actual_rows": 38335,
+                                "estimated_cardinality": 2141839,
                                 "children": [],
-                                "relation": "movie_info",
-                                "opt_filter": "movie_id>=2 AND movie_id<=2525971 AND movie_id IS NOT NULL",
+                                "relation": "dblp5",
+                                "opt_filter": null,
                                 "projection": [
                                     {
-                                        "table_name": "mi",
-                                        "field_name": "movie_id"
+                                        "table_name": "dblp5",
+                                        "field_name": "s"
+                                    },
+                                    {
+                                        "table_name": "dblp5",
+                                        "field_name": "d"
                                     }
                                 ]
                             }
@@ -46,15 +50,15 @@
                     "children": [
                         {
                             "name": "GROUPBY",
-                            "partitioned": true,
-                            "id": 0,
+                            "partitioned": false,
+                            "id": 4,
                             "group_on": [
                                 0
                             ],
                             "child": {
                                 "name": "MULTISEMIJOIN",
-                                "partitioned": true,
-                                "id": 0,
+                                "partitioned": false,
+                                "id": 3,
                                 "equijoin_keys": [
                                     [
                                         [
@@ -71,16 +75,20 @@
                                     "children": [
                                         {
                                             "name": "SEQUENTIALSCAN",
-                                            "execution_time": 0.027084,
-                                            "actual_rows": 4523930,
-                                            "estimated_cardinality": 4523930,
+                                            "execution_time": 0.000262,
+                                            "actual_rows": 39264,
+                                            "estimated_cardinality": 2134666,
                                             "children": [],
-                                            "relation": "movie_keyword",
+                                            "relation": "dblp8",
                                             "opt_filter": null,
                                             "projection": [
                                                 {
-                                                    "table_name": "mk",
-                                                    "field_name": "movie_id"
+                                                    "table_name": "dblp8",
+                                                    "field_name": "s"
+                                                },
+                                                {
+                                                    "table_name": "dblp8",
+                                                    "field_name": "d"
                                                 }
                                             ]
                                         }
@@ -89,15 +97,15 @@
                                 "children": [
                                     {
                                         "name": "GROUPBY",
-                                        "partitioned": true,
-                                        "id": 0,
+                                        "partitioned": false,
+                                        "id": 2,
                                         "group_on": [
                                             0
                                         ],
                                         "child": {
                                             "name": "MULTISEMIJOIN",
-                                            "partitioned": true,
-                                            "id": 0,
+                                            "partitioned": false,
+                                            "id": 1,
                                             "equijoin_keys": [],
                                             "guard": {
                                                 "name": "REPARTITION",
@@ -107,20 +115,20 @@
                                                 "children": [
                                                     {
                                                         "name": "SEQUENTIALSCAN",
-                                                        "execution_time": 0.080029,
-                                                        "actual_rows": 2525970,
-                                                        "estimated_cardinality": 2528312,
+                                                        "execution_time": 0.001946,
+                                                        "actual_rows": 1115090,
+                                                        "estimated_cardinality": 1115090,
                                                         "children": [],
-                                                        "relation": "title",
-                                                        "opt_filter": "id>=2 AND id<=2525971 AND id IS NOT NULL",
+                                                        "relation": "dblp9",
+                                                        "opt_filter": null,
                                                         "projection": [
                                                             {
-                                                                "table_name": "t",
-                                                                "field_name": "id"
+                                                                "table_name": "dblp9",
+                                                                "field_name": "d"
                                                             },
                                                             {
-                                                                "table_name": "t",
-                                                                "field_name": "title"
+                                                                "table_name": "dblp9",
+                                                                "field_name": "s"
                                                             }
                                                         ]
                                                     }
@@ -136,14 +144,36 @@
                 }
             }
         ],
-        "group_by": null,
-        "aggregate": [
-            "count_star()"
+        "on": [
+            {
+                "table_name": "dblp5",
+                "field_name": "s"
+            },
+            {
+                "table_name": "dblp5",
+                "field_name": "d"
+            },
+            {
+                "table_name": "dblp8",
+                "field_name": "s"
+            },
+            {
+                "table_name": "dblp8",
+                "field_name": "d"
+            },
+            {
+                "table_name": "dblp9",
+                "field_name": "s"
+            },
+            {
+                "table_name": "dblp9",
+                "field_name": "d"
+            }
         ]
     },
     "aliases": {
-        "mk": "movie_keyword",
-        "mi": "movie_info",
-        "t": "title"
+        "dblp8": "dblp8",
+        "dblp5": "dblp5",
+        "dblp9": "dblp9"
     }
 }
