@@ -78,30 +78,30 @@ impl RepartitionExecState {
     ) -> Self {
         let num_input_partitions = input.guard_partition_count();
         let num_output_partitions = input.guard_partition_count();
-        let (input_channels, output_channels) = {
+        let (send_channels, receive_channels) = {
             //only the preserve_order = false route has been implemented for now
-            let (input_channels, output_channels) = channels(num_input_partitions);
-            let input_channels = input_channels
+            let (send_channels, receive_channels) = channels(num_input_partitions);
+            let send_channels = send_channels
                 .into_iter()
                 .map(|item| vec![item; num_input_partitions])
                 .collect::<Vec<_>>(); //turn into 2D vector
-            let output_channels = output_channels
+            let receive_channels = receive_channels
                 .into_iter()
                 .map(|item| vec![item])
                 .collect::<Vec<_>>(); //turn into 2D vector
 
-            (input_channels, output_channels)
+            (send_channels, receive_channels)
         };
 
-        let mut channels = HashMap::with_capacity(input_channels.len()); // init hashmap with amount of partitions
-        for (partition, (input_channel, output_channel)) in
-            input_channels.into_iter().zip(output_channels).enumerate()
+        let mut channels = HashMap::with_capacity(send_channels.len()); // init hashmap with amount of partitions
+        for (partition, (send_channel, receive_channel)) in
+            send_channels.into_iter().zip(receive_channels).enumerate()
         {
             let reservation = Arc::new(Mutex::new(
                 MemoryConsumer::new(format!("{}[{partition}]", "RepartitionExec"))
                     .register(context.memory_pool()),
             ));
-            channels.insert(partition, (input_channel, output_channel, reservation));
+            channels.insert(partition, (send_channel, receive_channel, reservation));
         }
 
         // goal is to launch 1 task per input partition, these tasks gather input via a helper function and send it to the output channel
@@ -112,10 +112,10 @@ impl RepartitionExecState {
             let channels_in: HashMap<_, _> = channels
                 .iter()
                 .map(
-                    |(partition, (input_channels, _output_channels, reservations))| {
+                    |(partition, (send_channels, _receive_channels, reservations))| {
                         (
                             *partition,
-                            (input_channels[i].clone(), reservations.clone()),
+                            (send_channels[i].clone(), reservations.clone()),
                         )
                     },
                 )
@@ -138,7 +138,7 @@ impl RepartitionExecState {
                 input_task,
                 channels_in
                     .into_iter()
-                    .map(|(partition, (tx, _reservation))| (partition, tx))
+                    .map(|(partition, (send_channel, _reservation))| (partition, send_channel))
                     .collect(),
             ));
             spawned_tasks.push(wait_for_task);
@@ -548,21 +548,21 @@ impl RepartitionMultiSemiJoin {
             // println!("repartitionmsj test block");
 
             //retrieve the output channel relevant to the partition
-            let (mut output_channel, reservation, abort_helper) = {
+            let (mut receive_channel, reservation, abort_helper) = {
                 let mut state = state.lock();
 
-                let (_input_channel, output_channel, reservation) = state
+                let (_send_channel, receive_channel, reservation) = state
                     .channels
                     .remove(&partition)
                     .expect("partition not used yet");
 
-                (output_channel, reservation, state.abort_helper.clone())
+                (receive_channel, reservation, state.abort_helper.clone())
             };
             Ok::<Pin<Box<dyn MultiSemiJoinBatchStream + Send>>, DataFusionError>(Box::pin(
                 MsjRepartitionStream {
                     num_input_partitions,
                     num_input_partitions_processed: 0,
-                    input: output_channel.swap_remove(0), //retrieve 0th element from output channel so we don't have a vec
+                    input: receive_channel.swap_remove(0), //retrieve 0th element from output channel so we don't have a vec
                     schema,
                     reservation,
                     drop_helper: abort_helper,
@@ -588,7 +588,7 @@ impl RepartitionMultiSemiJoin {
     async fn pull_from_input(
         input: Arc<MultiSemiJoin>,
         partition: usize,
-        mut output_channnels: HashMap<
+        mut send_channnels: HashMap<
             usize,
             (
                 DistributionSender<MaybeNestedBatch>,
@@ -606,10 +606,12 @@ impl RepartitionMultiSemiJoin {
         let mut input_stream = input.execute(partition, context)?;
         timer.done();
 
-        let num_outputs = output_channnels.len();
+        let num_outputs = send_channnels.len();
         // println!("num outputs: {}", num_outputs);
         let mut partitioner =
             MsjBatchPartitioner::try_new(num_outputs, 0, repartition_key, msj_id, metrics.repartition_time.clone())?;
+
+        // ! sync needed between threads, the partitioner needs the nested columns of all partitions to be present in order to join it
 
         loop {
             //get batch from input stream, break the loop if there is no next
@@ -622,6 +624,7 @@ impl RepartitionMultiSemiJoin {
             };
             timer.done();
 
+
             for res in partitioner.partition_iter(batch, partition, msj_id)? {
                 let (partition_send, batch) = res?;
                 // println!(
@@ -630,14 +633,14 @@ impl RepartitionMultiSemiJoin {
                 // );
                 let timer = metrics.send_time[partition_send].timer();
                 //choose the output channel to send to, if we set this to 0 we will send everything to the first partition
-                if let Some((input_channel, reservation)) =
-                    output_channnels.get_mut(&partition_send)
+                if let Some((send_channel, reservation)) =
+                    send_channnels.get_mut(&partition_send)
                 {
                     //this partition is the partition we are sending to
                     let size = batch.get_array_memory_size();
                     reservation.lock().try_grow(size)?;
 
-                    if input_channel.send(Some(Ok(batch))).await.is_err() {
+                    if send_channel.send(Some(Ok(batch))).await.is_err() {
                         //if send is unsuccessful, shrink
                         reservation.lock().shrink(size);
                     }
@@ -652,24 +655,24 @@ impl RepartitionMultiSemiJoin {
     //function to wait for a given input task
     async fn wait_for_task(
         input_task: SpawnedTask<Result<(), DataFusionError>>,
-        txs: HashMap<usize, DistributionSender<MaybeNestedBatch>>,
+        send_channels: HashMap<usize, DistributionSender<MaybeNestedBatch>>,
     ) {
         // input_task.join().await;
         match input_task.join().await {
             Ok(_) => {
-                for (i, tx) in txs {
-                    tx.send(None).await.expect("send none");
+                for (i, send_channel) in send_channels {
+                    send_channel.send(None).await.expect("send none");
                     // println!("sent none to {}", i);
                 }
             }
             Err(e) => {
                 let e = Arc::new(e);
-                for (_, tx) in txs {
+                for (_, send_channel) in send_channels {
                     let err = Err(DataFusionError::Context(
                         "error".to_string(),
                         Box::new(DataFusionError::External(Box::new(Arc::clone(&e)))),
                     ));
-                    tx.send(Some(err)).await.expect("send none");
+                    send_channel.send(Some(err)).await.expect("send none");
                 }
             }
         }
