@@ -1,0 +1,164 @@
+use std::sync::Arc;
+
+use datafusion::{arrow, error::DataFusionError};
+
+use crate::yannakakis::data::{NestedColumn, NestedRel, NestedSchema, SingularNestedColumn};
+
+pub struct NestedCombiner {
+    inner_cols: Vec<NestedColumn>,
+
+    ready: bool,
+
+    final_inner_col: NestedColumn,
+
+    present_partitions: Vec<usize>,
+
+    offsets: Vec<usize>,
+}
+
+impl NestedCombiner {
+    pub fn new(num_input_partitions: usize) -> Self {
+        //empty nestedcolumn obj
+        let empty_schema = NestedSchema::empty();
+        let empty_schema = Arc::new(empty_schema);
+        let empty_nestedcol = NestedColumn::make_empty(empty_schema);
+        let inner_cols = vec![empty_nestedcol; num_input_partitions];
+        let present_partitions = vec![0; num_input_partitions];
+        let offsets = vec![0; num_input_partitions];
+        Self {
+            inner_cols: inner_cols,
+            ready: false,
+            final_inner_col: NestedColumn::Singular(SingularNestedColumn { weights: vec![] }),
+            present_partitions: present_partitions,
+            offsets: offsets,
+        }
+    }
+
+    pub fn add_inner_col(&mut self, inner_col: NestedColumn, index: usize) {
+        if (self.ready) {
+            return;
+        }
+        if index != 0{
+            self.offsets[index] = inner_col.num_rows();
+        }
+        self.inner_cols[index] = inner_col;
+        self.present_partitions[index] = index;
+    }
+
+    pub fn combine(&mut self) -> Result<NestedColumn, DataFusionError> {
+        if self.ready {
+            return Ok(self.final_inner_col.clone());
+        }
+        
+        //check if all partitions are present
+        for i in 0..self.present_partitions.len() {
+            if self.present_partitions[i] != i {
+                //return error
+                return Err(DataFusionError::Internal(
+                    "Not all partitions are present in the NestedCombiner".to_string(),
+                ));
+            }
+        }
+
+        //combine all inner columns
+        let mut final_inner_col = self.inner_cols[0].clone();
+        // println!("=======\ninitial final inner col: {:?}\n========", final_inner_col);
+        let mut curr_offset;
+        match final_inner_col {
+            NestedColumn::Singular(ref s) => {
+                curr_offset = s.weights.len() as u32;
+            }
+            NestedColumn::NonSingular(ref ns) => {
+                curr_offset = ns.data.next.iter().len() as u32;
+            }
+        }
+        if(self.offsets.len() > 1){
+            self.offsets[1] = curr_offset as usize;
+        }
+        // self.offsets[1] = curr_offset as usize;
+        for i in 1..self.inner_cols.len() {
+            let inner_col = &self.inner_cols[i];
+            match final_inner_col {
+                NestedColumn::Singular(ref mut s) => {
+                    match inner_col {
+                        NestedColumn::Singular(ref inner_s) => {
+                            s.weights.extend(inner_s.weights.iter());
+                        }
+                        NestedColumn::NonSingular(ref inner_ns) => {
+                            let mut new_weights = s.weights.clone();
+                            new_weights.extend(inner_ns.weights.iter());
+                            s.weights = new_weights;
+                        }
+                    }
+                }
+                NestedColumn::NonSingular(ref mut ns) => {
+                    match inner_col {
+                        NestedColumn::Singular(ref inner_s) => {
+                            ns.weights.extend(inner_s.weights.iter());
+                        }
+                        NestedColumn::NonSingular(ref inner_ns) => {
+                            // let mut new_weights = ns.weights.clone();
+                            // new_weights.extend(inner_ns.weights.iter());
+                            // ns.weights = new_weights;
+                            // let mut new_hols = ns.hols.clone();
+                            // for hol in inner_ns.hols.iter() {
+                            //     new_hols.push(hol + curr_offset);
+                            // }
+                            // new_hols.extend(inner_ns.hols.iter());
+                            // ns.hols = new_hols;
+
+                            let inner_ns_regular_cols = inner_ns.data.regular_cols.clone();
+                            //append regular cols to final (ns)
+                            let mut len = 0;
+                            for (i, col) in inner_ns_regular_cols.iter().enumerate() {
+                                let final_col = ns.data.regular_cols[i].clone();
+                                let mut new_col = final_col.clone();
+                                new_col = arrow::compute::concat(&[&new_col, col])?;
+                                let mut data = Arc::make_mut(&mut ns.data);
+                                data.regular_cols[i] = new_col;
+                                len = col.len();
+                            }
+                            if i+1 != self.inner_cols.len(){
+                                self.offsets[i+1] = len + self.offsets[i];
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        self.final_inner_col = final_inner_col.clone();
+        self.ready = true;
+
+        Ok(self.final_inner_col.clone())
+    }
+
+    pub fn get_final_inner_col(&self) -> &NestedColumn {
+        &self.final_inner_col
+    }
+
+    pub fn get_final_inner_col_data(&self) -> Option<Arc<NestedRel>> {
+        match &self.final_inner_col {
+            NestedColumn::NonSingular(ns) => Some(ns.data.clone()),
+            _ => None,
+        }
+    }
+    pub fn get_offsets(&self) -> &Vec<usize> {
+        &self.offsets
+    }
+
+    pub fn get_inners(&self) -> &Vec<NestedColumn> {
+        &self.inner_cols
+    }
+
+    pub fn print_content(&self) {
+        if !self.ready{
+            println!("NestedCombiner not ready yet");
+        }
+        else{
+            println!(
+                "*******\n[PRINT CONTENT]\ninner cols: {:?}, \nready: {:?}, \nfinal inner col: {:?}, \npresent partitions: {:?}, \noffsets: {:?}\n*******\n",
+                self.inner_cols, self.ready, self.final_inner_col, self.present_partitions, self.offsets
+            );
+        }
+    }
+}
