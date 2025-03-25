@@ -310,6 +310,14 @@ impl NestedColumn {
             NestedColumn::NonSingular(n) => &n.weights,
         }
     }
+
+    pub fn make_empty(schema: NestedSchemaRef) -> Self {
+        if schema.is_singular() {
+            NestedColumn::Singular(SingularNestedColumn::empty())
+        } else {
+            NestedColumn::NonSingular(NonSingularNestedColumn::empty_old(schema))
+        }
+    }
     
 }
 

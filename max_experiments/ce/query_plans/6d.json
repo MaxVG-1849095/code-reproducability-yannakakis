@@ -11,7 +11,7 @@
                 "root": {
                     "name": "MULTISEMIJOIN",
                     "partitioned": true,
-                    "id": 5,
+                    "id": 3,
                     "equijoin_keys": [
                         [
                             [
@@ -21,18 +21,26 @@
                         ]
                     ],
                     "guard": {
-                        "name": "SEQUENTIALSCAN",
-                        "children": [],
-                        "relation": "dblp5",
-                        "opt_filter": null,
-                        "projection": [
+                        "name": "REPARTITION",
+                        "num_partitions": 2,
+                        "partitioning": "unknown",
+                        "partition_on": 0,
+                        "children": [
                             {
-                                "table_name": "dblp5",
-                                "field_name": "s"
-                            },
-                            {
-                                "table_name": "dblp5",
-                                "field_name": "d"
+                                "name": "SEQUENTIALSCAN",
+                                "children": [],
+                                "relation": "dblp8",
+                                "opt_filter": null,
+                                "projection": [
+                                    {
+                                        "table_name": "dblp8",
+                                        "field_name": "s"
+                                    },
+                                    {
+                                        "table_name": "dblp8",
+                                        "field_name": "d"
+                                    }
+                                ]
                             }
                         ]
                     },
@@ -40,71 +48,40 @@
                         {
                             "name": "GROUPBY",
                             "partitioned": false,
-                            "id": 4,
+                            "id": 2,
                             "group_on": [
-                                1
+                                0
                             ],
                             "child": {
                                 "name": "MULTISEMIJOIN",
                                 "partitioned": true,
-                                "id": 3,
-                                "equijoin_keys": [
-                                    [
-                                        [
-                                            0,
-                                            0
-                                        ]
-                                    ]
-                                ],
+                                "id": 1,
+                                "equijoin_keys": [],
                                 "guard": {
-                                    "name": "SEQUENTIALSCAN",
-                                    "children": [],
-                                    "relation": "dblp8",
-                                    "opt_filter": null,
-                                    "projection": [
+                                    "name": "REPARTITION",
+                                    "num_partitions": 2,
+                                    "partitioning": "unknown",
+                                    "partition_on": 1,
+                                    "children": [
                                         {
-                                            "table_name": "dblp8",
-                                            "field_name": "s"
-                                        },
-                                        {
-                                            "table_name": "dblp8",
-                                            "field_name": "d"
+                                            "name": "SEQUENTIALSCAN",
+                                            "children": [],
+                                            "relation": "dblp9",
+                                            "opt_filter": null,
+                                            "projection": [
+                                                {
+                                                    "table_name": "dblp9",
+                                                    "field_name": "s"
+                                                },
+                                                {
+                                                    "table_name": "dblp9",
+                                                    "field_name": "d"
+                                                }
+                                            ]
                                         }
                                     ]
                                 },
-                                "children": [
-                                    {
-                                        "name": "GROUPBY",
-                                        "partitioned": false,
-                                        "id": 2,
-                                        "group_on": [
-                                            0
-                                        ],
-                                        "child": {
-                                            "name": "MULTISEMIJOIN",
-                                            "partitioned": true,
-                                            "id": 1,
-                                            "equijoin_keys": [],
-                                            "guard": {
-                                                "name": "SEQUENTIALSCAN",
-                                                "children": [],
-                                                "relation": "dblp9",
-                                                "opt_filter": null,
-                                                "projection": [
-                                                    {
-                                                        "table_name": "dblp9",
-                                                        "field_name": "s"
-                                                    },
-                                                    {
-                                                        "table_name": "dblp9",
-                                                        "field_name": "d"
-                                                    }
-                                                ]
-                                            },
-                                            "children": []
-                                        }
-                                    }
-                                ]
+                                "children": []
                             }
                         }
                     ]
@@ -112,14 +89,6 @@
             }
         ],
         "on": [
-            {
-                "table_name": "dblp5",
-                "field_name": "s"
-            },
-            {
-                "table_name": "dblp5",
-                "field_name": "d"
-            },
             {
                 "table_name": "dblp8",
                 "field_name": "s"
@@ -140,7 +109,6 @@
     },
     "aliases": {
         "dblp8": "dblp8",
-        "dblp5": "dblp5",
         "dblp9": "dblp9"
     }
 }
