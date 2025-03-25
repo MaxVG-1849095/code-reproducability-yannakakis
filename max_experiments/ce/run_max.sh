@@ -5,7 +5,7 @@ parquet_data="$root_dir/benchmarks/ce/parquet-zstd"
 out_folder="./output" # non-existing output folder
 timings="timings.csv"
 plan="./query_plans/6d.json"
-repetitions=1
+repetitions=10
 
 # make timings file
 touch $timings
@@ -17,6 +17,6 @@ echo "duration(µs),method,variant,query" > $timings
 
 # Run all stats-ceb queries in release mode, with 10 repetitions
 # ! add --release
-cargo +nightly run --manifest-path="../../intermediate_to_df_plan/Cargo.toml" --bin exec_ir_plans -- --plans "$plan" --data "$parquet_data" -o "$out_folder" -t $timings --repetitions $repetitions
+RUST_BACKTRACE=1 cargo +nightly run --manifest-path="../../intermediate_to_df_plan/Cargo.toml" --bin exec_ir_plans -- --plans "$plan" --data "$parquet_data" -o "$out_folder" -t $timings --repetitions $repetitions
 
 

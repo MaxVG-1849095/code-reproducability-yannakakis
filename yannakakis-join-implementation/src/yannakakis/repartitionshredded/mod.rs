@@ -19,6 +19,7 @@ use datafusion::{
 };
 use futures::{FutureExt, Stream, StreamExt, TryStreamExt};
 use nested_combiner::NestedCombiner;
+use tokio::time;
 
 use super::data::{
     Idx, NestedColumn, NestedRel, NestedSchema, NonSingularNestedColumn, SemiJoinResultBatch, SingularNestedColumn
@@ -371,17 +372,35 @@ impl RepartitionMultiSemiJoin {
         };
         let batch_clone = batch.clone();
 
+
         match batch_clone {
             SemiJoinResultBatch::Flat(_) => {
-                // println!("flat batch");
+                println!("flat batch");
+
             }
             SemiJoinResultBatch::Nested(nested_batch) => {
+                println!("adding inner col to nested combiner from partition {}", partition);
                 nested_combiner.lock().add_inner_col(nested_batch.inner.nested_cols[0].clone(), partition);
                 // println!("-----\n partition {}\n nested batch regular cols: {:?}\n nested batch nested cols: {:?}\n-----", partition,nested_batch.inner.regular_cols, nested_batch.inner.nested_cols);
+                if partition == 0 { //FIXME: these sleeps need to be turned into an await, the problem is that nested_combiner isnt send + sync and i dont know how to fix that
+                    while nested_combiner.lock().combine().is_err() {
+                        println!("waiting for all partitions to be present in the NestedCombiner msj id: {}", msj_id);
+                        time::sleep(time::Duration::from_millis(100)).await;
+                    }
+                }
+                else{
+                    while !nested_combiner.lock().is_ready(){
+                        println!("partition {} is waiting for the first partition to finish combining msj id {}", partition, msj_id);
+                        time::sleep(time::Duration::from_millis(100)).await;
+                    }
+                    
+                }
             }
         }
-        let _a = nested_combiner.lock().combine();
-        let mut nested_data = nested_combiner.lock().get_final_inner_col_data().clone(); //FIXME: dont require this lock if the batches are flat (no need)
+        
+
+        let nested_data = nested_combiner.lock().get_final_inner_col_data().clone();//FIXME: dont require this lock if the batches are flat (no need)
+        
         let offsets = nested_combiner.lock().get_offsets().clone();
         let mut first_iter = true;
         // loop to pull data from input and send it to the output channels

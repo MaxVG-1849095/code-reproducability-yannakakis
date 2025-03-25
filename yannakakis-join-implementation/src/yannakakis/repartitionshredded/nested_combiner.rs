@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{sync::Arc, u32};
 
 use datafusion::{arrow, error::DataFusionError};
 
@@ -23,7 +23,7 @@ impl NestedCombiner {
         let empty_schema = Arc::new(empty_schema);
         let empty_nestedcol = NestedColumn::make_empty(empty_schema);
         let inner_cols = vec![empty_nestedcol; num_input_partitions];
-        let present_partitions = vec![0; num_input_partitions];
+        let present_partitions = vec![usize::MAX; num_input_partitions];
         let offsets = vec![0; num_input_partitions];
         Self {
             inner_cols: inner_cols,
@@ -53,6 +53,7 @@ impl NestedCombiner {
         //check if all partitions are present
         for i in 0..self.present_partitions.len() {
             if self.present_partitions[i] != i {
+                // println!("RETURNING EARLY IN COMBINE, NOT ALL PARTITIONS PRESENT");
                 //return error
                 return Err(DataFusionError::Internal(
                     "Not all partitions are present in the NestedCombiner".to_string(),
@@ -150,6 +151,12 @@ impl NestedCombiner {
         &self.inner_cols
     }
 
+    pub async fn wait_for_ready(&self) {
+        while !self.ready {
+            tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+        }
+    }
+
     pub fn print_content(&self) {
         if !self.ready{
             println!("NestedCombiner not ready yet");
@@ -160,5 +167,9 @@ impl NestedCombiner {
                 self.inner_cols, self.ready, self.final_inner_col, self.present_partitions, self.offsets
             );
         }
+    }
+
+    pub fn is_ready(&self) -> bool {
+        self.ready
     }
 }

@@ -210,8 +210,9 @@ impl MsjBatchPartitioner {
                                 // take_nested_column_inplace(col, &arr);
                                 let nested_combined_clone = nested_combined.clone();
                                 let nested_offsets_clone = nested_offsets.clone();
-                                let c = take_rows_from_nestedcol(col, arr.as_ref(), nested_combined_clone, nested_offsets[partition])?;
-                                
+                                // println!("nested_offsets: {:?}", nested_offsets);
+                                let c = take_rows_from_nestedcol(col, arr.as_ref(), nested_combined.clone(), nested_offsets[partition])?;
+                                // println!("-------\n[MSJREP PRINT]\n-----\nmsj {} nested_combined_clone: {:?}\nnested_offsets: {:?}\n current nested column: {:?}\n-------\n", msj_id,nested_combined_clone, nested_offsets ,c);
                                 
 
                                 // println!("-------\nnested_combined_clone: {:?}\nnested_offsets: {:?}\n current nested column: {:?}\n-------\n", nested_combined_clone, nested_offsets ,c);
@@ -251,7 +252,7 @@ impl MsjBatchPartitioner {
                                 regular_cols,
                                 inner_cols_final,
                             ));
-                            println!("-----\n[MSJREP PRINT]\n-----\nmsj {} original batch:\n {:?}\n+++++\n new batch for partition {}:\n {:?}\n-----\n-----",msj_id, val, i, new_batch);
+                            // println!("-----\n[MSJREP PRINT]\n-----\nmsj {} original batch:\n {:?}\n+++++\n new batch for partition {}:\n {:?}\n-----\n-----",msj_id, val, i, new_batch);
                             if new_batch.num_rows() > 0 {
                                 batches.push(new_batch);
                                 batchindices.push(i);
