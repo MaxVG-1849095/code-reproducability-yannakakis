@@ -385,13 +385,13 @@ impl RepartitionMultiSemiJoin {
                 if partition == 0 { //FIXME: these sleeps need to be turned into an await, the problem is that nested_combiner isnt send + sync and i dont know how to fix that
                     while nested_combiner.lock().combine().is_err() {
                         println!("waiting for all partitions to be present in the NestedCombiner msj id: {}", msj_id);
-                        time::sleep(time::Duration::from_millis(100)).await;
+                        time::sleep(time::Duration::from_millis(10)).await;
                     }
                 }
                 else{
                     while !nested_combiner.lock().is_ready(){
                         println!("partition {} is waiting for the first partition to finish combining msj id {}", partition, msj_id);
-                        time::sleep(time::Duration::from_millis(100)).await;
+                        time::sleep(time::Duration::from_millis(10)).await;
                     }
                     
                 }

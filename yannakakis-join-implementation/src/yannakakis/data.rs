@@ -415,6 +415,19 @@ impl NonSingularNestedColumn {
         // new_hols.extend(other.hols.iter().map(|x| x + offset as u32));
         new_hols.extend(other.hols.iter());
         self.hols = new_hols;
+
+        let mut new_next = self.data.next.clone().unwrap();
+        let other_next = other.data.next.clone().unwrap();
+        for x in other_next.iter(){ //if its a 0, we don't want to add the offset!
+            if *x == 0{
+                new_next.push(0);
+            }
+            else{
+                new_next.push(*x + offset as u32);
+            }
+            
+        }
+        Arc::make_mut(&mut self.data).set_next(Some(new_next));
     }
 
     // appends a given NonSingularNestedColumn to the current NonSingularNestedColumn, this only fully works if they aren't nested further
@@ -437,6 +450,20 @@ impl NonSingularNestedColumn {
         let mut new_hols = self.hols.clone();
         new_hols.extend(other.hols.iter().map(|x| x + offset as u32));
         self.hols = new_hols;
+
+        let mut new_next = self.data.next.clone().unwrap();
+        let other_next = other.data.next.clone().unwrap();
+        // new_next.extend(other_next.iter().map(|x| x + offset as u32));
+        for x in other_next.iter(){ //if its a 0, we don't want to add the offset!
+            if *x == 0{
+                new_next.push(0);
+            }
+            else{
+                new_next.push(*x + offset as u32);
+            }
+            
+        }
+        Arc::make_mut(&mut self.data).set_next(Some(new_next));
         len
     }
 
@@ -559,6 +586,11 @@ pub struct NestedRel {
 }
 
 impl NestedRel {
+
+    pub fn set_next(&mut self, next: Option<Vec<Idx>>) {
+        self.next = next;
+    }
+
     /// Old implementation of creating an empty [NestedRel] with the given schema.
     /// Next is set to None, meaning that the NestedRel is a top-level relation.
     #[inline]
