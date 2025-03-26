@@ -60,7 +60,6 @@ impl NestedCombiner {
                 ));
             }
         }
-
         //combine all inner columns
         let mut final_inner_col = self.inner_cols[0].clone();
         // println!("=======\ninitial final inner col: {:?}\n========", final_inner_col);
@@ -77,6 +76,7 @@ impl NestedCombiner {
             self.offsets[1] = curr_offset as usize;
         }
         // self.offsets[1] = curr_offset as usize;
+        //append each inner column to the final inner column
         for i in 1..self.inner_cols.len() {
             let inner_col = &self.inner_cols[i];
             match final_inner_col {
@@ -92,35 +92,41 @@ impl NestedCombiner {
                         }
                     }
                 }
-                NestedColumn::NonSingular(ref mut ns) => {
+                NestedColumn::NonSingular(ref mut final_nested) => {
                     match inner_col {
                         NestedColumn::Singular(ref inner_s) => {
-                            ns.weights.extend(inner_s.weights.iter());
+                            final_nested.weights.extend(inner_s.weights.iter());
                         }
-                        NestedColumn::NonSingular(ref inner_ns) => {
-                            // let mut new_weights = ns.weights.clone();
-                            // new_weights.extend(inner_ns.weights.iter());
-                            // ns.weights = new_weights;
-                            // let mut new_hols = ns.hols.clone();
-                            // for hol in inner_ns.hols.iter() {
+                        NestedColumn::NonSingular(ref inner_nested) => {
+                            
+                            // let inner_ns_regular_cols = inner_nested.data.regular_cols.clone();
+                            // //append regular cols to final (ns)
+                            // let mut len = 0;
+                            // for (i, col) in inner_ns_regular_cols.iter().enumerate() {
+                            //     let final_col = final_nested.data.regular_cols[i].clone();
+                            //     let mut new_col = final_col.clone();
+                            //     new_col = arrow::compute::concat(&[&new_col, col])?;
+                            //     let mut data = Arc::make_mut(&mut final_nested.data);
+                            //     data.regular_cols[i] = new_col;
+                            //     len = col.len();
+                            // }
+                            // if i+1 != self.inner_cols.len(){
+                            //     self.offsets[i+1] = len + self.offsets[i];
+                            // }
+                            // //append weights and hols
+                            // let mut new_weights = final_nested.weights.clone();
+                            // new_weights.extend(inner_nested.weights.iter());
+                            // final_nested.weights = new_weights;
+                            // let mut new_hols = final_nested.hols.clone();
+                            // for hol in inner_nested.hols.iter() {
                             //     new_hols.push(hol + curr_offset);
                             // }
-                            // new_hols.extend(inner_ns.hols.iter());
-                            // ns.hols = new_hols;
-
-                            let inner_ns_regular_cols = inner_ns.data.regular_cols.clone();
-                            //append regular cols to final (ns)
-                            let mut len = 0;
-                            for (i, col) in inner_ns_regular_cols.iter().enumerate() {
-                                let final_col = ns.data.regular_cols[i].clone();
-                                let mut new_col = final_col.clone();
-                                new_col = arrow::compute::concat(&[&new_col, col])?;
-                                let mut data = Arc::make_mut(&mut ns.data);
-                                data.regular_cols[i] = new_col;
-                                len = col.len();
-                            }
+                            // final_nested.hols = new_hols;
+                            println!("final nested before append: {:?}", final_nested);
+                            let next_offset = final_nested.append_other(inner_nested, curr_offset as usize);
+                            println!("final nested after append: {:?}", final_nested);
                             if i+1 != self.inner_cols.len(){
-                                self.offsets[i+1] = len + self.offsets[i];
+                                self.offsets[i+1] = next_offset + self.offsets[i];
                             }
                         }
                     }

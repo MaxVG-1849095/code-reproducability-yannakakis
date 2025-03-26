@@ -6,8 +6,7 @@ use super::sel::Sel;
 use std::{any::Any, pin::Pin, sync::Arc};
 
 use datafusion::{arrow::{
-    array::{ArrayRef, RecordBatch},
-    datatypes::{DataType, Field, FieldRef, Schema, SchemaRef},
+    self, array::{ArrayRef, RecordBatch}, datatypes::{DataType, Field, FieldRef, Schema, SchemaRef}
 }, error::DataFusionError};
 use datafusion::error;
 use futures::Stream;
@@ -376,6 +375,30 @@ impl Default for NonSingularNestedColumn {
 }
 
 impl NonSingularNestedColumn {
+
+    pub fn append_other(&mut self, other: &NonSingularNestedColumn, offset: usize) -> usize {
+        let other_ns_regular_cols = other.data.regular_cols.clone();
+
+        let mut len = 0;
+        for (i, col) in other_ns_regular_cols.iter().enumerate() {
+            let final_col = self.data.regular_cols[i].clone();
+            let mut new_col = final_col.clone();
+            new_col = arrow::compute::concat(&[&new_col, col]).unwrap();
+            let mut data = Arc::make_mut(&mut self.data);
+            data.regular_cols[i] = new_col;
+            len = col.len();
+        }
+
+        let mut new_weights = self.weights.clone();
+        new_weights.extend(other.weights.iter());
+        self.weights = new_weights;
+
+        let mut new_hols = self.hols.clone();
+        new_hols.extend(other.hols.iter().map(|x| x + offset as u32));
+        self.hols = new_hols;
+        len
+    }
+
     pub fn empty_old(schema: NestedSchemaRef) -> Self {
         Self {
             hols: Vec::new(),

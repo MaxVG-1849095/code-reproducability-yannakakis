@@ -379,7 +379,7 @@ impl RepartitionMultiSemiJoin {
 
             }
             SemiJoinResultBatch::Nested(nested_batch) => {
-                println!("adding inner col to nested combiner from partition {}", partition);
+                // println!("\n------\nmsjrep {}\nadding inner col to nested combiner from partition {} \n inner_col: {:?}\n------", msj_id,partition, nested_batch.inner.nested_cols[0]);
                 nested_combiner.lock().add_inner_col(nested_batch.inner.nested_cols[0].clone(), partition);
                 // println!("-----\n partition {}\n nested batch regular cols: {:?}\n nested batch nested cols: {:?}\n-----", partition,nested_batch.inner.regular_cols, nested_batch.inner.nested_cols);
                 if partition == 0 { //FIXME: these sleeps need to be turned into an await, the problem is that nested_combiner isnt send + sync and i dont know how to fix that
@@ -400,6 +400,10 @@ impl RepartitionMultiSemiJoin {
         
 
         let nested_data = nested_combiner.lock().get_final_inner_col_data().clone();//FIXME: dont require this lock if the batches are flat (no need)
+
+        if partition == 0{
+            nested_combiner.lock().print_content();
+        }
         
         let offsets = nested_combiner.lock().get_offsets().clone();
         let mut first_iter = true;

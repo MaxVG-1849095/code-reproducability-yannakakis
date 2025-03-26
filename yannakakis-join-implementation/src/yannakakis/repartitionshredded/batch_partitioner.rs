@@ -207,43 +207,10 @@ impl MsjBatchPartitioner {
                             }
                             let mut inner_cols_final: Vec<NestedColumn> = Vec::new();
                             for col in val.inner.nested_cols.iter() {
-                                // take_nested_column_inplace(col, &arr);
-                                let nested_combined_clone = nested_combined.clone();
-                                let nested_offsets_clone = nested_offsets.clone();
                                 // println!("nested_offsets: {:?}", nested_offsets);
                                 let c = take_rows_from_nestedcol(col, arr.as_ref(), nested_combined.clone(), nested_offsets[partition])?;
-                                // println!("-------\n[MSJREP PRINT]\n-----\nmsj {} nested_combined_clone: {:?}\nnested_offsets: {:?}\n current nested column: {:?}\n-------\n", msj_id,nested_combined_clone, nested_offsets ,c);
-                                
-
-                                // println!("-------\nnested_combined_clone: {:?}\nnested_offsets: {:?}\n current nested column: {:?}\n-------\n", nested_combined_clone, nested_offsets ,c);
-
-                                // let mut c_clone = c.clone();
-                                // match c_clone{
-                                //     NestedColumn::Singular(s) => {
-                                //         let mut new_weights = Vec::new();
-                                //         for i in 0..arr.len() {
-                                //             new_weights.push(nested_offsets[i] as u32 + s.weights[i]);
-                                //         }
-                                //         let new_nested = SingularNestedColumn {
-                                //             weights: new_weights,
-                                //         };
-                                //         inner_cols_final.push(NestedColumn::Singular(new_nested));
-                                //     }
-                                //     NestedColumn::NonSingular(ns) => {
-                                //         let mut new_weights = Vec::new();
-                                //         for i in 0..arr.len() {
-                                //             new_weights.push(nested_offsets[i] as u32 + ns.weights[i]);
-                                //         }
-                                //         let new_nested = NonSingularNestedColumn {
-                                //             weights: new_weights,
-                                //             hols: ns.hols.clone(),
-                                //             data: ns.data.clone(),
-                                //         };
-                                //         inner_cols_final.push(NestedColumn::NonSingular(new_nested));
-                                //     }
-                                // }
-                                
-                                
+                                // println!("-------\n[MSJREP PRINT]\n-----\nmsj {} nested_combined_clone: {:?}\nnested_offsets: {:?}\n current nested column: {:?}\n-------\n", msj_id,nested_combined.clone(), nested_offsets ,c);
+                                                                
                                 inner_cols_final.push(c);
                             }
 
@@ -252,7 +219,7 @@ impl MsjBatchPartitioner {
                                 regular_cols,
                                 inner_cols_final,
                             ));
-                            // println!("-----\n[MSJREP PRINT]\n-----\nmsj {} original batch:\n {:?}\n+++++\n new batch for partition {}:\n {:?}\n-----\n-----",msj_id, val, i, new_batch);
+                            // println!("-----\n[MSJREP PRINT]\n-----\nmsj {} original batch:\n {:?} \n nested_data: \n {:?}\n+++++\n new batch for partition {}:\n {:?}\n-----\n-----",msj_id, val, nested_combined,i, new_batch);
                             if new_batch.num_rows() > 0 {
                                 batches.push(new_batch);
                                 batchindices.push(i);
@@ -312,7 +279,7 @@ pub fn take_rows_from_nestedcol(
         NestedColumn::NonSingular(ns_nestedcol) => {
             let new_weights = take_unnest(&ns_nestedcol.weights, row_ids)?;
             let mut new_hols = take_unnest(&ns_nestedcol.hols, row_ids)?;
-            //add offset to new_hols
+            //add offset to new_hols //! this only changes the outside hols, not the nested ones
             for i in 0..new_hols.len() {
                 new_hols[i] += nested_offset as u32;
             }
@@ -338,6 +305,7 @@ pub fn take_rows_from_nestedcol(
 fn take_unnest(data: &[u32], indices: &[Idx]) -> Result<Vec<u32>, DataFusionError> {
     let mut result = Vec::with_capacity(indices.len());
     for idx in indices {
+        
         result.push(unsafe { *data.get_unchecked(*idx as usize) });
     }
     Ok(result)
