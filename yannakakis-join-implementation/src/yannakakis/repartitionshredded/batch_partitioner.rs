@@ -210,7 +210,6 @@ impl MsjBatchPartitioner {
                                 // println!("nested_offsets: {:?}", nested_offsets);
                                 let c = take_rows_from_nestedcol(col, arr.as_ref(), nested_combined.clone(), nested_offsets[partition])?;
                                 // println!("-------\n[MSJREP PRINT]\n-----\nmsj {} nested_combined_clone: {:?}\nnested_offsets: {:?}\n current nested column: {:?}\n-------\n", msj_id,nested_combined.clone(), nested_offsets ,c);
-                                                                
                                 inner_cols_final.push(c);
                             }
 
@@ -277,7 +276,8 @@ pub fn take_rows_from_nestedcol(
             Ok(NestedColumn::Singular(nestedcol))
         }
         NestedColumn::NonSingular(ns_nestedcol) => {
-            let new_weights = take_unnest(&ns_nestedcol.weights, row_ids)?;
+            // let new_weights = take_unnest(&ns_nestedcol.weights, row_ids)?;
+            let new_weights = ns_nestedcol.weights.clone();
             let mut new_hols = take_unnest(&ns_nestedcol.hols, row_ids)?;
             //add offset to new_hols //! this only changes the outside hols, not the nested ones
             for i in 0..new_hols.len() {

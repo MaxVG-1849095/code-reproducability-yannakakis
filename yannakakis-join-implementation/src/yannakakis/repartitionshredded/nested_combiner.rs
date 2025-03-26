@@ -99,32 +99,14 @@ impl NestedCombiner {
                         }
                         NestedColumn::NonSingular(ref inner_nested) => {
                             
-                            // let inner_ns_regular_cols = inner_nested.data.regular_cols.clone();
-                            // //append regular cols to final (ns)
-                            // let mut len = 0;
-                            // for (i, col) in inner_ns_regular_cols.iter().enumerate() {
-                            //     let final_col = final_nested.data.regular_cols[i].clone();
-                            //     let mut new_col = final_col.clone();
-                            //     new_col = arrow::compute::concat(&[&new_col, col])?;
-                            //     let mut data = Arc::make_mut(&mut final_nested.data);
-                            //     data.regular_cols[i] = new_col;
-                            //     len = col.len();
-                            // }
-                            // if i+1 != self.inner_cols.len(){
-                            //     self.offsets[i+1] = len + self.offsets[i];
-                            // }
-                            // //append weights and hols
-                            // let mut new_weights = final_nested.weights.clone();
-                            // new_weights.extend(inner_nested.weights.iter());
-                            // final_nested.weights = new_weights;
-                            // let mut new_hols = final_nested.hols.clone();
-                            // for hol in inner_nested.hols.iter() {
-                            //     new_hols.push(hol + curr_offset);
-                            // }
-                            // final_nested.hols = new_hols;
-                            println!("final nested before append: {:?}", final_nested);
-                            let next_offset = final_nested.append_other(inner_nested, curr_offset as usize);
-                            println!("final nested after append: {:?}", final_nested);
+                            if !inner_nested.is_highest_level(){
+                                // println!("append other recursive");
+                                // println!("final nested before append\n: {:?} \n\n other: \n {:?} \n\n", final_nested, inner_nested);
+                                final_nested.append_other_recursive(inner_nested, curr_offset as usize);
+                                // println!("final nested after append: {:?}", final_nested);
+                            }
+                            let next_offset = final_nested.append_other_top_level(inner_nested, curr_offset as usize);
+                            // println!("final nested after append: {:?}", final_nested);
                             if i+1 != self.inner_cols.len(){
                                 self.offsets[i+1] = next_offset + self.offsets[i];
                             }
@@ -169,7 +151,7 @@ impl NestedCombiner {
         }
         else{
             println!(
-                "*******\n[PRINT CONTENT]\ninner cols: {:?}, \nready: {:?}, \nfinal inner col: {:?}, \npresent partitions: {:?}, \noffsets: {:?}\n*******\n",
+                "*******\n[PRINT CONTENT]\ninner cols:\n {:?}, \n\nready:\n {:?}, \n\nfinal inner col:\n {:?}, \n\npresent partitions:\n {:?}, \n\noffsets: {:?}\n*******\n",
                 self.inner_cols, self.ready, self.final_inner_col, self.present_partitions, self.offsets
             );
         }
