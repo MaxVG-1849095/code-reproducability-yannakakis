@@ -218,7 +218,7 @@ impl MsjBatchPartitioner {
                                 regular_cols,
                                 inner_cols_final,
                             ));
-                            // println!("-----\n[MSJREP PRINT]\n-----\nmsj {} original batch:\n {:?} \n nested_data: \n {:?}\n+++++\n new batch for partition {}:\n {:?}\n-----\n-----",msj_id, val, nested_combined,i, new_batch);
+                            println!("-----\n[MSJREP PRINT]\n-----\nmsj {} original batch:\n {:?} \n nested_data: \n {:?}\n+++++\n new batch for partition {}:\n {:?}\n-----\n-----",msj_id, val, nested_combined,i, new_batch);
                             if new_batch.num_rows() > 0 {
                                 batches.push(new_batch);
                                 batchindices.push(i);
