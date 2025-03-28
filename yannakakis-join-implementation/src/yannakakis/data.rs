@@ -416,18 +416,18 @@ impl NonSingularNestedColumn {
         new_hols.extend(other.hols.iter());
         self.hols = new_hols;
 
-        let mut new_next = self.data.next.clone().unwrap();
-        let other_next = other.data.next.clone().unwrap();
-        for x in other_next.iter(){ //if its a 0, we don't want to add the offset!
-            if *x == 0{
-                new_next.push(0);
-            }
-            else{
-                new_next.push(*x + offset as u32);
-            }
+        // let mut new_next = self.data.next.clone().unwrap();
+        // let other_next = other.data.next.clone().unwrap();
+        // for x in other_next.iter(){ //if its a 0, we don't want to add the offset!
+        //     if *x == 0{
+        //         new_next.push(0);
+        //     }
+        //     else{
+        //         new_next.push(*x + offset as u32);
+        //     }
             
-        }
-        Arc::make_mut(&mut self.data).set_next(Some(new_next));
+        // }
+        // Arc::make_mut(&mut self.data).set_next(Some(new_next));
     }
 
     // appends a given NonSingularNestedColumn to the current NonSingularNestedColumn, this only fully works if they aren't nested further
@@ -463,6 +463,7 @@ impl NonSingularNestedColumn {
             }
             
         }
+        
         Arc::make_mut(&mut self.data).set_next(Some(new_next));
         len
     }

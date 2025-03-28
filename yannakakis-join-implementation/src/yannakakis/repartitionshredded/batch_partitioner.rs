@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use datafusion::{arrow::array::{ArrayRef, RecordBatch, UInt32Array}, error::DataFusionError};
 
-use crate::yannakakis::data::{Idx, NestedBatch, NestedColumn, NestedRel, NonSingularNestedColumn, SemiJoinResultBatch, SingularNestedColumn};
+use crate::yannakakis::{data::{Idx, NestedBatch, NestedColumn, NestedRel, NonSingularNestedColumn, SemiJoinResultBatch, SingularNestedColumn}, repartitionshredded::batch_partitioner};
 use datafusion::arrow::compute::take;
 
 use datafusion::common::hash_utils::{self, create_hashes};
@@ -218,7 +218,8 @@ impl MsjBatchPartitioner {
                                 regular_cols,
                                 inner_cols_final,
                             ));
-                            println!("-----\n[MSJREP PRINT]\n-----\nmsj {} original batch:\n {:?} \n nested_data: \n {:?}\n+++++\n new batch for partition {}:\n {:?}\n-----\n-----",msj_id, val, nested_combined,i, new_batch);
+                            // println!("-----\n[MSJREP PRINT]\n-----\nmsj {} original batch:\n {:?} \n nested_data: \n {:?}\n nested_offsets: \n {:?}\n+++++\n new batch for partition {}:\n {:?}\n-----\n-----",msj_id, val, nested_combined,nested_offsets,i, new_batch);
+                            
                             if new_batch.num_rows() > 0 {
                                 batches.push(new_batch);
                                 batchindices.push(i);
@@ -276,8 +277,8 @@ pub fn take_rows_from_nestedcol(
             Ok(NestedColumn::Singular(nestedcol))
         }
         NestedColumn::NonSingular(ns_nestedcol) => {
-            // let new_weights = take_unnest(&ns_nestedcol.weights, row_ids)?;
-            let new_weights = ns_nestedcol.weights.clone();
+            let new_weights = take_unnest(&ns_nestedcol.weights, row_ids)?;
+            // let new_weights = ns_nestedcol.weights.clone();
             let mut new_hols = take_unnest(&ns_nestedcol.hols, row_ids)?;
             //add offset to new_hols //! this only changes the outside hols, not the nested ones
             for i in 0..new_hols.len() {

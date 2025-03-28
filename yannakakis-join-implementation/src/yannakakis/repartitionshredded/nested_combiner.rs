@@ -69,10 +69,11 @@ impl NestedCombiner {
                 curr_offset = s.weights.len() as u32;
             }
             NestedColumn::NonSingular(ref ns) => {
-                curr_offset = ns.data.next.iter().len() as u32;
+                curr_offset = ns.data.next.as_ref().unwrap().iter().len() as u32;
+                // println!("\nns data next \n{:?}\n", );
             }
         }
-        if(self.offsets.len() > 1){
+        if self.offsets.len() > 1{
             self.offsets[1] = curr_offset as usize;
         }
         // self.offsets[1] = curr_offset as usize;
@@ -107,7 +108,9 @@ impl NestedCombiner {
                             }
                             let next_offset = final_nested.append_other_top_level(inner_nested, curr_offset as usize);
                             // println!("final nested after append: {:?}", final_nested);
+                            // println!("BEFORE OFFSETS: {:?}", self.offsets);
                             if i+1 != self.inner_cols.len(){
+                                // println!("IN IF STATEMENT TEST");
                                 self.offsets[i+1] = next_offset + self.offsets[i];
                             }
                         }
