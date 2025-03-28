@@ -178,9 +178,15 @@ impl MsjBatchPartitioner {
                         let mut batches: Vec<SemiJoinResultBatch> = Vec::new();
                         let mut batchindices: Vec<usize> = Vec::new();
 
-
-                        //unwrapping nested_combined since it should always be some in the nestedbatch case
-                        let nested_combined = nested_combined.as_ref().unwrap();
+                        let mut singular = true;
+                        let schema = val.schema().clone();
+                        let mut nested_combined_val = &Arc::new(NestedRel::empty_no_next(schema));
+                        if nested_combined.is_some() {
+                            nested_combined_val = nested_combined.as_ref().unwrap();
+                            singular = false;
+                        }
+                        
+                        
 
                         //rebuild a batch for each partition
                         for i in 0..num_partitions {
@@ -206,12 +212,15 @@ impl MsjBatchPartitioner {
                                 continue;
                             }
                             let mut inner_cols_final: Vec<NestedColumn> = Vec::new();
-                            for col in val.inner.nested_cols.iter() {
-                                // println!("nested_offsets: {:?}", nested_offsets);
-                                let c = take_rows_from_nestedcol(col, arr.as_ref(), nested_combined.clone(), nested_offsets[partition])?;
-                                // println!("-------\n[MSJREP PRINT]\n-----\nmsj {} nested_combined_clone: {:?}\nnested_offsets: {:?}\n current nested column: {:?}\n-------\n", msj_id,nested_combined.clone(), nested_offsets ,c);
-                                inner_cols_final.push(c);
-                            }
+                            
+                                for col in val.inner.nested_cols.iter() {
+                                    // println!("nested_offsets: {:?}", nested_offsets);
+                                    let c = take_rows_from_nestedcol(col, arr.as_ref(), nested_combined_val.clone(), nested_offsets[partition])?;
+                                    // println!("-------\n[MSJREP PRINT]\n-----\nmsj {} nested_combined_clone: {:?}\nnested_offsets: {:?}\n current nested column: {:?}\n-------\n", msj_id,nested_combined.clone(), nested_offsets ,c);
+                                    inner_cols_final.push(c);
+                                }
+                            
+                            
 
                             let new_batch = SemiJoinResultBatch::Nested(NestedBatch::new(
                                 schema,

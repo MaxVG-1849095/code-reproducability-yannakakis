@@ -401,6 +401,8 @@ impl RepartitionMultiSemiJoin {
 
         let nested_data = nested_combiner.lock().get_final_inner_col_data().clone();//FIXME: dont require this lock if the batches are flat (no need)
 
+        println!("nested data: {:?}", nested_data);
+
         if partition == 0{
             // nested_combiner.lock().print_content();
         }

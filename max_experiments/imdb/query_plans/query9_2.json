@@ -11,7 +11,7 @@
                 "root": {
                     "name": "MULTISEMIJOIN",
                     "partitioned": true,
-                    "id": 0,
+                    "id": 5,
                     "equijoin_keys": [
                         [
                             [
@@ -22,15 +22,12 @@
                     ],
                     "guard": {
                         "name": "REPARTITION",
-                        "num_partitions": 2,
+                        "num_partitions": 4,
                         "partition_on": 0,
                         "partitioning": "unknown",
                         "children": [
                             {
                                 "name": "SEQUENTIALSCAN",
-                                "execution_time": 0.136019,
-                                "actual_rows": 14834998,
-                                "estimated_cardinality": 14835720,
                                 "children": [],
                                 "relation": "movie_info",
                                 "opt_filter": "movie_id>=2 AND movie_id<=2525971 AND movie_id IS NOT NULL",
@@ -47,14 +44,14 @@
                         {
                             "name": "GROUPBY",
                             "partitioned": true,
-                            "id": 0,
+                            "id": 4,
                             "group_on": [
                                 0
                             ],
                             "child": {
                                 "name": "MULTISEMIJOIN",
                                 "partitioned": true,
-                                "id": 0,
+                                "id": 3,
                                 "equijoin_keys": [
                                     [
                                         [
@@ -65,15 +62,12 @@
                                 ],
                                 "guard": {
                                     "name": "REPARTITION",
-                                    "num_partitions": 2,
+                                    "num_partitions": 4,
                                     "partitioning": "unknown",
                                     "partition_on": 0,
                                     "children": [
                                         {
                                             "name": "SEQUENTIALSCAN",
-                                            "execution_time": 0.028611,
-                                            "actual_rows": 4523930,
-                                            "estimated_cardinality": 4523930,
                                             "children": [],
                                             "relation": "movie_keyword",
                                             "opt_filter": null,
@@ -90,26 +84,24 @@
                                     {
                                         "name": "GROUPBY",
                                         "partitioned": true,
-                                        "id": 0,
+                                        "id": 2,
                                         "group_on": [
                                             0
                                         ],
                                         "child": {
                                             "name": "MULTISEMIJOIN",
                                             "partitioned": true,
-                                            "id": 0,
+                                            "id": 1,
                                             "equijoin_keys": [],
                                             "guard": {
                                                 "name": "REPARTITION",
-                                                "num_partitions": 2,
+                                                "num_partitions": 4,
                                                 "partitioning": "unknown",
                                                 "partition_on": 0,
                                                 "children": [
                                                     {
                                                         "name": "SEQUENTIALSCAN",
                                                         "execution_time": 0.005458,
-                                                        "actual_rows": 2525970,
-                                                        "estimated_cardinality": 2528312,
                                                         "children": [],
                                                         "relation": "title",
                                                         "opt_filter": "id>=2 AND id<=2525971 AND id IS NOT NULL",
