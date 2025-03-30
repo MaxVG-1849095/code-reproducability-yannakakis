@@ -366,12 +366,13 @@ impl RepartitionMultiSemiJoin {
             //if it is a batch, proceed otherwise break
             Some(batch) => batch?,
             None => {
-                println!("!!RETURNING EARLY IN PULL FROM INPUT!!");
+                println!("!!RETURNING EARLY IN PULL FROM INPUT IN PARTITION {}!!", partition);
                 return Ok(());
             }
         };
         let batch_clone = batch.clone();
 
+        // println!("\n in msj {} partition {}\nbatch: {:?}\n", msj_id,partition,batch);
 
         match batch_clone {
             SemiJoinResultBatch::Flat(_) => {
@@ -401,7 +402,7 @@ impl RepartitionMultiSemiJoin {
 
         let nested_data = nested_combiner.lock().get_final_inner_col_data().clone();//FIXME: dont require this lock if the batches are flat (no need)
 
-        println!("nested data: {:?}", nested_data);
+        // println!("nested data: {:?}", nested_data);
 
         if partition == 0{
             // nested_combiner.lock().print_content();

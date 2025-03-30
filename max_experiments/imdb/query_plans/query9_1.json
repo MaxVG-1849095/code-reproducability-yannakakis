@@ -11,7 +11,7 @@
                 "root": {
                     "name": "MULTISEMIJOIN",
                     "partitioned": true,
-                    "id": 0,
+                    "id": 5,
                     "equijoin_keys": [
                         [
                             [
@@ -22,7 +22,7 @@
                     ],
                     "guard": {
                         "name": "REPARTITION",
-                        "num_partitions": 2,
+                        "num_partitions": 3,
                         "partition_on": 0,
                         "partitioning": "unknown",
                         "children": [
@@ -51,7 +51,7 @@
                             "child": {
                                 "name": "MULTISEMIJOIN",
                                 "partitioned": true,
-                                "id": 0,
+                                "id": 4,
                                 "equijoin_keys": [
                                     [
                                         [
@@ -62,7 +62,7 @@
                                 ],
                                 "guard": {
                                     "name": "REPARTITION",
-                                    "num_partitions": 2,
+                                    "num_partitions": 3,
                                     "partitioning": "unknown",
                                     "partition_on": 0,
                                     "children": [
@@ -84,18 +84,18 @@
                                     {
                                         "name": "GROUPBY",
                                         "partitioned": true,
-                                        "id": 0,
+                                        "id": 2,
                                         "group_on": [
                                             0
                                         ],
                                         "child": {
                                             "name": "MULTISEMIJOIN",
                                             "partitioned": true,
-                                            "id": 0,
+                                            "id": 1,
                                             "equijoin_keys": [],
                                             "guard": {
                                                 "name": "REPARTITION",
-                                                "num_partitions": 2,
+                                                "num_partitions": 3,
                                                 "partitioning": "unknown",
                                                 "partition_on": 0,
                                                 "children": [

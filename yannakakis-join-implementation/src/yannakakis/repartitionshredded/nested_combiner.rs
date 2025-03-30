@@ -106,11 +106,11 @@ impl NestedCombiner {
                                 final_nested.append_other_recursive(inner_nested, curr_offset as usize);
                                 // println!("final nested after append: {:?}", final_nested);
                             }
-                            let next_offset = final_nested.append_other_top_level(inner_nested, curr_offset as usize);
+                            let next_offset = final_nested.append_other_top_level(inner_nested, curr_offset as usize +1);
                             // println!("final nested after append: {:?}", final_nested);
                             // println!("BEFORE OFFSETS: {:?}", self.offsets);
-                            if i+1 != self.inner_cols.len(){
-                                // println!("IN IF STATEMENT TEST");
+                            if i+1 != self.inner_cols.len(){ 
+                                println!("IN IF STATEMENT TEST");
                                 self.offsets[i+1] = next_offset + self.offsets[i];
                             }
                         }
@@ -120,6 +120,9 @@ impl NestedCombiner {
         }
         self.final_inner_col = final_inner_col.clone();
         self.ready = true;
+
+        println!("print end of combined:");
+        // self.print_content();
 
         Ok(self.final_inner_col.clone())
     }

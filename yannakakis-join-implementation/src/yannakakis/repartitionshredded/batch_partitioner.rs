@@ -219,9 +219,6 @@ impl MsjBatchPartitioner {
                                     // println!("-------\n[MSJREP PRINT]\n-----\nmsj {} nested_combined_clone: {:?}\nnested_offsets: {:?}\n current nested column: {:?}\n-------\n", msj_id,nested_combined.clone(), nested_offsets ,c);
                                     inner_cols_final.push(c);
                                 }
-                            
-                            
-
                             let new_batch = SemiJoinResultBatch::Nested(NestedBatch::new(
                                 schema,
                                 regular_cols,

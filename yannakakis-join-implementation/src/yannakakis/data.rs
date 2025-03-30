@@ -416,6 +416,7 @@ impl NonSingularNestedColumn {
         new_hols.extend(other.hols.iter());
         self.hols = new_hols;
 
+
         // let mut new_next = self.data.next.clone().unwrap();
         // let other_next = other.data.next.clone().unwrap();
         // for x in other_next.iter(){ //if its a 0, we don't want to add the offset!
@@ -465,6 +466,7 @@ impl NonSingularNestedColumn {
         }
         
         Arc::make_mut(&mut self.data).set_next(Some(new_next));
+        // println!("self after append: {:?},\n offset {}", self, offset);
         len
     }
 
