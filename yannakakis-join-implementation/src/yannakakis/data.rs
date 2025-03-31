@@ -441,16 +441,18 @@ impl NonSingularNestedColumn {
             new_col = arrow::compute::concat(&[&new_col, col]).unwrap();
             let mut data = Arc::make_mut(&mut self.data);
             data.regular_cols[i] = new_col;
-            len = col.len();
         }
 
         let mut new_weights = self.weights.clone();
         new_weights.extend(other.weights.iter());
+        
         self.weights = new_weights;
 
         let mut new_hols = self.hols.clone();
         new_hols.extend(other.hols.iter().map(|x| x + offset as u32));
         self.hols = new_hols;
+        
+        
 
         let mut new_next = self.data.next.clone().unwrap();
         let other_next = other.data.next.clone().unwrap();
@@ -464,6 +466,8 @@ impl NonSingularNestedColumn {
             }
             
         }
+
+        len = new_next.len();
         
         Arc::make_mut(&mut self.data).set_next(Some(new_next));
         // println!("self after append: {:?},\n offset {}", self, offset);

@@ -227,7 +227,7 @@ fn unnest_batches(
         // println!("unnesting batch with {}rows", batch.num_rows());
         match batch{
             Ok(batch)=>{
-                println!("batch num rows: {}", batch.num_rows());
+                // println!("batch num rows: {}", batch.num_rows());
                 unnest(batch, &output_schema, &metrics)
             }
             Err(e)=>{
