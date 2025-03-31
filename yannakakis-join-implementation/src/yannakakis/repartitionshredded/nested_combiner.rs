@@ -67,7 +67,6 @@ impl NestedCombiner {
         let mut curr_offset;
         match final_inner_col {
             NestedColumn::Singular(ref s) => {
-                panic!("Singular column in non-singular column");
                 curr_offset = s.weights.len() as u32;
             }
             NestedColumn::NonSingular(ref ns) => {
@@ -86,7 +85,6 @@ impl NestedCombiner {
                 NestedColumn::Singular(ref mut s) => {
                     match inner_col {
                         NestedColumn::Singular(ref inner_s) => {
-                            panic!("Singular column in non-singular column");
                             s.weights.extend(inner_s.weights.iter());
                         }
                         NestedColumn::NonSingular(ref inner_ns) => {
@@ -99,7 +97,6 @@ impl NestedCombiner {
                 NestedColumn::NonSingular(ref mut final_nested) => {
                     match inner_col {
                         NestedColumn::Singular(ref inner_s) => {
-                            panic!("Singular column in non-singular column");
                             final_nested.weights.extend(inner_s.weights.iter());
                         }
                         NestedColumn::NonSingular(ref inner_nested) => {
