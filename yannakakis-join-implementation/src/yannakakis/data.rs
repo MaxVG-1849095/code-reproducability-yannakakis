@@ -6,7 +6,7 @@ use super::sel::Sel;
 use std::{any::Any, pin::Pin, sync::Arc};
 
 use datafusion::{arrow::{
-    self, array::{ArrayRef, RecordBatch}, datatypes::{DataType, Field, FieldRef, Schema, SchemaRef}
+    self, array::{ArrayRef, RecordBatch}, compute::second, datatypes::{DataType, Field, FieldRef, Schema, SchemaRef}
 }, error::DataFusionError};
 use datafusion::error;
 use futures::Stream;
@@ -376,15 +376,15 @@ impl Default for NonSingularNestedColumn {
 
 impl NonSingularNestedColumn {
 
+    // checks if the current NonSingularNestedColumn has further nested columns
     pub fn is_highest_level(&self) -> bool{
         self.data.nested_cols.len() == 0
     }
 
-    pub fn append_other_recursive(&mut self, other: &NonSingularNestedColumn, offset: usize) {
-        if self.is_highest_level(){
-            
+
+    pub fn append_other_recursive(&mut self, other: &NonSingularNestedColumn, offset: usize, secondcall: bool) {
+        if secondcall{
             self.append_other_nested(other, offset);
-            
         }
         else{
             let self_ns_nested_cols = &mut Arc::make_mut(&mut self.data).nested_cols;
@@ -394,7 +394,7 @@ impl NonSingularNestedColumn {
                     match other_ns_nested_cols[0] {
                         NestedColumn::NonSingular(ref other_ns_nested_col) => {
                             // println!("------\n------\nself before append: \n{:?} \n\n ------ \n other: \n {:?} ------\n", self, other);
-                            self_ns_nested_col.append_other_recursive(other_ns_nested_col, offset);
+                            self_ns_nested_col.append_other_recursive(other_ns_nested_col, offset, true);
                             // println!("self after append: {:?}------\n------\n", self);
                             
                         }
