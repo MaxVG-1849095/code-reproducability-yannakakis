@@ -22,7 +22,7 @@
                     ],
                     "guard": {
                         "name": "REPARTITION",
-                        "num_partitions": 2,
+                        "num_partitions": 5,
                         "partitioning": "unknown",
                         "partition_on": 0,
                         "children": [
@@ -57,7 +57,7 @@
                             ],
                             "child": {
                                 "name": "MULTISEMIJOIN",
-                                "partitioned": false,
+                                "partitioned": true,
                                 "id": 3,
                                 "equijoin_keys": [
                                     [
@@ -69,7 +69,7 @@
                                 ],
                                 "guard": {
                                     "name": "REPARTITION",
-                                    "num_partitions": 2,
+                                    "num_partitions": 5,
                                     "partitioning": "unknown",
                                     "partition_on": 0,
                                     "children": [
@@ -97,7 +97,7 @@
                                 "children": [
                                     {
                                         "name": "GROUPBY",
-                                        "partitioned": false,
+                                        "partitioned": true,
                                         "id": 2,
                                         "group_on": [
                                             0
@@ -109,7 +109,7 @@
                                             "equijoin_keys": [],
                                             "guard": {
                                                 "name": "REPARTITION",
-                                                "num_partitions": 2,
+                                                "num_partitions": 5,
                                                 "partitioning": "unknown",
                                                 "partition_on": 0,
                                                 "children": [

@@ -132,7 +132,7 @@ impl MsjBatchPartitioner {
                                 new_columns,
                             )?);
                             // println!(
-                            //     "-----\n[MSJREP PRINT]\nmsj id {}, original batch: {:?}\n batch {}: {:?}\n-----",
+                            //     "-----\n[MSJREP PRINT]\nmsj id {},\n original batch: {:?}\n batch {}: {:?}\n-----",
                             //     msj_id, val, i, new_batch
                             // );
                             //if the batch's reguar columns are not empty, add it to output otherwise we skip it

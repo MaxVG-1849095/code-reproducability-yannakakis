@@ -1,20 +1,20 @@
 {
-    "execution_time": 0.30295,
+    "execution_time": 0.537139,
     "root": {
         "name": "PROJECTION",
-        "execution_time": 0.000328,
+        "execution_time": 0.000407,
         "actual_rows": 1115090,
         "estimated_cardinality": null,
         "children": [
             {
                 "name": "HASHJOIN",
-                "execution_time": 0.10568,
+                "execution_time": 0.1007,
                 "actual_rows": 1115090,
                 "estimated_cardinality": null,
                 "children": [
                     {
                         "name": "SEQUENTIALSCAN",
-                        "execution_time": 0.031158,
+                        "execution_time": 0.006509,
                         "actual_rows": 2134108,
                         "estimated_cardinality": 2141839,
                         "children": [],
@@ -33,18 +33,18 @@
                     },
                     {
                         "name": "HASHJOIN",
-                        "execution_time": 0.043612,
+                        "execution_time": 0.105143,
                         "actual_rows": 1115090,
                         "estimated_cardinality": null,
                         "children": [
                             {
                                 "name": "SEQUENTIALSCAN",
-                                "execution_time": 0.001179,
-                                "actual_rows": 39264,
+                                "execution_time": 0.017146,
+                                "actual_rows": 2134108,
                                 "estimated_cardinality": 2134666,
                                 "children": [],
                                 "relation": "dblp8",
-                                "opt_filter": "s<=1245700 AND s IS NOT NULL",
+                                "opt_filter": "s>=1206438 AND s<=3340551 AND s IS NOT NULL",
                                 "projection": [
                                     {
                                         "table_name": "dblp8",
@@ -57,22 +57,61 @@
                                 ]
                             },
                             {
-                                "name": "SEQUENTIALSCAN",
-                                "execution_time": 0.004298,
+                                "name": "HASHJOIN",
+                                "execution_time": 0.103091,
                                 "actual_rows": 1115090,
-                                "estimated_cardinality": 1115090,
-                                "children": [],
-                                "relation": "dblp9",
-                                "opt_filter": null,
-                                "projection": [
+                                "estimated_cardinality": null,
+                                "children": [
                                     {
-                                        "table_name": "dblp9",
-                                        "field_name": "d"
+                                        "name": "SEQUENTIALSCAN",
+                                        "execution_time": 0.006832,
+                                        "actual_rows": 2134077,
+                                        "estimated_cardinality": 2134627,
+                                        "children": [],
+                                        "relation": "dblp6",
+                                        "opt_filter": "s>=1206438 AND s<=3340551 AND s IS NOT NULL",
+                                        "projection": [
+                                            {
+                                                "table_name": "dblp6",
+                                                "field_name": "s"
+                                            },
+                                            {
+                                                "table_name": "dblp6",
+                                                "field_name": "d"
+                                            }
+                                        ]
                                     },
                                     {
-                                        "table_name": "dblp9",
-                                        "field_name": "s"
+                                        "name": "SEQUENTIALSCAN",
+                                        "execution_time": 0.001955,
+                                        "actual_rows": 1115090,
+                                        "estimated_cardinality": 1115090,
+                                        "children": [],
+                                        "relation": "dblp9",
+                                        "opt_filter": null,
+                                        "projection": [
+                                            {
+                                                "table_name": "dblp9",
+                                                "field_name": "s"
+                                            },
+                                            {
+                                                "table_name": "dblp9",
+                                                "field_name": "d"
+                                            }
+                                        ]
                                     }
+                                ],
+                                "condition": [
+                                    [
+                                        {
+                                            "table_name": "dblp6",
+                                            "field_name": "s"
+                                        },
+                                        {
+                                            "table_name": "dblp9",
+                                            "field_name": "s"
+                                        }
+                                    ]
                                 ]
                             }
                         ],
@@ -84,7 +123,7 @@
                                 },
                                 {
                                     "table_name": "dblp9",
-                                    "field_name": "d"
+                                    "field_name": "s"
                                 }
                             ]
                         ]
@@ -97,7 +136,7 @@
                             "field_name": "s"
                         },
                         {
-                            "table_name": "dblp9",
+                            "table_name": "dblp6",
                             "field_name": "s"
                         }
                     ]
@@ -114,11 +153,11 @@
                 "field_name": "d"
             },
             {
-                "table_name": "dblp9",
+                "table_name": "dblp6",
                 "field_name": "s"
             },
             {
-                "table_name": "dblp9",
+                "table_name": "dblp6",
                 "field_name": "d"
             },
             {
@@ -127,6 +166,14 @@
             },
             {
                 "table_name": "dblp8",
+                "field_name": "d"
+            },
+            {
+                "table_name": "dblp9",
+                "field_name": "s"
+            },
+            {
+                "table_name": "dblp9",
                 "field_name": "d"
             }
         ]
@@ -134,6 +181,7 @@
     "aliases": {
         "dblp8": "dblp8",
         "dblp9": "dblp9",
+        "dblp6": "dblp6",
         "dblp5": "dblp5"
     }
 }

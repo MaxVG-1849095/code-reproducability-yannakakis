@@ -66,42 +66,42 @@
 		</thead><tbody>
 	<tr>
 			<td><b>TOTAL TIME</b></td>
-            <td>0.34596</td>
+            <td>0.397027</td>
             <td>100.0%</td>
     </tr>
 
 	<tr>
 			<td><b>Execution Time</b></td>
-            <td>0.239798</td>
-            <td>69.313%</td>
+            <td>0.26847699999999997</td>
+            <td>67.621%</td>
     </tr>
 
 	<tr>
 			<td>HASH_JOIN</td>
-            <td>0.230583</td>
-            <td>66.650%</td>
+            <td>0.252372</td>
+            <td>63.565%</td>
     </tr>
 
 	<tr>
 			<td>RESULT_COLLECTOR</td>
-            <td>0.006502</td>
-            <td>1.8794%</td>
+            <td>0.013235</td>
+            <td>3.3335%</td>
     </tr>
 
 	<tr>
 			<td>SEQ_SCAN </td>
-            <td>0.002587</td>
-            <td>0.7477%</td>
+            <td>0.0027140000000000003</td>
+            <td>0.6835%</td>
     </tr>
 
 	<tr>
 			<td>PROJECTION</td>
-            <td>0.000126</td>
-            <td>0.0364%</td>
+            <td>0.000156</td>
+            <td>0.0392%</td>
     </tr>
 </tbody></table>
 	</div>
 	<div class="tf-tree tf-gap-lg"> 
- <ul><li><span class="tf-nc" style=""><div class="node-body"><p> <b>RESULT COLLECTOR (0.006502s) </b></p><p> cardinality = 0 </p></div></span><ul><li><span class="tf-nc" style="background-color: #ffb3ba;"><div class="node-body"><p> <b>PROJECTION (0.000126s) </b></p><p> dblp5.s<br>dblp5.d<br>dblp8.s<br>dblp8.d<br>dblp9.s<br>dblp9.d<br> </p><p> cardinality = 1115090 </p></div></span><ul><li><span class="tf-nc" style="background-color: #ffffba;"><div class="node-body"><p> <b>HASH JOIN (0.184448s) </b></p><p> INNER<br>dblp5.s = dblp8.d<br>----<br>Build Min: 1247097<br>Build Max: 1285431<br>----<br>EC: 1197643<br> </p><p> cardinality = 1115090 </p></div></span><ul><li><span class="tf-nc" style="background-color: #baffc9;"><div class="node-body"><p> <b>SEQ SCAN  (0.000379s) </b></p><p> dblp5<br>----<br>s<br>d<br>----<br>Filters: s>=1247097 AND s<=1285431 AND s IS NOT NULL<br>----<br>EC: 2141839 </p><p> cardinality = 38335 </p></div></span></li><li><span class="tf-nc" style="background-color: #ffffba;"><div class="node-body"><p> <b>HASH JOIN (0.046135s) </b></p><p> INNER<br>dblp8.s = dblp9.d<br>----<br>Build Min: 1206437<br>Build Max: 1245700<br>----<br>EC: 1135705<br> </p><p> cardinality = 1115090 </p></div></span><ul><li><span class="tf-nc" style="background-color: #baffc9;"><div class="node-body"><p> <b>SEQ SCAN  (0.000262s) </b></p><p> dblp8<br>----<br>s<br>d<br>----<br>Filters: s<=1245700 AND s IS NOT NULL<br>----<br>EC: 2134666 </p><p> cardinality = 39264 </p></div></span></li><li><span class="tf-nc" style="background-color: #baffc9;"><div class="node-body"><p> <b>SEQ SCAN  (0.001946s) </b></p><p> dblp9<br>----<br>d<br>s<br>----<br>EC: 1115090 </p><p> cardinality = 1115090 </p></div></span></li></ul></li></ul></li></ul></li></ul></li></ul> </div>
+ <ul><li><span class="tf-nc" style=""><div class="node-body"><p> <b>RESULT COLLECTOR (0.013235s) </b></p><p> cardinality = 0 </p></div></span><ul><li><span class="tf-nc" style="background-color: #ffb3ba;"><div class="node-body"><p> <b>PROJECTION (0.000156s) </b></p><p> dblp5.s<br>dblp5.d<br>dblp8.s<br>dblp8.d<br>dblp9.s<br>dblp9.d<br> </p><p> cardinality = 1115090 </p></div></span><ul><li><span class="tf-nc" style="background-color: #ffffba;"><div class="node-body"><p> <b>HASH JOIN (0.203271s) </b></p><p> INNER<br>dblp5.s = dblp8.d<br>----<br>Build Min: 1247097<br>Build Max: 1285431<br>----<br>EC: 1197643<br> </p><p> cardinality = 1115090 </p></div></span><ul><li><span class="tf-nc" style="background-color: #baffc9;"><div class="node-body"><p> <b>SEQ SCAN  (0.000502s) </b></p><p> dblp5<br>----<br>s<br>d<br>----<br>Filters: s>=1247097 AND s<=1285431 AND s IS NOT NULL<br>----<br>EC: 2141839 </p><p> cardinality = 38335 </p></div></span></li><li><span class="tf-nc" style="background-color: #ffffba;"><div class="node-body"><p> <b>HASH JOIN (0.049101s) </b></p><p> INNER<br>dblp8.s = dblp9.d<br>----<br>Build Min: 1206437<br>Build Max: 1245700<br>----<br>EC: 1135705<br> </p><p> cardinality = 1115090 </p></div></span><ul><li><span class="tf-nc" style="background-color: #baffc9;"><div class="node-body"><p> <b>SEQ SCAN  (0.000344s) </b></p><p> dblp8<br>----<br>s<br>d<br>----<br>Filters: s<=1245700 AND s IS NOT NULL<br>----<br>EC: 2134666 </p><p> cardinality = 39264 </p></div></span></li><li><span class="tf-nc" style="background-color: #baffc9;"><div class="node-body"><p> <b>SEQ SCAN  (0.001868s) </b></p><p> dblp9<br>----<br>d<br>s<br>----<br>EC: 1115090 </p><p> cardinality = 1115090 </p></div></span></li></ul></li></ul></li></ul></li></ul></li></ul> </div>
 </body>
 </html>

@@ -100,12 +100,11 @@ impl NestedCombiner {
                             final_nested.weights.extend(inner_s.weights.iter());
                         }
                         NestedColumn::NonSingular(ref inner_nested) => {
-                            
                             if !inner_nested.is_highest_level(){
                                 // println!("append other recursive");
-                                // println!("final nested before append\n: {:?} \n\n other: \n {:?} \n\n", final_nested, inner_nested);
+                                println!("final nested before append\n: {:?} \n\n other: \n {:?} \n\n", final_nested, inner_nested);
                                 final_nested.append_other_recursive(inner_nested, curr_offset as usize);
-                                // println!("final nested after append: {:?}", final_nested);
+                                println!("final nested after append: {:?}", final_nested);
                             }
                             let next_offset = final_nested.append_other_top_level(inner_nested, curr_offset as usize);
                             // println!("final nested after append: {:?}", final_nested);

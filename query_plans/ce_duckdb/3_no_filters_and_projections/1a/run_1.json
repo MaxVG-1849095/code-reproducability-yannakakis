@@ -1,7 +1,7 @@
 {
     "name": "Query",
-    "result": 0.965242,
-    "timing": 0.965242,
+    "result": 0.876311,
+    "timing": 0.876311,
     "cardinality": 0,
     "extra-info": "select count(*) from yago1, yago0 where yago1.d = yago0.d;PRAGMA profile_output = '/home/maxvg/Documents/masterINF/Masterproef/code-reproducability-yannakakis/query_plans/ce_duckdb/2_original_with_aliases/2a/run_1.json';",
     "timings": [],
@@ -14,26 +14,26 @@
             "children": [
                 {
                     "name": "UNGROUPED_AGGREGATE",
-                    "timing": 0.000335,
+                    "timing": 0.000193,
                     "cardinality": 1,
                     "extra_info": "count_star()",
                     "children": [
                         {
                             "name": "HASH_JOIN",
-                            "timing": 0.791538,
+                            "timing": 0.7096,
                             "cardinality": 1992324,
                             "extra_info": "INNER\nyago0.d = yago1.d\n\n[INFOSEPARATOR]\nEC: 578725\n",
                             "children": [
                                 {
                                     "name": "SEQ_SCAN ",
-                                    "timing": 0.106015,
+                                    "timing": 0.100233,
                                     "cardinality": 8331253,
                                     "extra_info": "yago0\n[INFOSEPARATOR]\nd\n[INFOSEPARATOR]\nFilters: d>=4532271 AND d<=12811178 AND d IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 8331273",
                                     "children": []
                                 },
                                 {
                                     "name": "SEQ_SCAN ",
-                                    "timing": 0.005618,
+                                    "timing": 0.006154,
                                     "cardinality": 569410,
                                     "extra_info": "yago1\n[INFOSEPARATOR]\nd\n[INFOSEPARATOR]\nEC: 569410",
                                     "children": []

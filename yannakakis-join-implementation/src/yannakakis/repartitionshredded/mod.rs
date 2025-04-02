@@ -391,7 +391,7 @@ impl RepartitionMultiSemiJoin {
                 }
                 else{
                     while !nested_combiner.lock().is_ready(){
-                        println!("partition {} is waiting for the first partition to finish combining msj id {}", partition, msj_id);
+                        // println!("partition {} is waiting for the first partition to finish combining msj id {}", partition, msj_id);
                         time::sleep(time::Duration::from_millis(10)).await;
                     }
                     
