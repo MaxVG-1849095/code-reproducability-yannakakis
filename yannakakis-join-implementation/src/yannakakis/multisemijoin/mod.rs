@@ -136,6 +136,15 @@ impl MultiSemiJoin {
 
         let once_futs = (0..guard.output_partitioning().partition_count()).map(|_| Default::default()).collect();
 
+        // let once_futs = (0..guard.output_partitioning().partition_count())
+        //     .map(|_| {
+        //         children
+        //             .iter()
+        //             .map(|_| Default::default())
+        //             .collect::<Vec<_>>()
+        //     })
+        //     .collect::<Vec<_>>();
+
         let guard_partitions = guard.output_partitioning().partition_count();
 
         MultiSemiJoin {
@@ -189,7 +198,7 @@ impl MultiSemiJoinWrapper for MultiSemiJoin {
             child.materialize(context, partition).await
         }
 
-        println!("msj with id {} execute on partition {}", self.id, partition);
+        // println!("msj with id {} execute on partition {}", self.id, partition);
 
         // let materialized_children_futs: Vec<OnceFut<Arc<dyn GroupedRel>>> = self
         //     .once_futs
@@ -208,6 +217,16 @@ impl MultiSemiJoinWrapper for MultiSemiJoin {
             // println!("calling once for partition {} in id: {}", partition, self.id);
             self.once_futs[partition].once(|| materialize_child(child.clone(), context.clone(), partition))
         }).collect();
+
+        // let materialized_children_futs: Vec<Vec<OnceFut<Arc<dyn GroupedRel>>>> = self.children.iter().enumerate().map(|(child_index, child)| {
+        //     (0..self.guard.output_partitioning().partition_count()).map(|partition| {
+        //         // Create a future for each partition for the current child, using the child index
+        //         self.once_futs[child_index][partition].once(|| materialize_child(child.clone(), context.clone(), partition))
+        //     }).collect()
+        // }).collect();
+        
+        
+        
 
         // println!("materialized children futs length: {} in id: {}", materialized_children_futs.len(), self.id);
 

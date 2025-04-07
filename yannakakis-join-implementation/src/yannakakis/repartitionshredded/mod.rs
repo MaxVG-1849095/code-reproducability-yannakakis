@@ -7,6 +7,8 @@ use batch_partitioner::MsjBatchPartitioner;
 use datafusion::arrow;
 use datafusion::arrow::array::{ArrayRef, RecordBatch, UInt32Array};
 
+use tokio::sync::Barrier;
+
 
 
 use datafusion::execution::memory_pool::MemoryReservation;
@@ -121,7 +123,7 @@ impl RepartitionExecState {
 
         println!("num input partitions: {}", num_input_partitions);
         let nested_combiner = Arc::new(Mutex::new(NestedCombiner::new(num_input_partitions)));
-
+        let barrier = Arc::new(Barrier::new(num_input_partitions));
         for i in 0..num_input_partitions {
             let channels_in: HashMap<_, _> = channels
                 .iter()
@@ -134,7 +136,7 @@ impl RepartitionExecState {
 
             //TODO: add metrics
             let r_metrics = MsjRepartitionMetrics::new(i, num_output_partitions, &metrics);
-
+            
             let input_task = SpawnedTask::spawn(RepartitionMultiSemiJoin::pull_from_input(
                 Arc::clone(&input),
                 i,
@@ -144,6 +146,7 @@ impl RepartitionExecState {
                 r_metrics,
                 child_id,
                 Arc::clone(&nested_combiner),
+                barrier.clone(),
             ));
 
             let wait_for_task = SpawnedTask::spawn(RepartitionMultiSemiJoin::wait_for_task(
@@ -207,6 +210,8 @@ pub struct RepartitionMultiSemiJoin {
     partition_key: usize,
     //metrics
     metrics: ExecutionPlanMetricsSet,
+
+    barrier: Arc<Barrier>,
 }
 
 impl RepartitionMultiSemiJoin {
@@ -220,12 +225,14 @@ impl RepartitionMultiSemiJoin {
     ) -> Self {
         // println!("RepartitionMultiSemiJoin new");
         let guardpartitions = guard.output_partitioning().partition_count();
+        let barrier = Arc::new(Barrier::new(guardpartitions));
         Self {
             state: Default::default(),
             child: Arc::new(MultiSemiJoin::new(guard, children, equijoin_keys, id)),
             partitions: guardpartitions,
             partition_key: partition_key,
             metrics: ExecutionPlanMetricsSet::new(),
+            barrier: barrier,
         }
     }
 
@@ -238,12 +245,14 @@ impl RepartitionMultiSemiJoin {
         partition_key: usize,
     ) -> Result<Self, DataFusionError> {
         let guardpartitions = guard.output_partitioning().partition_count();
+        let barrier = Arc::new(Barrier::new(guardpartitions));
         Ok(Self {
             state: Default::default(), //for now, just add a default value, it will be created later on in the execute function (get_or_init)
             child: Arc::new(MultiSemiJoin::new(guard, children, equijoin_keys, id)),
             partitions: guardpartitions,
             partition_key: partition_key,
             metrics: ExecutionPlanMetricsSet::new(),
+            barrier: barrier,
         })
     }
 
@@ -338,6 +347,7 @@ impl RepartitionMultiSemiJoin {
         metrics: MsjRepartitionMetrics,
         msj_id: usize,
         nested_combiner: Arc<Mutex<NestedCombiner>>,
+        barrier: Arc<Barrier>,
     ) -> Result<(), DataFusionError>
     where
         NestedCombiner: Send + Sync,
@@ -358,7 +368,7 @@ impl RepartitionMultiSemiJoin {
             metrics.repartition_time.clone(),
         )?;
 
-        // ! sync needed between threads, the partitioner needs the nested columns of all partitions to be present in order to join it
+        // ! sync needed between threads, the partitioner needs the nested columns of all partitions to be present in order to join it --> barrier
 
         //get first batch from input stream, this will be used to create nested columns!
         let batch = input_stream.next().await; //as long as there is a next in the input stream
@@ -374,25 +384,18 @@ impl RepartitionMultiSemiJoin {
         // println!("\n in msj {} partition {}\nbatch: {:?}\n", msj_id,partition,batch);
         match batch_clone {
             SemiJoinResultBatch::Flat(_) => {
-                println!("flat batch");
+                // println!("flat batch");
             }
             SemiJoinResultBatch::Nested(nested_batch) => {
                 // println!("\n------\nmsjrep {}\nadding inner col to nested combiner from partition {} \n inner_col: {:?}\n------", msj_id,partition, nested_batch.inner.nested_cols[0]);
                 nested_combiner.lock().add_inner_col(nested_batch.inner.nested_cols[0].clone(), partition);
+                barrier.wait().await; //first barrier for add_inner_col
                 // println!("-----\n partition {}\n nested batch regular cols: {:?}\n nested batch nested cols: {:?}\n-----", partition,nested_batch.inner.regular_cols, nested_batch.inner.nested_cols);
-                if partition == 0 { //FIXME: these sleeps need to be turned into an await, the problem is that nested_combiner isnt send + sync and i dont know how to fix that --> tokio docs  (barrier)
-                    while nested_combiner.lock().combine().is_err() {
-                        println!("waiting for all partitions to be present in the NestedCombiner msj id: {}", msj_id);
-                        time::sleep(time::Duration::from_millis(10)).await;
-                    }
+                if partition == 0 { 
+                    // we know we can call combine since a barrier made sure that all partitions were present
+                    let _ = nested_combiner.lock().combine();   
                 }
-                else{
-                    while !nested_combiner.lock().is_ready(){
-                        // println!("partition {} is waiting for the first partition to finish combining msj id {}", partition, msj_id);
-                        time::sleep(time::Duration::from_millis(10)).await;
-                    }
-                    
-                }
+                barrier.wait().await; // second barrier to wait for the combine to finish
             }
         }
         
