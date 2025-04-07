@@ -5,6 +5,56 @@ use datafusion::{arrow, error::DataFusionError};
 
 use crate::yannakakis::data::{NestedColumn, NestedRel, NestedSchema, SingularNestedColumn};
 
+
+// struct to wrap multple nested combiners together
+pub struct NestedCombinerWrapper{
+    nested_combiners: Vec<NestedCombiner>,
+
+    ready: bool,
+
+    final_inner_cols: Vec<NestedColumn>,
+}
+
+impl NestedCombinerWrapper{
+    pub fn new(num_input_partitions: usize, num_combiners: usize) -> Self {
+        let mut nested_combiners = vec![];
+        for _ in 0..num_combiners {
+            let nested_combiner = NestedCombiner::new(num_input_partitions);
+            nested_combiners.push(nested_combiner);
+        }
+        let final_inner_cols = vec![];
+        Self {
+            nested_combiners,
+            ready: false,
+            final_inner_cols,
+        }
+    }
+
+    pub fn add_inner_col(&mut self, inner_col: NestedColumn, index: usize) {
+        if self.ready {
+            return;
+        }
+        self.nested_combiners[index].add_inner_col(inner_col, index);
+    }
+
+    pub fn combine(&mut self){
+        for i in 0..self.nested_combiners.len() {
+            let mut nested_combiner = &mut self.nested_combiners[i];
+            let inner_col = nested_combiner.combine();
+            match inner_col {
+                Ok(inner_col) => {
+                    self.final_inner_cols.push(inner_col);
+                }
+                Err(e) => {
+                    panic!("Error combining nested columns: {:?}", e);
+                }
+            }
+        }
+        self.ready = true;
+    }
+}
+
+// object to combine multiple nested columns together
 pub struct NestedCombiner {
     inner_cols: Vec<NestedColumn>,
 

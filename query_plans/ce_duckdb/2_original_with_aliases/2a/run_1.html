@@ -66,42 +66,42 @@
 		</thead><tbody>
 	<tr>
 			<td><b>TOTAL TIME</b></td>
-            <td>0.452714</td>
+            <td>0.68407</td>
             <td>100.0%</td>
     </tr>
 
 	<tr>
 			<td><b>Execution Time</b></td>
-            <td>0.288694</td>
-            <td>63.769%</td>
+            <td>0.424842</td>
+            <td>62.105%</td>
     </tr>
 
 	<tr>
 			<td>HASH_JOIN</td>
-            <td>0.254284</td>
-            <td>56.168%</td>
+            <td>0.370033</td>
+            <td>54.092%</td>
     </tr>
 
 	<tr>
 			<td>SEQ_SCAN </td>
-            <td>0.034154000000000004</td>
-            <td>7.5442%</td>
+            <td>0.054535</td>
+            <td>7.9721%</td>
     </tr>
 
 	<tr>
 			<td>UNGROUPED_AGGREGATE</td>
-            <td>0.000252</td>
-            <td>0.0556%</td>
+            <td>0.000269</td>
+            <td>0.0393%</td>
     </tr>
 
 	<tr>
 			<td>RESULT_COLLECTOR</td>
-            <td>4e-06</td>
-            <td>0.0008%</td>
+            <td>5e-06</td>
+            <td>0.0007%</td>
     </tr>
 </tbody></table>
 	</div>
 	<div class="tf-tree tf-gap-lg"> 
- <ul><li><span class="tf-nc" style=""><div class="node-body"><p> <b>RESULT COLLECTOR (4e-06s) </b></p><p> cardinality = 0 </p></div></span><ul><li><span class="tf-nc" style="background-color: #ffdfba;"><div class="node-body"><p> <b>UNGROUPED AGGREGATE (0.000252s) </b></p><p> count_star() </p><p> cardinality = 1 </p></div></span><ul><li><span class="tf-nc" style="background-color: #ffffba;"><div class="node-body"><p> <b>HASH JOIN (0.153176s) </b></p><p> INNER<br>dblp23.s = dblp21.s<br>----<br>EC: 2746742<br> </p><p> cardinality = 4297008 </p></div></span><ul><li><span class="tf-nc" style="background-color: #baffc9;"><div class="node-body"><p> <b>SEQ SCAN  (0.023779s) </b></p><p> dblp23<br>----<br>s<br>----<br>Filters: s>=1206437 AND s IS NOT NULL<br>----<br>EC: 4302340 </p><p> cardinality = 4297008 </p></div></span></li><li><span class="tf-nc" style="background-color: #ffffba;"><div class="node-body"><p> <b>HASH JOIN (0.101108s) </b></p><p> INNER<br>dblp21.s = dblp7.s<br>----<br>EC: 2134666<br> </p><p> cardinality = 2134666 </p></div></span><ul><li><span class="tf-nc" style="background-color: #baffc9;"><div class="node-body"><p> <b>SEQ SCAN  (0.005905s) </b></p><p> dblp21<br>----<br>s<br>----<br>Filters: s>=1206437 AND s IS NOT NULL<br>----<br>EC: 3343619 </p><p> cardinality = 2134666 </p></div></span></li><li><span class="tf-nc" style="background-color: #baffc9;"><div class="node-body"><p> <b>SEQ SCAN  (0.00447s) </b></p><p> dblp7<br>----<br>s<br>----<br>EC: 2134666 </p><p> cardinality = 2134666 </p></div></span></li></ul></li></ul></li></ul></li></ul></li></ul> </div>
+ <ul><li><span class="tf-nc" style=""><div class="node-body"><p> <b>RESULT COLLECTOR (5e-06s) </b></p><p> cardinality = 0 </p></div></span><ul><li><span class="tf-nc" style="background-color: #ffdfba;"><div class="node-body"><p> <b>UNGROUPED AGGREGATE (0.000269s) </b></p><p> count_star() </p><p> cardinality = 1 </p></div></span><ul><li><span class="tf-nc" style="background-color: #ffffba;"><div class="node-body"><p> <b>HASH JOIN (0.206179s) </b></p><p> INNER<br>dblp23.s = dblp21.s<br>----<br>EC: 2746742<br> </p><p> cardinality = 4297008 </p></div></span><ul><li><span class="tf-nc" style="background-color: #baffc9;"><div class="node-body"><p> <b>SEQ SCAN  (0.033477s) </b></p><p> dblp23<br>----<br>s<br>----<br>Filters: s>=1206437 AND s IS NOT NULL<br>----<br>EC: 4302340 </p><p> cardinality = 4297008 </p></div></span></li><li><span class="tf-nc" style="background-color: #ffffba;"><div class="node-body"><p> <b>HASH JOIN (0.163854s) </b></p><p> INNER<br>dblp21.s = dblp7.s<br>----<br>EC: 2134666<br> </p><p> cardinality = 2134666 </p></div></span><ul><li><span class="tf-nc" style="background-color: #baffc9;"><div class="node-body"><p> <b>SEQ SCAN  (0.015971s) </b></p><p> dblp21<br>----<br>s<br>----<br>Filters: s>=1206437 AND s IS NOT NULL<br>----<br>EC: 3343619 </p><p> cardinality = 2134666 </p></div></span></li><li><span class="tf-nc" style="background-color: #baffc9;"><div class="node-body"><p> <b>SEQ SCAN  (0.005087s) </b></p><p> dblp7<br>----<br>s<br>----<br>EC: 2134666 </p><p> cardinality = 2134666 </p></div></span></li></ul></li></ul></li></ul></li></ul></li></ul> </div>
 </body>
 </html>

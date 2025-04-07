@@ -189,7 +189,7 @@ impl MultiSemiJoinWrapper for MultiSemiJoin {
             child.materialize(context, partition).await
         }
 
-        // println!("msj with id {} execute on partition {}", self.id, partition);
+        println!("msj with id {} execute on partition {}", self.id, partition);
 
         // let materialized_children_futs: Vec<OnceFut<Arc<dyn GroupedRel>>> = self
         //     .once_futs

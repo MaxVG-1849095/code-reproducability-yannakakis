@@ -135,7 +135,7 @@ impl MsjBatchPartitioner {
                             //     "-----\n[MSJREP PRINT]\nmsj id {},\n original batch: {:?}\n batch {}: {:?}\n-----",
                             //     msj_id, val, i, new_batch
                             // );
-                            //if the batch's reguar columns are not empty, add it to output otherwise we skip it
+                            //if the batch's regular columns are not empty, add it to output otherwise we skip it
                             if new_batch.num_rows() > 0 {
                                 batches.push(new_batch);
                                 batchindices.push(i);
@@ -186,8 +186,6 @@ impl MsjBatchPartitioner {
                             singular = false;
                         }
                         
-                        
-
                         //rebuild a batch for each partition
                         for i in 0..num_partitions {
                             let arr: Vec<u32> = indices[i].iter().map(|x| *x as u32).collect();
@@ -224,7 +222,7 @@ impl MsjBatchPartitioner {
                                 regular_cols,
                                 inner_cols_final,
                             ));
-                            // println!("-----\n[MSJREP PRINT]\n-----\nmsj {} original batch:\n {:?} \n nested_data: \n {:?}\n nested_offsets: \n {:?}\n+++++\n new batch for partition {}:\n {:?}\n-----\n-----",msj_id, val, nested_combined,nested_offsets,i, new_batch);
+                            // println!("-----\n[MSJREP PRINT]\n-----\nmsj {} original batch:\n {:?} \n\n\n nested_data: \n {:?}\n nested_offsets: \n {:?}\n+++++\n new batch for partition {}:\n {:?}\n-----\n-----",msj_id, val, nested_combined,nested_offsets,i, new_batch);
                             
                             if new_batch.num_rows() > 0 {
                                 batches.push(new_batch);

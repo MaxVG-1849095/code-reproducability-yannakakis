@@ -1,0 +1,207 @@
+{
+    "execution_time": 0.38905,
+    "description": "select * from dblp5, dblp6, dblp9, dblp8 where dblp9.d = dblp8.s and dblp5.s = dblp9.s and dblp5.s = dblp6.s;",
+    "root": {
+        "name": "PROJECTION",
+        "execution_time": 0.00036,
+        "actual_rows": 1115090,
+        "estimated_cardinality": null,
+        "children": [
+            {
+                "name": "YANNAKAKIS",
+                "root": {
+                    "name": "MULTISEMIJOIN",
+                    "partitioned": false,
+                    "id": 0,
+                    "equijoin_keys": [
+                        [
+                            [
+                                0,
+                                0
+                            ]
+                        ]
+                    ],
+                    "guard": {
+                        "name": "SEQUENTIALSCAN",
+                        "execution_time": 0.021896,
+                        "actual_rows": 2134108,
+                        "estimated_cardinality": 2141839,
+                        "children": [],
+                        "relation": "dblp5",
+                        "opt_filter": "s>=1206438 AND s<=3340551 AND s IS NOT NULL",
+                        "projection": [
+                            {
+                                "table_name": "dblp5",
+                                "field_name": "s"
+                            },
+                            {
+                                "table_name": "dblp5",
+                                "field_name": "d"
+                            }
+                        ]
+                    },
+                    "children": [
+                        {
+                            "name": "GROUPBY",
+                            "partitioned": false,
+                            "id": 0,
+                            "group_on": [
+                                0
+                            ],
+                            "child": {
+                                "name": "MULTISEMIJOIN",
+                                "partitioned": false,
+                                "id": 0,
+                                "equijoin_keys": [
+                                    [
+                                        [
+                                            0,
+                                            0
+                                        ]
+                                    ]
+                                ],
+                                "guard": {
+                                    "name": "SEQUENTIALSCAN",
+                                    "execution_time": 0.005491,
+                                    "actual_rows": 2134077,
+                                    "estimated_cardinality": 2134627,
+                                    "children": [],
+                                    "relation": "dblp6",
+                                    "opt_filter": "s>=1206438 AND s<=3340551 AND s IS NOT NULL",
+                                    "projection": [
+                                        {
+                                            "table_name": "dblp6",
+                                            "field_name": "s"
+                                        },
+                                        {
+                                            "table_name": "dblp6",
+                                            "field_name": "d"
+                                        }
+                                    ]
+                                },
+                                "children": [
+                                    {
+                                        "name": "GROUPBY",
+                                        "partitioned": false,
+                                        "id": 0,
+                                        "group_on": [
+                                            1
+                                        ],
+                                        "child": {
+                                            "name": "MULTISEMIJOIN",
+                                            "partitioned": false,
+                                            "id": 0,
+                                            "equijoin_keys": [
+                                                [
+                                                    [
+                                                        0,
+                                                        0
+                                                    ]
+                                                ]
+                                            ],
+                                            "guard": {
+                                                "name": "SEQUENTIALSCAN",
+                                                "execution_time": 0.004186,
+                                                "actual_rows": 1115090,
+                                                "estimated_cardinality": 1115090,
+                                                "children": [],
+                                                "relation": "dblp9",
+                                                "opt_filter": null,
+                                                "projection": [
+                                                    {
+                                                        "table_name": "dblp9",
+                                                        "field_name": "d"
+                                                    },
+                                                    {
+                                                        "table_name": "dblp9",
+                                                        "field_name": "s"
+                                                    }
+                                                ]
+                                            },
+                                            "children": [
+                                                {
+                                                    "name": "GROUPBY",
+                                                    "partitioned": false,
+                                                    "id": 0,
+                                                    "group_on": [
+                                                        0
+                                                    ],
+                                                    "child": {
+                                                        "name": "MULTISEMIJOIN",
+                                                        "partitioned": false,
+                                                        "id": 0,
+                                                        "equijoin_keys": [],
+                                                        "guard": {
+                                                            "name": "SEQUENTIALSCAN",
+                                                            "execution_time": 0.00094,
+                                                            "actual_rows": 39264,
+                                                            "estimated_cardinality": 2134666,
+                                                            "children": [],
+                                                            "relation": "dblp8",
+                                                            "opt_filter": "s<=1245700 AND s IS NOT NULL",
+                                                            "projection": [
+                                                                {
+                                                                    "table_name": "dblp8",
+                                                                    "field_name": "s"
+                                                                },
+                                                                {
+                                                                    "table_name": "dblp8",
+                                                                    "field_name": "d"
+                                                                }
+                                                            ]
+                                                        },
+                                                        "children": []
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            }
+        ],
+        "on": [
+            {
+                "table_name": "dblp5",
+                "field_name": "s"
+            },
+            {
+                "table_name": "dblp5",
+                "field_name": "d"
+            },
+            {
+                "table_name": "dblp6",
+                "field_name": "s"
+            },
+            {
+                "table_name": "dblp6",
+                "field_name": "d"
+            },
+            {
+                "table_name": "dblp9",
+                "field_name": "s"
+            },
+            {
+                "table_name": "dblp9",
+                "field_name": "d"
+            },
+            {
+                "table_name": "dblp8",
+                "field_name": "s"
+            },
+            {
+                "table_name": "dblp8",
+                "field_name": "d"
+            }
+        ]
+    },
+    "aliases": {
+        "dblp5": "dblp5",
+        "dblp6": "dblp6",
+        "dblp8": "dblp8",
+        "dblp9": "dblp9"
+    }
+}

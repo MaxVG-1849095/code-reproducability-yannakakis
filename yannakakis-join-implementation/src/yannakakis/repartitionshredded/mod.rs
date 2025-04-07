@@ -371,19 +371,16 @@ impl RepartitionMultiSemiJoin {
             }
         };
         let batch_clone = batch.clone();
-
         // println!("\n in msj {} partition {}\nbatch: {:?}\n", msj_id,partition,batch);
-
         match batch_clone {
             SemiJoinResultBatch::Flat(_) => {
                 println!("flat batch");
-
             }
             SemiJoinResultBatch::Nested(nested_batch) => {
                 // println!("\n------\nmsjrep {}\nadding inner col to nested combiner from partition {} \n inner_col: {:?}\n------", msj_id,partition, nested_batch.inner.nested_cols[0]);
                 nested_combiner.lock().add_inner_col(nested_batch.inner.nested_cols[0].clone(), partition);
                 // println!("-----\n partition {}\n nested batch regular cols: {:?}\n nested batch nested cols: {:?}\n-----", partition,nested_batch.inner.regular_cols, nested_batch.inner.nested_cols);
-                if partition == 0 { //FIXME: these sleeps need to be turned into an await, the problem is that nested_combiner isnt send + sync and i dont know how to fix that
+                if partition == 0 { //FIXME: these sleeps need to be turned into an await, the problem is that nested_combiner isnt send + sync and i dont know how to fix that --> tokio docs  (barrier)
                     while nested_combiner.lock().combine().is_err() {
                         println!("waiting for all partitions to be present in the NestedCombiner msj id: {}", msj_id);
                         time::sleep(time::Duration::from_millis(10)).await;

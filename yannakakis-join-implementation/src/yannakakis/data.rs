@@ -5,10 +5,16 @@
 use super::sel::Sel;
 use std::{any::Any, pin::Pin, sync::Arc};
 
-use datafusion::{arrow::{
-    self, array::{ArrayRef, RecordBatch}, compute::second, datatypes::{DataType, Field, FieldRef, Schema, SchemaRef}
-}, error::DataFusionError};
 use datafusion::error;
+use datafusion::{
+    arrow::{
+        self,
+        array::{ArrayRef, RecordBatch},
+        compute::second,
+        datatypes::{DataType, Field, FieldRef, Schema, SchemaRef},
+    },
+    error::DataFusionError,
+};
 use futures::Stream;
 
 /// A [NestedSchema] is like a traditional flat relational schema except that fields may be nested.
@@ -317,7 +323,6 @@ impl NestedColumn {
             NestedColumn::NonSingular(NonSingularNestedColumn::empty_old(schema))
         }
     }
-    
 }
 
 /// A singular nested column
@@ -375,34 +380,31 @@ impl Default for NonSingularNestedColumn {
 }
 
 impl NonSingularNestedColumn {
-
     // checks if the current NonSingularNestedColumn has further nested columns
-    pub fn is_highest_level(&self) -> bool{
+    pub fn is_highest_level(&self) -> bool {
         self.data.nested_cols.len() == 0
     }
 
-
-    pub fn append_other_recursive(&mut self, other: &NonSingularNestedColumn, offset: usize, secondcall: bool) {
-        if secondcall{
-            self.append_other_nested(other, offset);
-        }
-        else{
-            let self_ns_nested_cols = &mut Arc::make_mut(&mut self.data).nested_cols;
-            let other_ns_nested_cols = &other.data.nested_cols;
-            match &mut self_ns_nested_cols[0] {
-                NestedColumn::NonSingular(ref mut self_ns_nested_col) => {
-                    match other_ns_nested_cols[0] {
-                        NestedColumn::NonSingular(ref other_ns_nested_col) => {
-                            // println!("------\n------\nself before append: \n{:?} \n\n ------ \n other: \n {:?} ------\n", self, other);
-                            self_ns_nested_col.append_other_recursive(other_ns_nested_col, offset, true);
-                            // println!("self after append: {:?}------\n------\n", self);
-                            
-                        }
-                        _ => panic!("Expected a non-singular nested column"),
+    pub fn append_other_recursive(
+        &mut self,
+        other: &NonSingularNestedColumn,
+        offset: usize,
+        secondcall: bool,
+    ) {
+        let self_ns_nested_cols = &mut Arc::make_mut(&mut self.data).nested_cols;
+        let other_ns_nested_cols = &other.data.nested_cols;
+        match &mut self_ns_nested_cols[0] {
+            NestedColumn::NonSingular(ref mut self_ns_nested_col) => {
+                match other_ns_nested_cols[0] {
+                    NestedColumn::NonSingular(ref other_ns_nested_col) => {
+                        // println!("------\n------\nself before append: \n{:?} \n\n ------ \n other: \n {:?} ------\n", self, other);
+                        self_ns_nested_col.append_other_nested(other_ns_nested_col, offset);
+                        // println!("self after append: {:?}------\n------\n", self);
                     }
+                    _ => panic!("Expected a non-singular nested column"),
                 }
-                _ => panic!("Expected a non-singular nested column"),
             }
+            _ => panic!("Expected a non-singular nested column"),
         }
     }
 
@@ -416,7 +418,6 @@ impl NonSingularNestedColumn {
         new_hols.extend(other.hols.iter());
         self.hols = new_hols;
 
-
         // let mut new_next = self.data.next.clone().unwrap();
         // let other_next = other.data.next.clone().unwrap();
         // for x in other_next.iter(){ //if its a 0, we don't want to add the offset!
@@ -426,13 +427,17 @@ impl NonSingularNestedColumn {
         //     else{
         //         new_next.push(*x + offset as u32);
         //     }
-            
+
         // }
         // Arc::make_mut(&mut self.data).set_next(Some(new_next));
     }
 
     // appends a given NonSingularNestedColumn to the current NonSingularNestedColumn, this only fully works if they aren't nested further
-    pub fn append_other_top_level(&mut self, other: &NonSingularNestedColumn, offset: usize) -> usize {
+    pub fn append_other_top_level(
+        &mut self,
+        other: &NonSingularNestedColumn,
+        offset: usize,
+    ) -> usize {
         let other_ns_regular_cols = other.data.regular_cols.clone();
         let mut len = 0;
         for (i, col) in other_ns_regular_cols.iter().enumerate() {
@@ -445,30 +450,27 @@ impl NonSingularNestedColumn {
 
         let mut new_weights = self.weights.clone();
         new_weights.extend(other.weights.iter());
-        
+
         self.weights = new_weights;
 
         let mut new_hols = self.hols.clone();
         new_hols.extend(other.hols.iter().map(|x| x + offset as u32));
         self.hols = new_hols;
-        
-        
 
         let mut new_next = self.data.next.clone().unwrap();
         let other_next = other.data.next.clone().unwrap();
         // new_next.extend(other_next.iter().map(|x| x + offset as u32));
-        for x in other_next.iter(){ //if its a 0, we don't want to add the offset!
-            if *x == 0{
+        for x in other_next.iter() {
+            //if its a 0, we don't want to add the offset!
+            if *x == 0 {
                 new_next.push(0);
-            }
-            else{
+            } else {
                 new_next.push(*x + offset as u32);
             }
-            
         }
 
         len = new_next.len();
-        
+
         Arc::make_mut(&mut self.data).set_next(Some(new_next));
         // println!("self after append: {:?},\n offset {}", self, offset);
         len
@@ -534,8 +536,6 @@ impl NonSingularNestedColumn {
     pub fn iterate_linked_list(&self, hol_ptr: Idx) -> impl Iterator<Item = Idx> + '_ {
         self.data.iterate_linked_list(hol_ptr)
     }
-
-
 }
 
 /// The total weights of tuples in a [NestedRel].
@@ -593,7 +593,6 @@ pub struct NestedRel {
 }
 
 impl NestedRel {
-
     pub fn set_next(&mut self, next: Option<Vec<Idx>>) {
         self.next = next;
     }
@@ -727,7 +726,7 @@ impl NestedRel {
             if ptr == 0 || ptr as usize > next.len() {
                 None
             } else {
-                if(ptr as usize) > next.len() {
+                if (ptr as usize) > next.len() {
                     println!("------Invalid pointer----------: {}", ptr);
                 }
                 Some(next[(ptr - 1) as usize]) // -1 because pointer is the actual position + 1 (0 is reserved for EOL)
@@ -782,7 +781,6 @@ pub struct NestedBatch {
     /// The [NestedSchema] of the nested batch.
     pub inner: NestedRel,
 }
-
 
 impl NestedBatch {
     /// Create a new [NestedBatch] with the given schema.
@@ -926,7 +924,6 @@ pub trait GroupedRel: Send + Sync {
 
     /// Returns the number of rows in the [GroupedRel].
     fn is_empty(&self) -> bool;
-    
 }
 
 pub type GroupedRelRef = Arc<dyn GroupedRel>;
@@ -955,8 +952,8 @@ impl SemiJoinResultBatch {
         }
     }
 
-    pub fn get_array_memory_size(&self) ->usize {
-        match self{
+    pub fn get_array_memory_size(&self) -> usize {
+        match self {
             SemiJoinResultBatch::Flat(batch) => {
                 let mut size = 0;
                 for col in batch.columns() {
@@ -985,11 +982,6 @@ impl SemiJoinResultBatch {
         }
     }
 }
-
-
-
-
-
 
 #[cfg(test)]
 pub mod test {
