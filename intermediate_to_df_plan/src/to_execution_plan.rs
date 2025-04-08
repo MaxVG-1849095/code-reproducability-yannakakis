@@ -106,11 +106,7 @@ impl ToPhysicalNode for intermediate_plan::YannakakisNode {
             partition_key: usize,
         ) -> Result<(DFSchema, Box<dyn MultiSemiJoinWrapper>), DataFusionError> {
             let mut schema: DFSchema = DFSchema::empty();
-            let (guard_schema, guard) = node
-                .guard
-                .to_execution_plan(catalog, alternative_flatten, partition_key)
-                .await?;
-            schema.merge(&guard_schema);
+            
 
             let mut children = Vec::with_capacity(node.children.len());
             
@@ -120,6 +116,21 @@ impl ToPhysicalNode for intermediate_plan::YannakakisNode {
                 schema.merge(&child_schema);
                 children.push(child);
             }
+
+            let rep_key;
+            if children.len() > 0{
+                rep_key = node.equijoin_keys[0][0].0;
+            }
+            else{
+                rep_key = 0;
+            }
+
+            let (guard_schema, guard) = node
+                .guard
+                .to_execution_plan(catalog, alternative_flatten, rep_key)
+                .await?;
+            schema.merge(&guard_schema);
+
             let msj: Box<dyn MultiSemiJoinWrapper>;
             if node.partitioned{
                 msj = Box::new(RepartitionMultiSemiJoin::try_new(guard, children, node.equijoin_keys.clone(), node.id, partition_key).unwrap());
@@ -567,8 +578,8 @@ impl ToPhysicalNode for intermediate_plan::RepartitionExecNode {
 
         // let partitioning = Partitioning::RoundRobinBatch(num_partitions); 
 
-        let column_expr = Arc::new(Column::new("id", self.partition_on));
-        // let column_expr = Arc::new(Column::new("id", partition_key));
+        // let column_expr = Arc::new(Column::new("id", self.partition_on));
+        let column_expr = Arc::new(Column::new("id", partition_key));
         let partitioning = Partitioning::Hash(vec![column_expr], num_partitions);
 
         let repartition = datafusion::physical_plan::repartition::RepartitionExec::try_new(

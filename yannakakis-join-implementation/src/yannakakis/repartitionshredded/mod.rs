@@ -376,7 +376,7 @@ impl RepartitionMultiSemiJoin {
             //if it is a batch, proceed otherwise break
             Some(batch) => batch?,
             None => {
-                println!("!!RETURNING EARLY IN PULL FROM INPUT IN PARTITION {}!!", partition);
+                println!("!!RETURNING EARLY IN PULL FROM INPUT IN PARTITION {}!!", partition); //FIXME: still needs to be fixed to work when there is no data in this partition
                 return Ok(());
             }
         };

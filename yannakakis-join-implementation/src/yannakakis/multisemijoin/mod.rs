@@ -66,7 +66,7 @@ pub struct MultiSemiJoin {
     // / This ensures that we can share the materialized results of the child groupbies across multiple partitions.
     // once_fut: OnceAsync<Vec<GroupedRelRef>>,
     /// For each child, a OnceAsync that returns the materialized result of the child groupby.
-    once_futs: Vec<OnceAsync<GroupedRelRef>>,
+    once_futs: Vec<Vec<OnceAsync<GroupedRelRef>>>,
 
     /// Wether or not the input is partitioned
     partitioned: bool,
@@ -134,16 +134,23 @@ impl MultiSemiJoin {
         let child_schemas: Vec<_> = children.iter().map(|c| c.schema()).collect();
         let result_schema = NestedSchema::semijoin(&guard_schema, &child_schemas);
 
-        let once_futs = (0..guard.output_partitioning().partition_count()).map(|_| Default::default()).collect();
+        // let once_futs = (0..guard.output_partitioning().partition_count()).map(|_| Default::default()).collect();
 
-        // let once_futs = (0..guard.output_partitioning().partition_count())
-        //     .map(|_| {
-        //         children
-        //             .iter()
-        //             .map(|_| Default::default())
-        //             .collect::<Vec<_>>()
-        //     })
-        //     .collect::<Vec<_>>();
+        let once_futs = children
+            .iter()
+            .map(|_| {
+                (0..guard.output_partitioning().partition_count())
+                    .map(|_| Default::default())
+                    .collect::<Vec<_>>()
+            })
+            .collect::<Vec<_>>();
+
+        // println!(
+        //     "once fut dimensions: {}, {} in msj {}",
+        //     once_futs.len(),
+        //     once_futs[0].len(),
+        //     id
+        // );
 
         let guard_partitions = guard.output_partitioning().partition_count();
 
@@ -212,24 +219,28 @@ impl MultiSemiJoinWrapper for MultiSemiJoin {
 
         // println!("materialized_children_futs length: {}", materialized_children_futs.len());
 
-        // ! still incorrect, once futs is made for one per child but currently using it for 1 per partition 
-        let materialized_children_futs: Vec<OnceFut<Arc<dyn GroupedRel>>> = self.children.iter().map(|child|{
-            // println!("calling once for partition {} in id: {}", partition, self.id);
-            self.once_futs[partition].once(|| materialize_child(child.clone(), context.clone(), partition))
-        }).collect();
-
-        // let materialized_children_futs: Vec<Vec<OnceFut<Arc<dyn GroupedRel>>>> = self.children.iter().enumerate().map(|(child_index, child)| {
-        //     (0..self.guard.output_partitioning().partition_count()).map(|partition| {
-        //         // Create a future for each partition for the current child, using the child index
-        //         self.once_futs[child_index][partition].once(|| materialize_child(child.clone(), context.clone(), partition))
-        //     }).collect()
+        // ! still incorrect, once futs is made for one per child but currently using it for 1 per partition
+        // let materialized_children_futs: Vec<OnceFut<Arc<dyn GroupedRel>>> = self.children.iter().map(|child|{
+        //     // println!("calling once for partition {} in id: {}", partition, self.id);
+        //     self.once_futs[partition].once(|| materialize_child(child.clone(), context.clone(), partition))
         // }).collect();
-        
-        
-        
 
-        // println!("materialized children futs length: {} in id: {}", materialized_children_futs.len(), self.id);
+        let materialized_children_futs: Vec<OnceFut<Arc<dyn GroupedRel>>> = self
+            .children
+            .iter()
+            .enumerate()
+            .map(|(child_index, child)| {
+                // Create a future for each partition for the current child, using the child index
+                self.once_futs[child_index][partition]
+                    .once(|| materialize_child(child.clone(), context.clone(), partition))
+            })
+            .collect();
 
+        println!(
+            "materialized children futs length: {} in id: {}",
+            materialized_children_futs.len(),
+            self.id
+        );
 
         // println!("msj with id {} execute on partition {}", self.id, partition);
 
@@ -238,7 +249,6 @@ impl MultiSemiJoinWrapper for MultiSemiJoin {
 
         let guard_stream: Pin<Box<dyn RecordBatchStream + Send>>;
         guard_stream = self.guard.execute(partition, context)?;
-
 
         let schema = self.schema.clone();
         let semijoin_keys = self.semijoin_keys.clone();
@@ -382,7 +392,6 @@ impl MultiSemiJoinStream {
         }
     }
 
-
     // pub fn schema(&self) -> &NestedSchemaRef {
     //     &self.schema
     // }
@@ -441,8 +450,10 @@ fn poll_next_leaf(
     // - the guard input batch is not yet available
     // - the guard stream returned an error
     let guard_batch = match ready!(guard_stream.poll_next_unpin(cx)) {
-        Some(Ok(guard_batch)) => {//println!("guard_batch leaf:{:?}", guard_batch);
-        guard_batch},
+        Some(Ok(guard_batch)) => {
+            //println!("guard_batch leaf:{:?}", guard_batch);
+            guard_batch
+        }
         Some(Err(e)) => return Poll::Ready(Some(Err(e))),
         None => return Poll::Ready(None),
     };
@@ -485,8 +496,10 @@ fn poll_next_single_semijoin(
     // - the guard input batch is not yet available (see the ready! macro)
     // - the guard stream returned an error
     let guard_batch = match ready!(guard_stream.poll_next_unpin(cx)) {
-        Some(Ok(guard_batch)) => {//println!("guard_batch single:{:?}", guard_batch);
-        guard_batch},
+        Some(Ok(guard_batch)) => {
+            //println!("guard_batch single:{:?}", guard_batch);
+            guard_batch
+        }
         Some(Err(e)) => return Poll::Ready(Some(Err(e))),
         None => return Poll::Ready(None),
     };
