@@ -385,29 +385,38 @@ impl NonSingularNestedColumn {
         self.data.nested_cols.len() == 0
     }
 
-    pub fn append_other_recursive(
+    //functio to append a given nested column to the current one, it is to be called on the second nested level since here is no need to append data among other things
+    pub fn append_other_2nd_level(
         &mut self,
         other: &NonSingularNestedColumn,
         offset: usize,
         secondcall: bool,
     ) {
-        let self_ns_nested_cols = &mut Arc::make_mut(&mut self.data).nested_cols;
+        
+        let self_ns_nested_cols = &mut Arc::make_mut(&mut self.data).nested_cols; //FIXME: needs to be remade so it does not need to take [0]
         let other_ns_nested_cols = &other.data.nested_cols;
-        match &mut self_ns_nested_cols[0] {
-            NestedColumn::NonSingular(ref mut self_ns_nested_col) => {
-                match other_ns_nested_cols[0] {
-                    NestedColumn::NonSingular(ref other_ns_nested_col) => {
-                        // println!("------\n------\nself before append: \n{:?} \n\n ------ \n other: \n {:?} ------\n", self, other);
-                        self_ns_nested_col.append_other_nested(other_ns_nested_col, offset);
-                        // println!("self after append: {:?}------\n------\n", self);
-                    }
-                    _ => panic!("Expected a non-singular nested column"),
-                }
-            }
-            _ => panic!("Expected a non-singular nested column"),
+        //check of ze even lang zijn, dan voor ieder paar de append doen
+        if self_ns_nested_cols.len() != other_ns_nested_cols.len() {
+            panic!("The number of nested columns in the two nested columns do not match");
         }
+        for i in 0..self_ns_nested_cols.len(){
+            match &mut self_ns_nested_cols[i] {
+                NestedColumn::NonSingular(ref mut self_ns_nested_col) => {
+                    match other_ns_nested_cols[i] {
+                        NestedColumn::NonSingular(ref other_ns_nested_col) => {
+                            // println!("------\n------\nself before append: \n{:?} \n\n ------ \n other: \n {:?} ------\n", self, other);
+                            self_ns_nested_col.append_other_nested(other_ns_nested_col, offset);
+                            // println!("self after append: {:?}------\n------\n", self);
+                        }
+                        _ => panic!("Expected a non-singular nested column 1"),
+                    }
+                }
+                _ => panic!("Expected a non-singular nested column 2"),
+            }
+        }
+        
     }
-
+    
     fn append_other_nested(&mut self, other: &NonSingularNestedColumn, offset: usize) {
         let mut new_weights = self.weights.clone();
         new_weights.extend(other.weights.iter());
@@ -593,6 +602,14 @@ pub struct NestedRel {
 }
 
 impl NestedRel {
+    pub fn get_total_weights(&self) -> Option<&Vec<Weight>> {
+        self.total_weights.as_ref()
+    }
+
+    pub fn set_total_weights(&mut self, total_weights: Option<Vec<Weight>>) {
+        self.total_weights = total_weights;
+    }
+
     pub fn set_next(&mut self, next: Option<Vec<Idx>>) {
         self.next = next;
     }
@@ -761,6 +778,7 @@ impl NestedRel {
         }
     }
 
+
     /// Returns true if all regular fields are primitive.
     #[inline]
     pub fn regular_fields_all_primitive(&self) -> bool {
@@ -793,6 +811,18 @@ impl NestedBatch {
     ) -> Self {
         assert!(schema.is_nested());
         let inner = NestedRel::new_no_next(schema, regular_cols, nested_cols);
+        Self { inner }
+    }
+
+    pub fn new_with_totalweights(
+        schema: Arc<NestedSchema>,
+        regular_cols: Vec<ArrayRef>,
+        nested_cols: Vec<NestedColumn>,
+        total_weights: Option<Vec<Weight>>,
+    ) -> Self {
+        assert!(schema.is_nested());
+        let mut inner = NestedRel::new_no_next(schema, regular_cols, nested_cols);
+        inner.set_total_weights(total_weights);
         Self { inner }
     }
 

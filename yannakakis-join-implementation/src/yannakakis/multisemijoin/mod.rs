@@ -236,11 +236,11 @@ impl MultiSemiJoinWrapper for MultiSemiJoin {
             })
             .collect();
 
-        println!(
-            "materialized children futs length: {} in id: {}",
-            materialized_children_futs.len(),
-            self.id
-        );
+        // println!(
+        //     "materialized children futs length: {} in id: {}",
+        //     materialized_children_futs.len(),
+        //     self.id
+        // );
 
         // println!("msj with id {} execute on partition {}", self.id, partition);
 

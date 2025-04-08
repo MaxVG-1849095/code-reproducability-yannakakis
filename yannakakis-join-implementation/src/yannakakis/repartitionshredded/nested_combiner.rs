@@ -13,6 +13,10 @@ pub struct NestedCombinerWrapper{
     ready: bool,
 
     final_inner_cols: Vec<NestedColumn>,
+
+    total_weights: Vec<Vec<u32>>,
+
+    final_total_weights: Vec<u32>,
 }
 
 impl NestedCombinerWrapper{
@@ -27,17 +31,29 @@ impl NestedCombinerWrapper{
             nested_combiners,
             ready: false,
             final_inner_cols,
+            total_weights: vec![vec![]; num_input_partitions],
+            final_total_weights: vec![],
         }
     }
 
-    pub fn add_inner_col(&mut self, inner_col: NestedColumn, index: usize) {
+    pub fn add_inner_col(&mut self, inner_col: NestedColumn, index: usize, child_index: usize) {
         if self.ready {
             return;
         }
-        self.nested_combiners[index].add_inner_col(inner_col, index);
+
+        // println!("\n\n\n\n\nADDING INNER COL FOR PARTITION {} AND CHILD {}\n {:?}\n\n\n\n\n", index, child_index, inner_col);
+
+        self.nested_combiners[child_index].add_inner_col(inner_col, index);
     }
 
     pub fn combine(&mut self){
+        //turn 2D weights into 1D
+        let mut total_weights = vec![];
+        for i in 0..self.total_weights.len(){
+            for j in 0..self.total_weights[i].len(){
+                total_weights.push(self.total_weights[i][j]);
+            }
+        }
         for i in 0..self.nested_combiners.len() {
             let mut nested_combiner = &mut self.nested_combiners[i];
             let inner_col = nested_combiner.combine();
@@ -50,7 +66,47 @@ impl NestedCombinerWrapper{
                 }
             }
         }
+        self.final_total_weights = total_weights;
         self.ready = true;
+    }
+
+    pub fn get_final_inner_col_data(&self) -> Vec<Option<Arc<NestedRel>>> {
+        let mut final_inner_col_data = vec![];
+        for i in 0..self.final_inner_cols.len() {
+            match &self.final_inner_cols[i] {
+                NestedColumn::NonSingular(ns) => final_inner_col_data.push(Some(ns.data.clone())),
+                _ => final_inner_col_data.push(None),
+            }
+        }
+        final_inner_col_data
+    }
+
+    pub fn get_final_total_weights(&self) -> Vec<u32> {
+        self.final_total_weights.clone()
+    }
+
+    pub fn get_offsets(&self) -> Vec<Vec<usize>> {
+        let mut offsets = vec![];
+        for i in 0..self.nested_combiners.len() {
+            offsets.push(self.nested_combiners[i].get_offsets().clone());
+        }
+        offsets
+    } 
+
+    pub fn check_singular_non_singular(&self){
+        for i in 0..self.nested_combiners.len() {
+            self.nested_combiners[i].check_singular_non_singular();
+        }
+    }
+
+    pub fn add_total_weights(&mut self, total_weights: Vec<u32>, index: usize){
+        if self.ready {
+            return;
+        }
+        if index >= self.total_weights.len() {
+            panic!("Index out of bounds");
+        }
+        self.total_weights[index] = total_weights;
     }
 }
 
@@ -153,7 +209,7 @@ impl NestedCombiner {
                             if !inner_nested.is_highest_level(){
                                 // println!("append other recursive");
                                 // println!(" \n\n\n -----\nfinal nested before append\n: {:?} \n\n other: \n {:?} \n\n", final_nested, inner_nested);
-                                final_nested.append_other_recursive(inner_nested, curr_offset as usize, false);
+                                final_nested.append_other_2nd_level(inner_nested, curr_offset as usize, false);
                                 // println!("final nested after append: {:?}\n -----\n\n", final_nested);
                             }
                             let next_offset = final_nested.append_other_top_level(inner_nested, curr_offset as usize);
@@ -211,6 +267,20 @@ impl NestedCombiner {
                 "*******\n[PRINT CONTENT]\ninner cols:\n {:?}, \n\nready:\n {:?}, \n\nfinal inner col:\n {:?}, \n\npresent partitions:\n {:?}, \n\noffsets: {:?}\n*******\n",
                 self.inner_cols, self.ready, self.final_inner_col, self.present_partitions, self.offsets
             );
+        }
+    }
+
+    pub fn check_singular_non_singular(&self){
+        let mut singular = 0;
+        let mut non_singular = 0;
+        for i in 0..self.inner_cols.len() {
+            match &self.inner_cols[i] {
+                NestedColumn::Singular(_) => singular += 1,
+                NestedColumn::NonSingular(_) => non_singular += 1,
+            }
+        }
+        if singular > 0 && non_singular > 0 {
+            panic!("Both singular and non-singular columns present");
         }
     }
 

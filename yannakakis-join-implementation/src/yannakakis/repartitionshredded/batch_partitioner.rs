@@ -1,8 +1,17 @@
 use std::sync::Arc;
 
-use datafusion::{arrow::array::{ArrayRef, RecordBatch, UInt32Array}, error::DataFusionError};
+use datafusion::{
+    arrow::array::{ArrayRef, RecordBatch, UInt32Array},
+    error::DataFusionError,
+};
 
-use crate::yannakakis::{data::{Idx, NestedBatch, NestedColumn, NestedRel, NonSingularNestedColumn, SemiJoinResultBatch, SingularNestedColumn}, repartitionshredded::batch_partitioner};
+use crate::yannakakis::{
+    data::{
+        Idx, NestedBatch, NestedColumn, NestedRel, NonSingularNestedColumn, SemiJoinResultBatch,
+        SingularNestedColumn,
+    },
+    repartitionshredded::batch_partitioner,
+};
 use datafusion::arrow::compute::take;
 
 use datafusion::common::hash_utils::{self, create_hashes};
@@ -66,8 +75,9 @@ impl MsjBatchPartitioner {
         batch: SemiJoinResultBatch,
         partition: usize,
         msj_id: usize,
-        nested_combined: &Option<Arc<NestedRel>>,
-        nested_offsets: &Vec<usize>,
+        nested_combined: &Vec<Option<Arc<NestedRel>>>,
+        nested_offsets: &Vec<Vec<usize>>,
+        total_weights: &Vec<u32>,
     ) -> Result<
         impl Iterator<Item = Result<(usize, SemiJoinResultBatch), DataFusionError>>,
         DataFusionError,
@@ -178,14 +188,39 @@ impl MsjBatchPartitioner {
                         let mut batches: Vec<SemiJoinResultBatch> = Vec::new();
                         let mut batchindices: Vec<usize> = Vec::new();
 
-                        let mut singular = true;
+                        let children_len = val.inner.nested_cols.len();
                         let schema = val.schema().clone();
-                        let mut nested_combined_val = &Arc::new(NestedRel::empty_no_next(schema));
-                        if nested_combined.is_some() {
-                            nested_combined_val = nested_combined.as_ref().unwrap();
-                            singular = false;
+                        // let mut nested_combined_val = &Arc::new(NestedRel::empty_no_next(schema));
+                        // if nested_combined[0].is_some() {
+                        //     //FIXME: no [0]
+                        //     println!("unwrapping on nested_combined[0]");
+                        //     nested_combined_val = nested_combined[0].as_ref().unwrap();
+                        // }
+
+                        let mut nested_combined_vals = Vec::new();
+                        // fill vector with empty nested columns
+                        let value = NestedRel::empty_no_next(schema);
+                        let arc_value = Arc::new(value);
+                        for _ in 0..children_len {
+                            nested_combined_vals.push(arc_value.clone());
                         }
-                        
+                        let mut empty = true;
+                        for i in 0..children_len {
+                            if nested_combined[i].is_some() {
+                                if empty {
+                                    nested_combined_vals = Vec::new();
+                                    empty = false;
+                                }
+                                let nested_combined_val = nested_combined[i].as_ref().unwrap();
+                                nested_combined_vals.push(nested_combined_val.clone());
+                            }
+                        }
+
+                        // println!(
+                        //     " ------\nnested_combined_vals: {:?} -----\n",
+                        //     nested_combined_vals
+                        // );
+
                         //rebuild a batch for each partition
                         for i in 0..num_partitions {
                             let arr: Vec<u32> = indices[i].iter().map(|x| *x as u32).collect();
@@ -210,20 +245,38 @@ impl MsjBatchPartitioner {
                                 continue;
                             }
                             let mut inner_cols_final: Vec<NestedColumn> = Vec::new();
-                            
-                                for col in val.inner.nested_cols.iter() {
-                                    // println!("nested_offsets: {:?}", nested_offsets);
-                                    let c = take_rows_from_nestedcol(col, arr.as_ref(), nested_combined_val.clone(), nested_offsets[partition])?;
-                                    // println!("-------\n[MSJREP PRINT]\n-----\nmsj {} nested_combined_clone: {:?}\nnested_offsets: {:?}\n current nested column: {:?}\n-------\n", msj_id,nested_combined.clone(), nested_offsets ,c);
-                                    inner_cols_final.push(c);
-                                }
+
+                            for (i, col) in val.inner.nested_cols.iter().enumerate() {
+                                let c = take_rows_from_nestedcol(
+                                    col,
+                                    arr.as_ref(),
+                                    nested_combined_vals[i].clone(),
+                                    nested_offsets[i][partition],
+                                )?;
+                                inner_cols_final.push(c);
+                            }
+
+                            println!(
+                                "inner_cols_final length: {:?}, nested_combined length {}",
+                                inner_cols_final.len(),
+                                nested_combined.len()
+                            );
                             let new_batch = SemiJoinResultBatch::Nested(NestedBatch::new(
                                 schema,
                                 regular_cols,
                                 inner_cols_final,
                             ));
-                            // println!("-----\n[MSJREP PRINT]\n-----\nmsj {} original batch:\n {:?} \n\n\n nested_data: \n {:?}\n nested_offsets: \n {:?}\n+++++\n new batch for partition {}:\n {:?}\n-----\n-----",msj_id, val, nested_combined,nested_offsets,i, new_batch);
-                            
+
+                            // let new_batch =
+                            //     SemiJoinResultBatch::Nested(NestedBatch::new_with_totalweights(
+                            //         schema,
+                            //         regular_cols,
+                            //         inner_cols_final,
+                            //         Some(total_weights.clone()),
+                            //     ));
+
+                            // println!("-----\n[MSJREP PRINT]\n-----\nmsj {} original batch:\n {:?} \n\n\n nested_data: \n {:?}\n nested_offsets: \n {:?} \n total_weights: \n {:?}\n+++++\n new batch for partition {}:\n {:?}\n-----\n-----",msj_id, val, nested_combined,nested_offsets, total_weights,i, new_batch);
+
                             if new_batch.num_rows() > 0 {
                                 batches.push(new_batch);
                                 batchindices.push(i);
@@ -261,7 +314,6 @@ impl MsjBatchPartitioner {
     }
 }
 
-
 /// Create new [NestedColumn] by taking the rows in `nestedcol` at the positions in `row_ids`.
 /// # Panics
 /// Panics if an index in `row_ids` is out of bounds for `nestedcol`.
@@ -288,15 +340,13 @@ pub fn take_rows_from_nestedcol(
             for i in 0..new_hols.len() {
                 new_hols[i] += nested_offset as u32;
             }
-            // let new_data = ns_nestedcol.clone_data(); // ! changed this to make a deep copy of the data
-            // println!("data in take_rows_from_nestedcol: {:?}", ns_nestedcol.data);
             let new_data = nested_data.clone();
 
             let nestedcol = NonSingularNestedColumn {
                 weights: new_weights,
                 hols: new_hols,
                 // data: ns_nestedcol.data.clone(), // clone arc = cheap,
-                data: new_data, // clone data = expensive
+                data: new_data,
             };
             Ok(NestedColumn::NonSingular(nestedcol))
         }
@@ -310,7 +360,6 @@ pub fn take_rows_from_nestedcol(
 fn take_unnest(data: &[u32], indices: &[Idx]) -> Result<Vec<u32>, DataFusionError> {
     let mut result = Vec::with_capacity(indices.len());
     for idx in indices {
-        
         result.push(unsafe { *data.get_unchecked(*idx as usize) });
     }
     Ok(result)
