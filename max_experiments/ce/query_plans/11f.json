@@ -1,7 +1,7 @@
 {
     "execution_time": 0.395637,
     "sql": "select count(*) from dblp23, dblp14, dblp17, dblp9, dblp7, dblp11 where dblp23.s = dblp14.s and dblp14.s = dblp17.s and dblp17.d = dblp9.s and dblp9.d = dblp7.s and dblp7.s = dblp11.s;",
-    "description": "smaller version of 11b without repartition, equal to 11e",
+    "description": "smaller version of 11b without repartition, equal to 11e, 1 multisemijoin with multiple children with a msj on top WITHOUT REPARTITION",
     "root": {
         "name": "AGGREGATE",
         "execution_time": 9.8e-05,
