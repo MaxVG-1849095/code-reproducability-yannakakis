@@ -367,7 +367,6 @@ impl RepartitionMultiSemiJoin {
 
         //get first batch from input stream, this will be used to create nested columns!
         let batch = input_stream.next().await; //as long as there is a next in the input stream
-        let mut empty_partition = false;
         let batch = match batch {
             //if it is a batch, proceed otherwise break
             Some(batch) => batch?,
@@ -415,7 +414,7 @@ impl RepartitionMultiSemiJoin {
 
         let nested_data = nested_combiner.lock().get_final_inner_col_data().clone(); //FIXME: dont require this lock if the batches are flat (no need)
         let total_weights = nested_combiner.lock().get_final_total_weights().clone();
-        println!("total weights: {:?}", total_weights);
+        // println!("total weights: {:?}", total_weights);
         println!("nested data length: {} in partition {} for id {}", nested_data.len(), partition, msj_id);
         // println!("nested data: {:?}", nested_data);
 

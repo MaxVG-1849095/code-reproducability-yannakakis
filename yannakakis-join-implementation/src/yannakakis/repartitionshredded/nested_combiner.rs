@@ -46,6 +46,17 @@ impl NestedCombinerWrapper{
         self.nested_combiners[child_index].add_inner_col(inner_col, index);
     }
 
+    pub fn add_empty_inner_col(&mut self, index: usize, child_index: usize) {
+        if self.ready {
+            return;
+        }
+        // println!("\n\n\n\n\nADDING EMPTY INNER COL FOR PARTITION {} AND CHILD {}\n {:?}\n\n\n\n\n", index, child_index, inner_col);
+        let empty_schema = NestedSchema::empty();
+        let empty_schema = Arc::new(empty_schema);
+        let empty_nestedcol = NestedColumn::make_empty(empty_schema);
+        self.nested_combiners[child_index].add_inner_col(empty_nestedcol, index);
+    }
+
     pub fn combine(&mut self){
         //turn 2D weights into 1D
         let mut total_weights = vec![];

@@ -206,7 +206,7 @@ impl MsjBatchPartitioner {
                         }
                         let mut empty = true;
                         for i in 0..children_len {
-                            if nested_combined[i].is_some() {
+                            if nested_combined[i].is_some() { //append the value
                                 if empty {
                                     nested_combined_vals = Vec::new();
                                     empty = false;
@@ -214,7 +214,18 @@ impl MsjBatchPartitioner {
                                 let nested_combined_val = nested_combined[i].as_ref().unwrap();
                                 nested_combined_vals.push(nested_combined_val.clone());
                             }
+                            else{ //append empty value
+                                // println!("nested_combined[{}] is None", i);
+                                if empty{
+                                    nested_combined_vals = Vec::new();
+                                    empty = false;
+                                }
+                                nested_combined_vals.push(Arc::new(NestedRel::empty_no_next(val.schema().clone())));
+                            }
                         }
+
+                        println!("nested_combined_vals length: {:?} children len: {:?}", nested_combined_vals.len(), children_len);
+
 
                         // println!(
                         //     " ------\nnested_combined_vals: {:?} -----\n",
@@ -245,7 +256,6 @@ impl MsjBatchPartitioner {
                                 continue;
                             }
                             let mut inner_cols_final: Vec<NestedColumn> = Vec::new();
-
                             for (i, col) in val.inner.nested_cols.iter().enumerate() {
                                 let c = take_rows_from_nestedcol(
                                     col,

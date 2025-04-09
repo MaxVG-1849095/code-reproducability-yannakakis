@@ -4,7 +4,7 @@ root_dir="../../"
 parquet_data="$root_dir/benchmarks/ce/parquet-zstd"
 out_folder="./output" # non-existing output folder
 timings="timings.csv"
-plan="./query_plans/11a_full.json"
+plan="./query_plans/11b_full.json"
 repetitions=1
 
 # make timings file
