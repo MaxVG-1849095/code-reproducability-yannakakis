@@ -153,8 +153,8 @@ impl ToPhysicalNode for intermediate_plan::YannakakisNode {
                 Arc::new(Flatten::new_alternative(root.into())),
             ))
         } else {
-            Ok((Arc::new(dfschema), Arc::new(Flatten::new(root.into()))))
-            // Ok((Arc::new(dfschema), Arc::new(Unnest::new(root.into()))))
+            // Ok((Arc::new(dfschema), Arc::new(Flatten::new(root.into()))))
+            Ok((Arc::new(dfschema), Arc::new(Unnest::new(root.into()))))
         }
     }
 }
