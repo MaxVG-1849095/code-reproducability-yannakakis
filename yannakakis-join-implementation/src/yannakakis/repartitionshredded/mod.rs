@@ -7,6 +7,7 @@ use batch_partitioner::MsjBatchPartitioner;
 use datafusion::arrow;
 use datafusion::arrow::array::{ArrayRef, RecordBatch, UInt32Array};
 
+use datafusion::datasource::empty;
 use tokio::sync::Barrier;
 
 use datafusion::execution::memory_pool::MemoryReservation;
@@ -366,15 +367,16 @@ impl RepartitionMultiSemiJoin {
 
         //get first batch from input stream, this will be used to create nested columns!
         let batch = input_stream.next().await; //as long as there is a next in the input stream
+        let mut empty_partition = false;
         let batch = match batch {
             //if it is a batch, proceed otherwise break
             Some(batch) => batch?,
-            None => {
+            None => { //the partition is completely empty
                 println!(
                     "!!RETURNING EARLY IN PULL FROM INPUT IN PARTITION {}!!",
                     partition
                 ); //FIXME: still needs to be fixed to work when there is no data in this partition
-                return Ok(());
+                return(Ok(()));
             }
         };
 

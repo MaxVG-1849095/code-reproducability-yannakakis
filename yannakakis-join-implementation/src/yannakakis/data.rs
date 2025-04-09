@@ -333,6 +333,17 @@ pub struct SingularNestedColumn {
 }
 
 impl SingularNestedColumn {
+
+    fn append_other_nested_singular(
+        &mut self,
+        other: &SingularNestedColumn,
+        offset: usize,
+    ) {
+        let mut new_weights = self.weights.clone();
+        new_weights.extend(other.weights.iter());
+        self.weights = new_weights;
+    }
+
     /// Creates a new Empty SingularNestedColumn
     pub fn empty() -> Self {
         Self {
@@ -385,16 +396,15 @@ impl NonSingularNestedColumn {
         self.data.nested_cols.len() == 0
     }
 
-    //functio to append a given nested column to the current one, it is to be called on the second nested level since here is no need to append data among other things
+    //function to append a given nested column to the current one, it is to be called on the second nested level since here is no need to append data among other things
     // ! does not work if either is nonsingular!
     pub fn append_other_2nd_level(
         &mut self,
         other: &NonSingularNestedColumn,
         offset: usize,
-        secondcall: bool,
     ) {
         
-        let self_ns_nested_cols = &mut Arc::make_mut(&mut self.data).nested_cols; //FIXME: needs to be remade so it does not need to take [0]
+        let self_ns_nested_cols = &mut Arc::make_mut(&mut self.data).nested_cols; 
         let other_ns_nested_cols = &other.data.nested_cols;
         //check of ze even lang zijn, dan voor ieder paar de append doen
         if self_ns_nested_cols.len() != other_ns_nested_cols.len() {
@@ -406,19 +416,30 @@ impl NonSingularNestedColumn {
                     match other_ns_nested_cols[i] {
                         NestedColumn::NonSingular(ref other_ns_nested_col) => {
                             // println!("------\n------\nself before append: \n{:?} \n\n ------ \n other: \n {:?} ------\n", self, other);
-                            self_ns_nested_col.append_other_nested(other_ns_nested_col, offset);
+                            self_ns_nested_col.append_other_nested_non_singular(other_ns_nested_col, offset);
                             // println!("self after append: {:?}------\n------\n", self);
                         }
                         _ => panic!("Expected a non-singular nested column 1"),
                     }
                 }
-                _ => panic!("Expected a non-singular nested column 2"),
+                NestedColumn::Singular(ref mut self_s_nested_col) => {
+                    match other_ns_nested_cols[i] {
+                        NestedColumn::Singular(ref other_s_nested_col) => {
+                            // println!("------\n------\nself before append: \n{:?} \n\n ------ \n other: \n {:?} ------\n", self, other);
+                            self_s_nested_col.append_other_nested_singular(other_s_nested_col, offset);
+                            // println!("self after append: {:?}------\n------\n", self);
+                        }
+                        _ => panic!("Expected a singular nested column 1"),
+                    }
+                }
             }
         }
         
     }
     
-    fn append_other_nested(&mut self, other: &NonSingularNestedColumn, offset: usize) {
+
+
+    fn append_other_nested_non_singular(&mut self, other: &NonSingularNestedColumn, offset: usize) {
         let mut new_weights = self.weights.clone();
         new_weights.extend(other.weights.iter());
         self.weights = new_weights;
@@ -427,19 +448,6 @@ impl NonSingularNestedColumn {
         // new_hols.extend(other.hols.iter().map(|x| x + offset as u32));
         new_hols.extend(other.hols.iter());
         self.hols = new_hols;
-
-        // let mut new_next = self.data.next.clone().unwrap();
-        // let other_next = other.data.next.clone().unwrap();
-        // for x in other_next.iter(){ //if its a 0, we don't want to add the offset!
-        //     if *x == 0{
-        //         new_next.push(0);
-        //     }
-        //     else{
-        //         new_next.push(*x + offset as u32);
-        //     }
-
-        // }
-        // Arc::make_mut(&mut self.data).set_next(Some(new_next));
     }
 
     // appends a given NonSingularNestedColumn to the current NonSingularNestedColumn, this only fully works if they aren't nested further

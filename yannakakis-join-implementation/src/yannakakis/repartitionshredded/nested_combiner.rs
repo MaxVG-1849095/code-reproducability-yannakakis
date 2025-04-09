@@ -209,7 +209,7 @@ impl NestedCombiner {
                             if !inner_nested.is_highest_level(){
                                 // println!("append other recursive");
                                 // println!(" \n\n\n -----\nfinal nested before append\n: {:?} \n\n other: \n {:?} \n\n", final_nested, inner_nested);
-                                final_nested.append_other_2nd_level(inner_nested, curr_offset as usize, false);
+                                final_nested.append_other_2nd_level(inner_nested, curr_offset as usize);
                                 // println!("final nested after append: {:?}\n -----\n\n", final_nested);
                             }
                             let next_offset = final_nested.append_other_top_level(inner_nested, curr_offset as usize);
