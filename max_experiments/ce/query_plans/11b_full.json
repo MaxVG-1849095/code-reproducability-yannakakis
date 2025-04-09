@@ -3,7 +3,7 @@
     "sql": "select count(*) from dblp23, dblp14, dblp17, dblp9, dblp7, dblp11 where dblp23.s = dblp14.s and dblp14.s = dblp17.s and dblp17.d = dblp9.s and dblp9.d = dblp7.s and dblp7.s = dblp11.s;",
     "description": "join that currently (2/4) does not work due to one msj having 2 children",
     "root": {
-        "name": "AGGREGATE",
+        "name": "PROJECTION",
         "execution_time": 9.8e-05,
         "actual_rows": 1,
         "estimated_cardinality": null,
@@ -40,6 +40,10 @@
                                     {
                                         "table_name": "dblp23",
                                         "field_name": "s"
+                                    },
+                                    {
+                                        "table_name": "dblp23",
+                                        "field_name": "d"
                                     }
                                 ]
                             }
@@ -83,6 +87,10 @@
                                                 {
                                                     "table_name": "dblp14",
                                                     "field_name": "s"
+                                                },
+                                                {
+                                                    "table_name": "dblp14",
+                                                    "field_name": "d"
                                                 }
                                             ]
                                         }
@@ -216,6 +224,10 @@
                                                                                     {
                                                                                         "table_name": "dblp11",
                                                                                         "field_name": "s"
+                                                                                    },
+                                                                                    {
+                                                                                        "table_name": "dblp11",
+                                                                                        "field_name": "d"
                                                                                     }
                                                                                 ]
                                                                             }
@@ -254,6 +266,10 @@
                                                                                     {
                                                                                         "table_name": "dblp7",
                                                                                         "field_name": "s"
+                                                                                    },
+                                                                                    {
+                                                                                        "table_name": "dblp7",
+                                                                                        "field_name": "d"
                                                                                     }
                                                                                 ]
                                                                             }
@@ -275,9 +291,57 @@
                 }
             }
         ],
-        "group_by": null,
-        "aggregate": [
-            "count_star()"
+        "on": [
+            
+                {
+                    "table_name": "dblp11",
+                    "field_name": "s"
+                },
+                {
+                    "table_name": "dblp11",
+                    "field_name": "d"
+                },
+                {
+                    "table_name": "dblp7",
+                    "field_name": "s"
+                },
+                {
+                    "table_name": "dblp7",
+                    "field_name": "d"
+                },
+                {
+                    "table_name": "dblp9",
+                    "field_name": "s"
+                },
+                {
+                    "table_name": "dblp9",
+                    "field_name": "d"
+                },
+                {
+                    "table_name": "dblp17",
+                    "field_name": "s"
+                },
+                {
+                    "table_name": "dblp17",
+                    "field_name": "d"
+                },
+                {
+                    "table_name": "dblp14",
+                    "field_name": "s"
+                },
+                {
+                    "table_name": "dblp14",
+                    "field_name": "d"
+                },
+                {
+                    "table_name": "dblp23",
+                    "field_name": "s"
+                },
+                {
+                    "table_name": "dblp23",
+                    "field_name": "d"
+                }
+            
         ]
     },
     "aliases": {

@@ -1,65 +1,65 @@
 {
     "name": "Query",
-    "result": 0.38025,
-    "timing": 0.38025,
+    "result": 0.511455,
+    "timing": 0.511455,
     "cardinality": 0,
     "extra-info": "select * from dblp5, dblp6,dblp8, dblp9 where dblp5.s = dblp6.s and dblp6.s = dblp8.s and dblp8.s = dblp9.s ;PRAGMA profile_output = '/home/maxvg/Documents/masterINF/Masterproef/code-reproducability-yannakakis/query_plans/ce_duckdb/2_original_with_aliases/4b/run_1.json';",
     "timings": [],
     "children": [
         {
             "name": "RESULT_COLLECTOR",
-            "timing": 0.017491,
+            "timing": 0.017477,
             "cardinality": 0,
             "extra_info": "",
             "children": [
                 {
                     "name": "PROJECTION",
-                    "timing": 0.000369,
+                    "timing": 0.000367,
                     "cardinality": 1115090,
                     "extra_info": "dblp5.s\ndblp5.d\ndblp6.s\ndblp6.d\ndblp8.s\ndblp8.d\ndblp9.s\ndblp9.d\n",
                     "children": [
                         {
                             "name": "HASH_JOIN",
-                            "timing": 0.077803,
+                            "timing": 0.087451,
                             "cardinality": 1115090,
                             "extra_info": "INNER\ndblp5.s = dblp6.s\n\n[INFOSEPARATOR]\nEC: 1182022\n",
                             "children": [
                                 {
                                     "name": "SEQ_SCAN ",
-                                    "timing": 0.005444,
+                                    "timing": 0.005591,
                                     "cardinality": 2134108,
                                     "extra_info": "dblp5\n[INFOSEPARATOR]\ns\nd\n[INFOSEPARATOR]\nFilters: s>=1206438 AND s<=3340551 AND s IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 2141839",
                                     "children": []
                                 },
                                 {
                                     "name": "HASH_JOIN",
-                                    "timing": 0.07615,
+                                    "timing": 0.120793,
                                     "cardinality": 1115090,
                                     "extra_info": "INNER\ndblp8.s = dblp9.s\n\n[INFOSEPARATOR]\nEC: 1156680\n",
                                     "children": [
                                         {
                                             "name": "SEQ_SCAN ",
-                                            "timing": 0.021974,
+                                            "timing": 0.01932,
                                             "cardinality": 2134108,
                                             "extra_info": "dblp8\n[INFOSEPARATOR]\ns\nd\n[INFOSEPARATOR]\nFilters: s>=1206438 AND s<=3340551 AND s IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 2134666",
                                             "children": []
                                         },
                                         {
                                             "name": "HASH_JOIN",
-                                            "timing": 0.06571,
+                                            "timing": 0.11955,
                                             "cardinality": 1115090,
                                             "extra_info": "INNER\ndblp6.s = dblp9.s\n\n[INFOSEPARATOR]\nEC: 1135684\n",
                                             "children": [
                                                 {
                                                     "name": "SEQ_SCAN ",
-                                                    "timing": 0.004112,
+                                                    "timing": 0.005712,
                                                     "cardinality": 2134077,
                                                     "extra_info": "dblp6\n[INFOSEPARATOR]\ns\nd\n[INFOSEPARATOR]\nFilters: s>=1206438 AND s<=3340551 AND s IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 2134627",
                                                     "children": []
                                                 },
                                                 {
                                                     "name": "SEQ_SCAN ",
-                                                    "timing": 0.001913,
+                                                    "timing": 0.001963,
                                                     "cardinality": 1115090,
                                                     "extra_info": "dblp9\n[INFOSEPARATOR]\ns\nd\n[INFOSEPARATOR]\nEC: 1115090",
                                                     "children": []
