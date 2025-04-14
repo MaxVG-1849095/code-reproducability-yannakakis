@@ -1,0 +1,235 @@
+{
+    "execution_time": 0.168534,
+    "description": "query with more attributes to project, this works as of 14/4",
+    "sql": "SELECT * FROM mi_idx, t WHERE t.id = mi_idx.movie_id AND t.title = 'The Shawshank Redemption';",
+"root": {
+        "name": "PROJECTION",
+        "execution_time": 3e-06,
+        "actual_rows": 4,
+        "estimated_cardinality": null,
+        "children": [
+            {
+                "name": "YANNAKAKIS",
+                "root": {
+                    "name": "MULTISEMIJOIN",
+                    "partitioned": false,
+                    "id": 0,
+                    "equijoin_keys": [
+                        [
+                            [
+                                0,
+                                0
+                            ]
+                        ]
+                    ],
+                    "guard": {
+                        "name": "REPARTITION",
+                        "num_partitions": 4,
+                        "partition_on": 0,
+                        "partitioning": "unknown",
+                        "children": [
+                            {
+                                "name": "SEQUENTIALSCAN",
+                                "execution_time": 0.037006,
+                                "actual_rows": 1380035,
+                                "estimated_cardinality": 1380035,
+                                "children": [],
+                                "relation": "movie_info_idx",
+                                "opt_filter": null,
+                                "projection": [
+                                    {
+                                        "table_name": "mi_idx",
+                                        "field_name": "movie_id"
+                                    },
+                                    {
+                                        "table_name": "mi_idx",
+                                        "field_name": "id"
+                                    },
+                                    {
+                                        "table_name": "mi_idx",
+                                        "field_name": "info_type_id"
+                                    },
+                                    {
+                                        "table_name": "mi_idx",
+                                        "field_name": "info"
+                                    },
+                                    {
+                                        "table_name": "mi_idx",
+                                        "field_name": "note"
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    "children": [
+                        {
+                            "name": "GROUPBY",
+                            "partitioned": false,
+                            "id": 0,
+                            "group_on": [
+                                0
+                            ],
+                            "child": {
+                                "name": "MULTISEMIJOIN",
+                                "partitioned": false,
+                                "id": 0,
+                                "equijoin_keys": [],
+                                "guard": {
+                                    "name": "REPARTITION",
+                                    "num_partitions": 4,
+                                    "partition_on": 0,
+                                    "partitioning": "unknown",
+                                    "children": [
+                                        {
+                                            "name": "FILTER",
+                                            "execution_time": 0.000344,
+                                            "actual_rows": 1,
+                                            "estimated_cardinality": 3,
+                                            "children": [
+                                                {
+                                                    "name": "SEQUENTIALSCAN",
+                                                    "execution_time": 0.1225,
+                                                    "actual_rows": 1,
+                                                    "estimated_cardinality": 3,
+                                                    "children": [],
+                                                    "relation": "title",
+                                                    "opt_filter": "title='The Shawshank Redemption' AND title IS NOT NULL",
+                                                    "projection": [
+                                                        {
+                                                            "table_name": "t",
+                                                            "field_name": "id"
+                                                        },
+                                                        {
+                                                            "table_name": "t",
+                                                            "field_name": "title"
+                                                        },
+                                                        {
+                                                            "table_name": "t",
+                                                            "field_name": "imdb_index"
+                                                        },
+                                                        {
+                                                            "table_name": "t",
+                                                            "field_name": "kind_id"
+                                                        },
+                                                        {
+                                                            "table_name": "t",
+                                                            "field_name": "production_year"
+                                                        },
+                                                        {
+                                                            "table_name": "t",
+                                                            "field_name": "imdb_id"
+                                                        },
+                                                        {
+                                                            "table_name": "t",
+                                                            "field_name": "phonetic_code"
+                                                        },
+                                                        {
+                                                            "table_name": "t",
+                                                            "field_name": "episode_of_id"
+                                                        },
+                                                        {
+                                                            "table_name": "t",
+                                                            "field_name": "season_nr"
+                                                        },
+                                                        {
+                                                            "table_name": "t",
+                                                            "field_name": "episode_nr"
+                                                        },
+                                                        {
+                                                            "table_name": "t",
+                                                            "field_name": "series_years"
+                                                        },
+                                                        {
+                                                            "table_name": "t",
+                                                            "field_name": "md5sum"
+                                                        }
+                                                    ]
+                                                }
+                                            ],
+                                            "condition": "(t.id BETWEEN 2 AND 2525793)"
+                                        }
+                                    ]
+                                },
+                                "children": []
+                            }
+                        }
+                    ]
+                }
+            }
+        ],
+        "on": [
+            {
+                "table_name": "mi_idx",
+                "field_name": "id"
+            },
+            {
+                "table_name": "mi_idx",
+                "field_name": "movie_id"
+            },
+            {
+                "table_name": "mi_idx",
+                "field_name": "info_type_id"
+            },
+            {
+                "table_name": "mi_idx",
+                "field_name": "info"
+            },
+            {
+                "table_name": "mi_idx",
+                "field_name": "note"
+            },
+            {
+                "table_name": "t",
+                "field_name": "id"
+            },
+            {
+                "table_name": "t",
+                "field_name": "title"
+            },
+            {
+                "table_name": "t",
+                "field_name": "imdb_index"
+            },
+            {
+                "table_name": "t",
+                "field_name": "kind_id"
+            },
+            {
+                "table_name": "t",
+                "field_name": "production_year"
+            },
+            {
+                "table_name": "t",
+                "field_name": "imdb_id"
+            },
+            {
+                "table_name": "t",
+                "field_name": "phonetic_code"
+            },
+            {
+                "table_name": "t",
+                "field_name": "episode_of_id"
+            },
+            {
+                "table_name": "t",
+                "field_name": "season_nr"
+            },
+            {
+                "table_name": "t",
+                "field_name": "episode_nr"
+            },
+            {
+                "table_name": "t",
+                "field_name": "series_years"
+            },
+            {
+                "table_name": "t",
+                "field_name": "md5sum"
+            }
+        ]
+    },
+    "aliases": {
+        "mi_idx": "movie_info_idx",
+        "t": "title"
+    }
+}

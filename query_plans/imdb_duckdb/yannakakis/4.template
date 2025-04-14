@@ -1,0 +1,69 @@
+{
+    "semijoin_plan": {
+        "guard": "mc",
+        "children": [
+            {
+                "guard": "cn",
+                "children": [
+                    {
+                        "guard": "ct",
+                        "children": [],
+                        "partitioned": false,
+                        "id": 0
+                    }
+                ],
+                "partitioned": false,
+                "id": 0
+            }
+        ],
+        "partitioned": false,
+        "id": 0
+    },
+    "replacements": {
+        "mc": {
+            "name": "SEQUENTIALSCAN",
+            "execution_time": 0.000947,
+            "actual_rows": 4,
+            "estimated_cardinality": 2609129,
+            "children": [],
+            "relation": "movie_companies",
+            "opt_filter": "id<=4 AND id IS NOT NULL",
+            "projection": [
+                {
+                    "table_name": "mc",
+                    "field_name": "id"
+                }
+            ]
+        },
+        "cn": {
+            "name": "SEQUENTIALSCAN",
+            "execution_time": 0.001133,
+            "actual_rows": 4,
+            "estimated_cardinality": 234997,
+            "children": [],
+            "relation": "company_name",
+            "opt_filter": "id<=4 AND id IS NOT NULL",
+            "projection": [
+                {
+                    "table_name": "cn",
+                    "field_name": "id"
+                }
+            ]
+        },
+        "ct": {
+            "name": "SEQUENTIALSCAN",
+            "execution_time": 0.008559,
+            "actual_rows": 4,
+            "estimated_cardinality": 4,
+            "children": [],
+            "relation": "company_type",
+            "opt_filter": null,
+            "projection": [
+                {
+                    "table_name": "ct",
+                    "field_name": "id"
+                }
+            ]
+        }
+    }
+}

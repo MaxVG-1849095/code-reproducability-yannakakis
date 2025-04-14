@@ -1,7 +1,7 @@
 {
     "execution_time": 0.395637,
     "sql": "select count(*) from dblp23, dblp14, dblp17, dblp9, dblp7, dblp11 where dblp23.s = dblp14.s and dblp14.s = dblp17.s and dblp17.d = dblp9.s and dblp9.d = dblp7.s and dblp7.s = dblp11.s;",
-    "description": "join that currently (2/4) does not work due to one msj having 2 children",
+    "description": "join with msj with 2 children at the bottom",
     "root": {
         "name": "PROJECTION",
         "execution_time": 9.8e-05,

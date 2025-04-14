@@ -1,0 +1,73 @@
+{
+    "execution_time": 0.975105,
+    "root": {
+        "name": "AGGREGATE",
+        "execution_time": 0.017056,
+        "actual_rows": 1,
+        "estimated_cardinality": null,
+        "children": [
+            {
+                "name": "HASHJOIN",
+                "execution_time": 0.610965,
+                "actual_rows": 14835720,
+                "estimated_cardinality": null,
+                "children": [
+                    {
+                        "name": "SEQUENTIALSCAN",
+                        "execution_time": 0.026592,
+                        "actual_rows": 14835720,
+                        "estimated_cardinality": 14835720,
+                        "children": [],
+                        "relation": "movie_info",
+                        "opt_filter": null,
+                        "projection": [
+                            {
+                                "table_name": "mi",
+                                "field_name": "movie_id"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "SEQUENTIALSCAN",
+                        "execution_time": 0.120715,
+                        "actual_rows": 2526430,
+                        "estimated_cardinality": 2528312,
+                        "children": [],
+                        "relation": "title",
+                        "opt_filter": "id<=2526430 AND id IS NOT NULL",
+                        "projection": [
+                            {
+                                "table_name": "t",
+                                "field_name": "id"
+                            },
+                            {
+                                "table_name": "t",
+                                "field_name": "title"
+                            }
+                        ]
+                    }
+                ],
+                "condition": [
+                    [
+                        {
+                            "table_name": "mi",
+                            "field_name": "movie_id"
+                        },
+                        {
+                            "table_name": "t",
+                            "field_name": "id"
+                        }
+                    ]
+                ]
+            }
+        ],
+        "group_by": null,
+        "aggregate": [
+            "count_star()"
+        ]
+    },
+    "aliases": {
+        "mi": "movie_info",
+        "t": "title"
+    }
+}

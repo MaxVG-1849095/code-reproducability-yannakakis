@@ -370,25 +370,35 @@ impl RepartitionMultiSemiJoin {
         let batch = match batch {
             //if it is a batch, proceed otherwise break
             Some(batch) => batch?,
-            None => { //the partition is completely empty
+            None => {
+                //the partition is completely empty
                 println!(
                     "!!RETURNING EARLY IN PULL FROM INPUT IN PARTITION {}!!",
                     partition
-                ); //FIXME: still needs to be fixed to work when there is no data in this partition
-                return(Ok(()));
+                );
+                nested_combiner.lock().add_empty_inner_col(partition);
+                // unsafe { nested_combiner.force_unlock() };
+                barrier.wait().await; //wait for all partitions to be present and to have added their inner columns
+                barrier.wait().await; // second barrier to wait for the combine to finish
+                return (Ok(()));
             }
         };
 
         let children_len = input.children().len();
         let batch_clone = batch.clone();
+        let mut flat = false;
         // println!("\n in msj {} partition {}\nbatch: {:?}\n", msj_id,partition,batch);
         match batch_clone {
             SemiJoinResultBatch::Flat(_) => {
                 // println!("flat batch");
+                barrier.wait().await; //wait for all partitions to be present and to have added their inner columns
+                barrier.wait().await; // second barrier to wait for the combine to finish
+                flat = true;
             }
             SemiJoinResultBatch::Nested(nested_batch) => {
                 // println!("\n------\nmsjrep {}\nadding inner col to nested combiner from partition {} \n inner_col: {:?}\n------", msj_id,partition, nested_batch.inner.nested_cols[0]);
-                for i in 0..children_len { //for each child, add the inner column to the combiner
+                for i in 0..children_len {
+                    //for each child, add the inner column to the combiner
                     nested_combiner.lock().add_inner_col(
                         nested_batch.inner.nested_cols[i].clone(),
                         partition,
@@ -398,12 +408,12 @@ impl RepartitionMultiSemiJoin {
                         nested_combiner.lock().add_total_weights(
                             nested_batch.inner.get_total_weights().unwrap().to_vec(),
                             partition,
-                            );
+                        );
                     }
                 }
                 barrier.wait().await; //wait for all partitions to be present and to have added their inner columns
                                       // println!("-----\n partition {}\n nested batch regular cols: {:?}\n nested batch nested cols: {:?}\n-----", partition,nested_batch.inner.regular_cols, nested_batch.inner.nested_cols);
-                if partition == 0 {
+                if nested_combiner.lock().combined() { //first partition to arrive here has to combine
                     nested_combiner.lock().check_singular_non_singular();
                     // we know we can call combine since a barrier made sure that all partitions were present
                     let _ = nested_combiner.lock().combine();
@@ -412,15 +422,15 @@ impl RepartitionMultiSemiJoin {
             }
         }
 
-        let nested_data = nested_combiner.lock().get_final_inner_col_data().clone(); //FIXME: dont require this lock if the batches are flat (no need)
+        let nested_data = nested_combiner.lock().get_final_inner_col_data().clone();
         let total_weights = nested_combiner.lock().get_final_total_weights().clone();
-        // println!("total weights: {:?}", total_weights);
-        println!("nested data length: {} in partition {} for id {}", nested_data.len(), partition, msj_id);
+        println!(
+            "nested data length: {} in partition {} for id {}",
+            nested_data.len(),
+            partition,
+            msj_id
+        );
         // println!("nested data: {:?}", nested_data);
-
-        if partition == 0 {
-            // nested_combiner.lock().print_content();
-        }
 
         let offsets = nested_combiner.lock().get_offsets().clone();
         let mut first_iter = true;
@@ -440,9 +450,14 @@ impl RepartitionMultiSemiJoin {
             };
 
             // timer.done();
-            for res in
-                partitioner.partition_iter(batch, partition, msj_id, &nested_data, &offsets, &total_weights)?
-            {
+            for res in partitioner.partition_iter(
+                batch,
+                partition,
+                msj_id,
+                &nested_data,
+                &offsets,
+                &total_weights,
+            )? {
                 let (partition_send, batch) = res?;
                 // println!(
                 //     "sending batch from partition {} to partition {}",
