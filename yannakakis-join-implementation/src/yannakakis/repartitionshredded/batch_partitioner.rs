@@ -224,7 +224,7 @@ impl MsjBatchPartitioner {
                             }
                         }
 
-                        println!("nested_combined_vals length: {:?} children len: {:?}", nested_combined_vals.len(), children_len);
+                        // println!("nested_combined_vals length: {:?} children len: {:?}", nested_combined_vals.len(), children_len);
 
 
                         // println!(
@@ -266,11 +266,11 @@ impl MsjBatchPartitioner {
                                 inner_cols_final.push(c);
                             }
 
-                            println!(
-                                "inner_cols_final length: {:?}, nested_combined length {}",
-                                inner_cols_final.len(),
-                                nested_combined.len()
-                            );
+                            // println!(
+                            //     "inner_cols_final length: {:?}, nested_combined length {}",
+                            //     inner_cols_final.len(),
+                            //     nested_combined.len()
+                            // );
                             let new_batch = SemiJoinResultBatch::Nested(NestedBatch::new(
                                 schema,
                                 regular_cols,

@@ -119,7 +119,7 @@ impl RepartitionExecState {
         let mut spawned_tasks = Vec::with_capacity(num_input_partitions);
         let child_id = input.id();
 
-        println!("num input partitions: {}", num_input_partitions);
+        // println!("num input partitions: {}", num_input_partitions);
         let nested_combiner = Arc::new(Mutex::new(NestedCombinerWrapper::new(
             num_input_partitions,
             input.children().len(),
@@ -372,10 +372,10 @@ impl RepartitionMultiSemiJoin {
             Some(batch) => batch?,
             None => {
                 //the partition is completely empty
-                println!(
-                    "!!RETURNING EARLY IN PULL FROM INPUT IN PARTITION {}!!",
-                    partition
-                );
+                // println!(
+                //     "!!RETURNING EARLY IN PULL FROM INPUT IN PARTITION {}!!",
+                //     partition
+                // );
                 nested_combiner.lock().add_empty_inner_col(partition);
                 // unsafe { nested_combiner.force_unlock() };
                 barrier.wait().await; //wait for all partitions to be present and to have added their inner columns
@@ -424,12 +424,12 @@ impl RepartitionMultiSemiJoin {
 
         let nested_data = nested_combiner.lock().get_final_inner_col_data().clone();
         let total_weights = nested_combiner.lock().get_final_total_weights().clone();
-        println!(
-            "nested data length: {} in partition {} for id {}",
-            nested_data.len(),
-            partition,
-            msj_id
-        );
+        // println!(
+        //     "nested data length: {} in partition {} for id {}",
+        //     nested_data.len(),
+        //     partition,
+        //     msj_id
+        // );
         // println!("nested data: {:?}", nested_data);
 
         let offsets = nested_combiner.lock().get_offsets().clone();
@@ -492,7 +492,7 @@ impl RepartitionMultiSemiJoin {
         match input_task.join().await {
             Ok(_) => {
                 for (i, send_channel) in send_channels {
-                    send_channel.send(None).await.expect("send none");
+                    send_channel.send(None).await;
                     // println!("sent none to {}", i);
                 }
             }

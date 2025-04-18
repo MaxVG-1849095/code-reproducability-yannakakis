@@ -69,7 +69,7 @@ struct Args {
 //TODO: multithreaded runtime
 // Single threaded, also known as "current_thread" runtime in Tokio
 // src: https://docs.rs/tokio/latest/tokio/attr.main.html#using-current-thread-runtime
-#[tokio::main(flavor = "multi_thread", worker_threads = 4)]
+#[tokio::main(flavor = "multi_thread", worker_threads = 16)]
 // #[tokio::main]
 // #[tokio::main(flavor = "current_thread")]
 

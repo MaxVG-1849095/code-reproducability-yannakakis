@@ -1,0 +1,120 @@
+{
+    "semijoin_plan": {
+        "guard": "t",
+        "children": [
+            {
+                "guard": "mc",
+                "children": [
+                    {
+                        "guard": "mi_idx",
+                        "children": [
+                            {
+                                "guard": "it",
+                                "children": [],
+                                "partitioned": false,
+                                "id": 0
+                            }
+                        ],
+                        "partitioned": false,
+                        "id": 0
+                    },
+                    {
+                        "guard": "ct",
+                        "children": [],
+                        "partitioned": false,
+                        "id": 0
+                    }
+                ],
+                "partitioned": false,
+                "id": 0
+            }
+        ],
+        "partitioned": false,
+        "id": 0
+    },
+    "replacements": {
+        "t": {
+            "name": "SEQUENTIALSCAN",
+            "execution_time": 0.005472,
+            "actual_rows": 2525744,
+            "estimated_cardinality": 2528312,
+            "children": [],
+            "relation": "title",
+            "opt_filter": "id>=2 AND id<=2525745 AND id IS NOT NULL",
+            "projection": [
+                {
+                    "table_name": "t",
+                    "field_name": "id"
+                }
+            ]
+        },
+        "mc": {
+            "name": "SEQUENTIALSCAN",
+            "execution_time": 0.018198,
+            "actual_rows": 2609129,
+            "estimated_cardinality": 2609129,
+            "children": [],
+            "relation": "movie_companies",
+            "opt_filter": null,
+            "projection": [
+                {
+                    "table_name": "mc",
+                    "field_name": "company_type_id"
+                },
+                {
+                    "table_name": "mc",
+                    "field_name": "movie_id"
+                }
+            ]
+        },
+        "mi_idx": {
+            "name": "SEQUENTIALSCAN",
+            "execution_time": 0.003377,
+            "actual_rows": 1380011,
+            "estimated_cardinality": 1380035,
+            "children": [],
+            "relation": "movie_info_idx",
+            "opt_filter": "movie_id<=2525745 AND movie_id IS NOT NULL",
+            "projection": [
+                {
+                    "table_name": "mi_idx",
+                    "field_name": "movie_id"
+                },
+                {
+                    "table_name": "mi_idx",
+                    "field_name": "info_type_id"
+                }
+            ]
+        },
+        "it": {
+            "name": "SEQUENTIALSCAN",
+            "execution_time": 0.000523,
+            "actual_rows": 15,
+            "estimated_cardinality": 113,
+            "children": [],
+            "relation": "info_type",
+            "opt_filter": "id>=99 AND id IS NOT NULL",
+            "projection": [
+                {
+                    "table_name": "it",
+                    "field_name": "id"
+                }
+            ]
+        },
+        "ct": {
+            "name": "SEQUENTIALSCAN",
+            "execution_time": 4e-06,
+            "actual_rows": 2,
+            "estimated_cardinality": 4,
+            "children": [],
+            "relation": "company_type",
+            "opt_filter": "id<=2 AND id IS NOT NULL",
+            "projection": [
+                {
+                    "table_name": "ct",
+                    "field_name": "id"
+                }
+            ]
+        }
+    }
+}

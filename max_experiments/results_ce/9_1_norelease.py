@@ -14,16 +14,38 @@ sixteenthreads = [35.290368035,34.845754887,32.965507558,31.405385973,31.6179997
 print(baseline)
 
 # make plot
+import numpy as np
 import matplotlib.pyplot as plt
-fig, ax = plt.subplots()
-ax.plot(baseline, label='baseline')
-ax.plot(onethread, label='1 thread')
-ax.plot(twothreads, label='2 threads')
-ax.plot(fourthreads, label='4 threads')
-ax.plot(eightthreads, label='8 threads')
-ax.plot(sixteenthreads, label='16 threads')
-ax.set_xlabel('Iteration')
-ax.set_ylabel('Time (ms)')
-ax.set_title('9_1_norelease')
-ax.legend(loc='upper right')
+import seaborn as sns
+# fig, ax = plt.subplots()
+# ax.plot(baseline, label='baseline')
+# ax.plot(onethread, label='1 thread')
+# ax.plot(twothreads, label='2 threads')
+# ax.plot(fourthreads, label='4 threads')
+# ax.plot(eightthreads, label='8 threads')
+# ax.plot(sixteenthreads, label='16 threads')
+# ax.set_xlabel('Iteration')
+# ax.set_ylabel('Time (ms)')
+# ax.set_title('9_1_norelease')
+# ax.legend(loc='upper right')
+# plt.show()
+
+data = [
+    baseline,
+    onethread,
+    twothreads,
+    fourthreads,
+    eightthreads,
+    sixteenthreads
+]
+
+labels = ['baseline', '1 thread', '2 threads', '4 threads', '8 threads', '16 threads']
+
+plt.figure(figsize=(10, 6))
+sns.boxplot(data=data)
+plt.xticks(ticks=range(len(labels)), labels=labels)
+plt.ylabel("Execution Time (ms)")
+plt.title("Execution Time vs. Number of Parallel Parts")
+plt.grid(axis='y')
+plt.tight_layout()
 plt.show()

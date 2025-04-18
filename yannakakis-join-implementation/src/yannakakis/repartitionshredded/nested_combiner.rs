@@ -207,7 +207,7 @@ impl NestedCombiner {
             }
         }
 
-        println!("[][][]Combining nested columns");
+        // println!("[][][]Combining nested columns");
 
         let mut curr_offset= 0;
         let mut final_inner_col: Option<NestedColumn> = None;
@@ -258,7 +258,7 @@ impl NestedCombiner {
                     }
                 }
                 None => {
-                    println!("IN NONE STATEMENT TEST");
+                    // println!("IN NONE STATEMENT TEST");
                     //combine all inner columns
                     final_inner_col = self.inner_cols[i].clone();
                     // println!("=======\ninitial final inner col: {:?}\n========", final_inner_col);
@@ -284,7 +284,7 @@ impl NestedCombiner {
         self.final_inner_col = final_inner_col.clone().expect("final_inner_col is None");
         self.ready = true;
 
-        println!("print end of combined:");
+        // println!("print end of combined:");
         // self.print_content();
 
         Ok(self.final_inner_col.clone())

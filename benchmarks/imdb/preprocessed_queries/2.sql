@@ -1,4 +1,4 @@
-SELECT *
+SELECT COUNT(*)
 FROM mi,
      mk,
      t

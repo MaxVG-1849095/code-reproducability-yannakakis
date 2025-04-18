@@ -1,45 +1,45 @@
 {
     "name": "Query",
-    "result": 0.168534,
-    "timing": 0.168534,
+    "result": 0.130284,
+    "timing": 0.130284,
     "cardinality": 0,
     "extra-info": "SELECT *\nFROM mi_idx,\n     t\nWHERE t.id = mi_idx.movie_id AND t.title = 'The Shawshank Redemption';PRAGMA profile_output = '/home/maxvg/Documents/masterINF/Masterproef/code-reproducability-yannakakis/query_plans/imdb_duckdb/2_original_with_aliases/2/run_1.json';",
     "timings": [],
     "children": [
         {
             "name": "RESULT_COLLECTOR",
-            "timing": 2.1e-05,
+            "timing": 1.8e-05,
             "cardinality": 0,
             "extra_info": "",
             "children": [
                 {
                     "name": "PROJECTION",
-                    "timing": 3e-06,
+                    "timing": 2e-06,
                     "cardinality": 4,
                     "extra_info": "mi_idx.id\nmi_idx.movie_id\nmi_idx.info_type_id\nmi_idx.info\nmi_idx.note\nt.id\nt.title\nt.imdb_index\nt.kind_id\nt.production_year\nt.imdb_id\nt.phonetic_code\nt.episode_of_id\nt.season_nr\nt.episode_nr\nt.series_years\nt.md5sum\n",
                     "children": [
                         {
                             "name": "HASH_JOIN",
-                            "timing": 0.005321,
+                            "timing": 0.003688,
                             "cardinality": 4,
                             "extra_info": "INNER\nmi_idx.movie_id = t.id\n\n[INFOSEPARATOR]\nEC: 1\n",
                             "children": [
                                 {
                                     "name": "SEQ_SCAN ",
-                                    "timing": 0.037006,
+                                    "timing": 0.031495,
                                     "cardinality": 1380035,
                                     "extra_info": "mi_idx\n[INFOSEPARATOR]\nmovie_id\nid\ninfo_type_id\ninfo\nnote\n[INFOSEPARATOR]\nEC: 1380035",
                                     "children": []
                                 },
                                 {
                                     "name": "FILTER",
-                                    "timing": 0.000344,
+                                    "timing": 8.5e-05,
                                     "cardinality": 1,
                                     "extra_info": "(t.id BETWEEN 2 AND 2525793)\n[INFOSEPARATOR]\nEC: 3",
                                     "children": [
                                         {
                                             "name": "SEQ_SCAN ",
-                                            "timing": 0.1225,
+                                            "timing": 0.094177,
                                             "cardinality": 1,
                                             "extra_info": "t\n[INFOSEPARATOR]\nid\ntitle\nimdb_index\nkind_id\nproduction_year\nimdb_id\nphonetic_code\nepisode_of_id\nseason_nr\nepisode_nr\nseries_years\nmd5sum\n[INFOSEPARATOR]\nFilters: title='The Shawshank Redemption' AND title IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 3",
                                             "children": []

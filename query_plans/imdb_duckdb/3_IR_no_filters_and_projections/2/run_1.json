@@ -1,20 +1,20 @@
 {
-    "execution_time": 8.37194,
+    "execution_time": 3.210279,
     "root": {
         "name": "AGGREGATE",
-        "execution_time": 0.710481,
+        "execution_time": 0.027064,
         "actual_rows": 1,
         "estimated_cardinality": null,
         "children": [
             {
                 "name": "HASHJOIN",
-                "execution_time": 4.35343,
+                "execution_time": 2.571264,
                 "actual_rows": 235420417,
                 "estimated_cardinality": null,
                 "children": [
                     {
                         "name": "SEQUENTIALSCAN",
-                        "execution_time": 0.26976,
+                        "execution_time": 0.147291,
                         "actual_rows": 14834998,
                         "estimated_cardinality": 14835720,
                         "children": [],
@@ -29,13 +29,13 @@
                     },
                     {
                         "name": "HASHJOIN",
-                        "execution_time": 0.126722,
+                        "execution_time": 0.099363,
                         "actual_rows": 4523930,
                         "estimated_cardinality": null,
                         "children": [
                             {
                                 "name": "SEQUENTIALSCAN",
-                                "execution_time": 0.02922,
+                                "execution_time": 0.023763,
                                 "actual_rows": 4523930,
                                 "estimated_cardinality": 4523930,
                                 "children": [],
@@ -50,7 +50,7 @@
                             },
                             {
                                 "name": "SEQUENTIALSCAN",
-                                "execution_time": 0.009633,
+                                "execution_time": 0.005178,
                                 "actual_rows": 2525970,
                                 "estimated_cardinality": 2528312,
                                 "children": [],
@@ -99,7 +99,7 @@
     },
     "aliases": {
         "mi": "movie_info",
-        "mk": "movie_keyword",
-        "t": "title"
+        "t": "title",
+        "mk": "movie_keyword"
     }
 }
