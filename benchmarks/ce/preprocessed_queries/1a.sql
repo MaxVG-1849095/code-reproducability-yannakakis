@@ -1,1 +1,0 @@
-select count(*) from yago1, yago0 where yago1.d = yago0.d;

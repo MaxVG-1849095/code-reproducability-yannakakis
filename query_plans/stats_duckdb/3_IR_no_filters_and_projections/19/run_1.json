@@ -1,0 +1,127 @@
+{
+    "execution_time": 0.004333,
+    "root": {
+        "name": "AGGREGATE",
+        "execution_time": 3e-06,
+        "actual_rows": 1,
+        "estimated_cardinality": null,
+        "children": [
+            {
+                "name": "HASHJOIN",
+                "execution_time": 0.001063,
+                "actual_rows": 10895,
+                "estimated_cardinality": null,
+                "children": [
+                    {
+                        "name": "FILTER",
+                        "execution_time": 6.2e-05,
+                        "actual_rows": 40244,
+                        "estimated_cardinality": 8065,
+                        "children": [
+                            {
+                                "name": "SEQUENTIALSCAN",
+                                "execution_time": 0.00013,
+                                "actual_rows": 40244,
+                                "estimated_cardinality": 8065,
+                                "children": [],
+                                "relation": "users",
+                                "opt_filter": "CreationDate<='2014-09-12 07:12:16'::TIMESTAMP AND CreationDate IS NOT NULL",
+                                "projection": [
+                                    {
+                                        "table_name": "u",
+                                        "field_name": "Id"
+                                    }
+                                ]
+                            }
+                        ],
+                        "condition": "(u.Id <= 55746)"
+                    },
+                    {
+                        "name": "HASHJOIN",
+                        "execution_time": 0.00145,
+                        "actual_rows": 11050,
+                        "estimated_cardinality": null,
+                        "children": [
+                            {
+                                "name": "FILTER",
+                                "execution_time": 0.000252,
+                                "actual_rows": 91816,
+                                "estimated_cardinality": 18395,
+                                "children": [
+                                    {
+                                        "name": "SEQUENTIALSCAN",
+                                        "execution_time": 0.000323,
+                                        "actual_rows": 91837,
+                                        "estimated_cardinality": 18395,
+                                        "children": [],
+                                        "relation": "posts",
+                                        "opt_filter": "CommentCount<=17 AND CommentCount IS NOT NULL",
+                                        "projection": [
+                                            {
+                                                "table_name": "p",
+                                                "field_name": "Id"
+                                            },
+                                            {
+                                                "table_name": "p",
+                                                "field_name": "OwnerUserId"
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "condition": "(p.Id BETWEEN 4 AND 115360)"
+                            },
+                            {
+                                "name": "SEQUENTIALSCAN",
+                                "execution_time": 1.9e-05,
+                                "actual_rows": 11102,
+                                "estimated_cardinality": 11102,
+                                "children": [],
+                                "relation": "postLinks",
+                                "opt_filter": null,
+                                "projection": [
+                                    {
+                                        "table_name": "pl",
+                                        "field_name": "PostId"
+                                    }
+                                ]
+                            }
+                        ],
+                        "condition": [
+                            [
+                                {
+                                    "table_name": "p",
+                                    "field_name": "Id"
+                                },
+                                {
+                                    "table_name": "pl",
+                                    "field_name": "PostId"
+                                }
+                            ]
+                        ]
+                    }
+                ],
+                "condition": [
+                    [
+                        {
+                            "table_name": "u",
+                            "field_name": "Id"
+                        },
+                        {
+                            "table_name": "p",
+                            "field_name": "OwnerUserId"
+                        }
+                    ]
+                ]
+            }
+        ],
+        "group_by": null,
+        "aggregate": [
+            "count_star()"
+        ]
+    },
+    "aliases": {
+        "p": "posts",
+        "pl": "postLinks",
+        "u": "users"
+    }
+}

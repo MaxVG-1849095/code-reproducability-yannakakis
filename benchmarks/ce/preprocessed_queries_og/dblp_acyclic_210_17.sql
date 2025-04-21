@@ -1,1 +1,0 @@
-select count(*) from dblp9, dblp13, dblp2, dblp1, dblp21, dblp26, dblp20 where dblp9.d = dblp13.s and dblp13.d = dblp2.d and dblp2.s = dblp1.s and dblp1.d = dblp21.s and dblp21.d = dblp26.d and dblp26.d = dblp20.s;

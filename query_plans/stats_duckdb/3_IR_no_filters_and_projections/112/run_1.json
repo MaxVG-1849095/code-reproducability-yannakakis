@@ -1,0 +1,186 @@
+{
+    "execution_time": 0.152923,
+    "root": {
+        "name": "AGGREGATE",
+        "execution_time": 0.000232,
+        "actual_rows": 1,
+        "estimated_cardinality": null,
+        "children": [
+            {
+                "name": "HASHJOIN",
+                "execution_time": 0.103728,
+                "actual_rows": 1839326,
+                "estimated_cardinality": null,
+                "children": [
+                    {
+                        "name": "SEQUENTIALSCAN",
+                        "execution_time": 0.000702,
+                        "actual_rows": 303121,
+                        "estimated_cardinality": 303187,
+                        "children": [],
+                        "relation": "postHistory",
+                        "opt_filter": "PostId>=4 AND PostId<=115360 AND PostId IS NOT NULL",
+                        "projection": [
+                            {
+                                "table_name": "ph",
+                                "field_name": "PostId"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "HASHJOIN",
+                        "execution_time": 0.016376,
+                        "actual_rows": 235437,
+                        "estimated_cardinality": null,
+                        "children": [
+                            {
+                                "name": "SEQUENTIALSCAN",
+                                "execution_time": 0.000393,
+                                "actual_rows": 174279,
+                                "estimated_cardinality": 174305,
+                                "children": [],
+                                "relation": "comments",
+                                "opt_filter": "PostId>=4 AND PostId<=115360 AND PostId IS NOT NULL",
+                                "projection": [
+                                    {
+                                        "table_name": "c",
+                                        "field_name": "PostId"
+                                    }
+                                ]
+                            },
+                            {
+                                "name": "HASHJOIN",
+                                "execution_time": 0.007872,
+                                "actual_rows": 56757,
+                                "estimated_cardinality": null,
+                                "children": [
+                                    {
+                                        "name": "SEQUENTIALSCAN",
+                                        "execution_time": 0.000237,
+                                        "actual_rows": 91955,
+                                        "estimated_cardinality": 91976,
+                                        "children": [],
+                                        "relation": "posts",
+                                        "opt_filter": "Id>=4 AND Id<=115360 AND Id IS NOT NULL",
+                                        "projection": [
+                                            {
+                                                "table_name": "p",
+                                                "field_name": "Id"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "name": "HASHJOIN",
+                                        "execution_time": 0.003899,
+                                        "actual_rows": 56757,
+                                        "estimated_cardinality": null,
+                                        "children": [
+                                            {
+                                                "name": "FILTER",
+                                                "execution_time": 0.000856,
+                                                "actual_rows": 326989,
+                                                "estimated_cardinality": 65612,
+                                                "children": [
+                                                    {
+                                                        "name": "SEQUENTIALSCAN",
+                                                        "execution_time": 0.002249,
+                                                        "actual_rows": 327152,
+                                                        "estimated_cardinality": 65612,
+                                                        "children": [],
+                                                        "relation": "votes",
+                                                        "opt_filter": "CreationDate>='2010-07-19 00:00:00'::TIMESTAMP AND CreationDate<='2014-09-10 00:00:00'::TIMESTAMP AND CreationDate IS NOT NULL",
+                                                        "projection": [
+                                                            {
+                                                                "table_name": "v",
+                                                                "field_name": "PostId"
+                                                            }
+                                                        ]
+                                                    }
+                                                ],
+                                                "condition": "(v.PostId BETWEEN 4 AND 115360)"
+                                            },
+                                            {
+                                                "name": "SEQUENTIALSCAN",
+                                                "execution_time": 5.7e-05,
+                                                "actual_rows": 9549,
+                                                "estimated_cardinality": 5551,
+                                                "children": [],
+                                                "relation": "postLinks",
+                                                "opt_filter": "LinkTypeId=1 AND LinkTypeId IS NOT NULL AND CreationDate>='2011-06-14 13:31:35'::TIMESTAMP AND CreationDate IS NOT NULL",
+                                                "projection": [
+                                                    {
+                                                        "table_name": "pl",
+                                                        "field_name": "PostId"
+                                                    }
+                                                ]
+                                            }
+                                        ],
+                                        "condition": [
+                                            [
+                                                {
+                                                    "table_name": "v",
+                                                    "field_name": "PostId"
+                                                },
+                                                {
+                                                    "table_name": "pl",
+                                                    "field_name": "PostId"
+                                                }
+                                            ]
+                                        ]
+                                    }
+                                ],
+                                "condition": [
+                                    [
+                                        {
+                                            "table_name": "p",
+                                            "field_name": "Id"
+                                        },
+                                        {
+                                            "table_name": "v",
+                                            "field_name": "PostId"
+                                        }
+                                    ]
+                                ]
+                            }
+                        ],
+                        "condition": [
+                            [
+                                {
+                                    "table_name": "c",
+                                    "field_name": "PostId"
+                                },
+                                {
+                                    "table_name": "pl",
+                                    "field_name": "PostId"
+                                }
+                            ]
+                        ]
+                    }
+                ],
+                "condition": [
+                    [
+                        {
+                            "table_name": "ph",
+                            "field_name": "PostId"
+                        },
+                        {
+                            "table_name": "p",
+                            "field_name": "Id"
+                        }
+                    ]
+                ]
+            }
+        ],
+        "group_by": null,
+        "aggregate": [
+            "count_star()"
+        ]
+    },
+    "aliases": {
+        "ph": "postHistory",
+        "p": "posts",
+        "pl": "postLinks",
+        "c": "comments",
+        "v": "votes"
+    }
+}

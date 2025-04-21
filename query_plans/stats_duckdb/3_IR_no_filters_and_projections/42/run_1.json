@@ -1,0 +1,145 @@
+{
+    "execution_time": 0.023403,
+    "root": {
+        "name": "AGGREGATE",
+        "execution_time": 8.1e-05,
+        "actual_rows": 1,
+        "estimated_cardinality": null,
+        "children": [
+            {
+                "name": "HASHJOIN",
+                "execution_time": 0.012804,
+                "actual_rows": 896180,
+                "estimated_cardinality": null,
+                "children": [
+                    {
+                        "name": "SEQUENTIALSCAN",
+                        "execution_time": 0.000307,
+                        "actual_rows": 328064,
+                        "estimated_cardinality": 328064,
+                        "children": [],
+                        "relation": "votes",
+                        "opt_filter": null,
+                        "projection": [
+                            {
+                                "table_name": "v",
+                                "field_name": "PostId"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "HASHJOIN",
+                        "execution_time": 0.00175,
+                        "actual_rows": 209583,
+                        "estimated_cardinality": null,
+                        "children": [
+                            {
+                                "name": "SEQUENTIALSCAN",
+                                "execution_time": 0.000288,
+                                "actual_rows": 303187,
+                                "estimated_cardinality": 303187,
+                                "children": [],
+                                "relation": "postHistory",
+                                "opt_filter": null,
+                                "projection": [
+                                    {
+                                        "table_name": "ph",
+                                        "field_name": "PostId"
+                                    }
+                                ]
+                            },
+                            {
+                                "name": "HASHJOIN",
+                                "execution_time": 0.002831,
+                                "actual_rows": 41569,
+                                "estimated_cardinality": null,
+                                "children": [
+                                    {
+                                        "name": "SEQUENTIALSCAN",
+                                        "execution_time": 8.7e-05,
+                                        "actual_rows": 40324,
+                                        "estimated_cardinality": 40325,
+                                        "children": [],
+                                        "relation": "users",
+                                        "opt_filter": "Id<=55746 AND Id IS NOT NULL",
+                                        "projection": [
+                                            {
+                                                "table_name": "u",
+                                                "field_name": "Id"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "name": "SEQUENTIALSCAN",
+                                        "execution_time": 0.001016,
+                                        "actual_rows": 42291,
+                                        "estimated_cardinality": 18396,
+                                        "children": [],
+                                        "relation": "posts",
+                                        "opt_filter": "PostTypeId=1 AND PostTypeId IS NOT NULL AND Score>=-1 AND Score IS NOT NULL AND CommentCount>=0 AND CommentCount<=11 AND CommentCount IS NOT NULL",
+                                        "projection": [
+                                            {
+                                                "table_name": "p",
+                                                "field_name": "Id"
+                                            },
+                                            {
+                                                "table_name": "p",
+                                                "field_name": "OwnerUserId"
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "condition": [
+                                    [
+                                        {
+                                            "table_name": "u",
+                                            "field_name": "Id"
+                                        },
+                                        {
+                                            "table_name": "p",
+                                            "field_name": "OwnerUserId"
+                                        }
+                                    ]
+                                ]
+                            }
+                        ],
+                        "condition": [
+                            [
+                                {
+                                    "table_name": "ph",
+                                    "field_name": "PostId"
+                                },
+                                {
+                                    "table_name": "p",
+                                    "field_name": "Id"
+                                }
+                            ]
+                        ]
+                    }
+                ],
+                "condition": [
+                    [
+                        {
+                            "table_name": "v",
+                            "field_name": "PostId"
+                        },
+                        {
+                            "table_name": "p",
+                            "field_name": "Id"
+                        }
+                    ]
+                ]
+            }
+        ],
+        "group_by": null,
+        "aggregate": [
+            "count_star()"
+        ]
+    },
+    "aliases": {
+        "ph": "postHistory",
+        "v": "votes",
+        "p": "posts",
+        "u": "users"
+    }
+}

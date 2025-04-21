@@ -1,1 +1,0 @@
-select count(*) from watdiv1052575, watdiv1052576, watdiv1052574, watdiv1052573, watdiv1052595, watdiv1052640, watdiv1052637 where watdiv1052575.s = watdiv1052576.s and watdiv1052576.s = watdiv1052574.s and watdiv1052574.s = watdiv1052573.s and watdiv1052573.d = watdiv1052595.s and watdiv1052595.d = watdiv1052640.s and watdiv1052640.s = watdiv1052637.s;

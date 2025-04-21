@@ -1,1 +1,0 @@
-select count(*) from hetio45178, hetio45167, hetio45179, hetio45174, hetio45176, hetio45173, hetio45180 where hetio45178.d = hetio45167.d and hetio45167.d = hetio45179.d and hetio45179.d = hetio45174.s and hetio45174.s = hetio45176.s and hetio45176.s = hetio45173.s and hetio45173.d = hetio45180.s;

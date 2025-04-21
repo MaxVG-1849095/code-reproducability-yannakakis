@@ -1,1 +1,0 @@
-select count(*) from yago31, yago35, yago54, yago44, yago50, yago55 where yago31.d = yago35.d and yago35.s = yago54.d and yago54.s = yago44.d and yago44.s = yago50.s and yago50.d = yago55.d;

@@ -1,0 +1,78 @@
+{
+    "semijoin_plan": {
+        "guard": "ph",
+        "children": [
+            {
+                "guard": "c",
+                "children": [
+                    {
+                        "guard": "p",
+                        "children": [],
+                        "partitioned": false,
+                        "id": 0
+                    }
+                ],
+                "partitioned": false,
+                "id": 0
+            }
+        ],
+        "partitioned": false,
+        "id": 0
+    },
+    "replacements": {
+        "ph": {
+            "name": "SEQUENTIALSCAN",
+            "execution_time": 0.000411,
+            "actual_rows": 303183,
+            "estimated_cardinality": 303187,
+            "children": [],
+            "relation": "postHistory",
+            "opt_filter": "PostId<=115376 AND PostId IS NOT NULL",
+            "projection": [
+                {
+                    "table_name": "ph",
+                    "field_name": "PostId"
+                }
+            ]
+        },
+        "c": {
+            "name": "SEQUENTIALSCAN",
+            "execution_time": 0.000131,
+            "actual_rows": 174305,
+            "estimated_cardinality": 174305,
+            "children": [],
+            "relation": "comments",
+            "opt_filter": null,
+            "projection": [
+                {
+                    "table_name": "c",
+                    "field_name": "PostId"
+                }
+            ]
+        },
+        "p": {
+            "name": "FILTER",
+            "execution_time": 0.000177,
+            "actual_rows": 91946,
+            "estimated_cardinality": 18395,
+            "children": [
+                {
+                    "name": "SEQUENTIALSCAN",
+                    "execution_time": 0.000301,
+                    "actual_rows": 91948,
+                    "estimated_cardinality": 18395,
+                    "children": [],
+                    "relation": "posts",
+                    "opt_filter": "CommentCount>=0 AND CommentCount<=25 AND CommentCount IS NOT NULL",
+                    "projection": [
+                        {
+                            "table_name": "p",
+                            "field_name": "Id"
+                        }
+                    ]
+                }
+            ],
+            "condition": "(p.Id <= 115376)"
+        }
+    }
+}

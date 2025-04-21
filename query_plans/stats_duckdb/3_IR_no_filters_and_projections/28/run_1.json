@@ -1,0 +1,163 @@
+{
+    "execution_time": 0.517593,
+    "root": {
+        "name": "AGGREGATE",
+        "execution_time": 0.002448,
+        "actual_rows": 1,
+        "estimated_cardinality": null,
+        "children": [
+            {
+                "name": "HASHJOIN",
+                "execution_time": 0.305734,
+                "actual_rows": 16049150,
+                "estimated_cardinality": null,
+                "children": [
+                    {
+                        "name": "SEQUENTIALSCAN",
+                        "execution_time": 0.000428,
+                        "actual_rows": 328064,
+                        "estimated_cardinality": 328064,
+                        "children": [],
+                        "relation": "votes",
+                        "opt_filter": null,
+                        "projection": [
+                            {
+                                "table_name": "v",
+                                "field_name": "PostId"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "HASHJOIN",
+                        "execution_time": 0.062995,
+                        "actual_rows": 3660301,
+                        "estimated_cardinality": null,
+                        "children": [
+                            {
+                                "name": "SEQUENTIALSCAN",
+                                "execution_time": 0.000212,
+                                "actual_rows": 79851,
+                                "estimated_cardinality": 79851,
+                                "children": [],
+                                "relation": "badges",
+                                "opt_filter": null,
+                                "projection": [
+                                    {
+                                        "table_name": "b",
+                                        "field_name": "UserId"
+                                    }
+                                ]
+                            },
+                            {
+                                "name": "HASHJOIN",
+                                "execution_time": 0.002241,
+                                "actual_rows": 89652,
+                                "estimated_cardinality": null,
+                                "children": [
+                                    {
+                                        "name": "FILTER",
+                                        "execution_time": 0.000269,
+                                        "actual_rows": 89652,
+                                        "estimated_cardinality": 18395,
+                                        "children": [
+                                            {
+                                                "name": "SEQUENTIALSCAN",
+                                                "execution_time": 0.000336,
+                                                "actual_rows": 91231,
+                                                "estimated_cardinality": 18395,
+                                                "children": [],
+                                                "relation": "posts",
+                                                "opt_filter": "Score<=22 AND Score IS NOT NULL",
+                                                "projection": [
+                                                    {
+                                                        "table_name": "p",
+                                                        "field_name": "Id"
+                                                    },
+                                                    {
+                                                        "table_name": "p",
+                                                        "field_name": "OwnerUserId"
+                                                    }
+                                                ]
+                                            }
+                                        ],
+                                        "condition": "(p.OwnerUserId >= 2)"
+                                    },
+                                    {
+                                        "name": "FILTER",
+                                        "execution_time": 8.2e-05,
+                                        "actual_rows": 40323,
+                                        "estimated_cardinality": 8065,
+                                        "children": [
+                                            {
+                                                "name": "SEQUENTIALSCAN",
+                                                "execution_time": 0.000114,
+                                                "actual_rows": 40324,
+                                                "estimated_cardinality": 8065,
+                                                "children": [],
+                                                "relation": "users",
+                                                "opt_filter": "Id<=55746 AND Id IS NOT NULL",
+                                                "projection": [
+                                                    {
+                                                        "table_name": "u",
+                                                        "field_name": "Id"
+                                                    }
+                                                ]
+                                            }
+                                        ],
+                                        "condition": "(u.Id >= 2)"
+                                    }
+                                ],
+                                "condition": [
+                                    [
+                                        {
+                                            "table_name": "p",
+                                            "field_name": "OwnerUserId"
+                                        },
+                                        {
+                                            "table_name": "u",
+                                            "field_name": "Id"
+                                        }
+                                    ]
+                                ]
+                            }
+                        ],
+                        "condition": [
+                            [
+                                {
+                                    "table_name": "b",
+                                    "field_name": "UserId"
+                                },
+                                {
+                                    "table_name": "u",
+                                    "field_name": "Id"
+                                }
+                            ]
+                        ]
+                    }
+                ],
+                "condition": [
+                    [
+                        {
+                            "table_name": "v",
+                            "field_name": "PostId"
+                        },
+                        {
+                            "table_name": "p",
+                            "field_name": "Id"
+                        }
+                    ]
+                ]
+            }
+        ],
+        "group_by": null,
+        "aggregate": [
+            "count_star()"
+        ]
+    },
+    "aliases": {
+        "v": "votes",
+        "b": "badges",
+        "p": "posts",
+        "u": "users"
+    }
+}

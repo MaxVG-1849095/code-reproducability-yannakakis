@@ -1,0 +1,305 @@
+{
+    "execution_time": 0.883897,
+    "root": {
+        "name": "AGGREGATE",
+        "execution_time": 7.6e-05,
+        "actual_rows": 1,
+        "estimated_cardinality": null,
+        "children": [
+            {
+                "name": "PROJECTION",
+                "execution_time": 1.2e-05,
+                "actual_rows": 4700,
+                "estimated_cardinality": null,
+                "children": [
+                    {
+                        "name": "YANNAKAKIS",
+                        "root": {
+                            "name": "MULTISEMIJOIN",
+                            "partitioned": true,
+                            "id": 0,
+                            "equijoin_keys": [
+                                [
+                                    [
+                                        1,
+                                        0
+                                    ]
+                                ]
+                            ],
+                            "guard": {
+                                "name": "REPARTITION",
+                                "num_partitions": 4,
+                                "partitioning": "unknown",
+                                "partition_on": 0,
+                                "children": [
+                                    {
+                                        "name": "FILTER",
+                                        "execution_time": 0.002972,
+                                        "actual_rows": 30,
+                                        "estimated_cardinality": 26834,
+                                        "children": [
+                                            {
+                                                "name": "SEQUENTIALSCAN",
+                                                "execution_time": 0.004706,
+                                                "actual_rows": 134170,
+                                                "estimated_cardinality": 26834,
+                                                "children": [],
+                                                "relation": "keyword",
+                                                "opt_filter": null,
+                                                "projection": [
+                                                    {
+                                                        "table_name": "k",
+                                                        "field_name": "keyword"
+                                                    },
+                                                    {
+                                                        "table_name": "k",
+                                                        "field_name": "id"
+                                                    }
+                                                ]
+                                            }
+                                        ],
+                                        "condition": "k.keyword LIKE '%sequel%'"
+                                    }
+                                ]
+                            },
+                            "children": [
+                                {
+                                    "name": "GROUPBY",
+                                    "partitioned": true,
+                                    "id": 0,
+                                    "group_on": [
+                                        1
+                                    ],
+                                    "child": {
+                                        "name": "MULTISEMIJOIN",
+                                        "partitioned": true,
+                                        "id": 0,
+                                        "equijoin_keys": [
+                                            [
+                                                [
+                                                    0,
+                                                    0
+                                                ]
+                                            ]
+                                        ],
+                                        "guard": {
+                                            "name": "REPARTITION",
+                                            "num_partitions": 4,
+                                            "partitioning": "unknown",
+                                            "partition_on": 0,
+                                            "children": [
+                                                {
+                                                    "name": "SEQUENTIALSCAN",
+                                                    "execution_time": 0.020696,
+                                                    "actual_rows": 4523924,
+                                                    "estimated_cardinality": 4523930,
+                                                    "children": [],
+                                                    "relation": "movie_keyword",
+                                                    "opt_filter": "movie_id<=2525793 AND movie_id IS NOT NULL",
+                                                    "projection": [
+                                                        {
+                                                            "table_name": "mk",
+                                                            "field_name": "movie_id"
+                                                        },
+                                                        {
+                                                            "table_name": "mk",
+                                                            "field_name": "keyword_id"
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        },
+                                        "children": [
+                                            {
+                                                "name": "GROUPBY",
+                                                "partitioned": true,
+                                                "id": 0,
+                                                "group_on": [
+                                                    0
+                                                ],
+                                                "child": {
+                                                    "name": "MULTISEMIJOIN",
+                                                    "partitioned": true,
+                                                    "id": 0,
+                                                    "equijoin_keys": [
+                                                        [
+                                                            [
+                                                                0,
+                                                                0
+                                                            ]
+                                                        ]
+                                                    ],
+                                                    "guard": {
+                                                        "name": "REPARTITION",
+                                                        "num_partitions": 4,
+                                                        "partitioning": "unknown",
+                                                        "partition_on": 0,
+                                                        "children": [
+                                                            {
+                                                                "name": "FILTER",
+                                                                "execution_time": 0.005287,
+                                                                "actual_rows": 1748457,
+                                                                "estimated_cardinality": 505662,
+                                                                "children": [
+                                                                    {
+                                                                        "name": "SEQUENTIALSCAN",
+                                                                        "execution_time": 0.100676,
+                                                                        "actual_rows": 1749032,
+                                                                        "estimated_cardinality": 505662,
+                                                                        "children": [],
+                                                                        "relation": "title",
+                                                                        "opt_filter": "production_year>1990 AND production_year IS NOT NULL",
+                                                                        "projection": [
+                                                                            {
+                                                                                "table_name": "t",
+                                                                                "field_name": "id"
+                                                                            },
+                                                                            {
+                                                                                "table_name": "t",
+                                                                                "field_name": "title"
+                                                                            }
+                                                                        ]
+                                                                    }
+                                                                ],
+                                                                "condition": "(t.id BETWEEN 2 AND 2525793)"
+                                                            }
+                                                        ]
+                                                    },
+                                                    "children": [
+                                                        {
+                                                            "name": "GROUPBY",
+                                                            "partitioned": true,
+                                                            "id": 0,
+                                                            "group_on": [
+                                                                1
+                                                            ],
+                                                            "child": {
+                                                                "name": "MULTISEMIJOIN",
+                                                                "partitioned": true,
+                                                                "id": 0,
+                                                                "equijoin_keys": [
+                                                                    [
+                                                                        [
+                                                                            2,
+                                                                            0
+                                                                        ]
+                                                                    ]
+                                                                ],
+                                                                "guard": {
+                                                                    "name": "REPARTITION",
+                                                                    "num_partitions": 4,
+                                                                    "partitioning": "unknown",
+                                                                    "partition_on": 0,
+                                                                    "children": [
+                                                                        {
+                                                                            "name": "SEQUENTIALSCAN",
+                                                                            "execution_time": 0.030496,
+                                                                            "actual_rows": 806365,
+                                                                            "estimated_cardinality": 276007,
+                                                                            "children": [],
+                                                                            "relation": "movie_info_idx",
+                                                                            "opt_filter": "info>'2.0' AND info IS NOT NULL",
+                                                                            "projection": [
+                                                                                {
+                                                                                    "table_name": "mi_idx",
+                                                                                    "field_name": "info"
+                                                                                },
+                                                                                {
+                                                                                    "table_name": "mi_idx",
+                                                                                    "field_name": "movie_id"
+                                                                                },
+                                                                                {
+                                                                                    "table_name": "mi_idx",
+                                                                                    "field_name": "info_type_id"
+                                                                                }
+                                                                            ]
+                                                                        }
+                                                                    ]
+                                                                },
+                                                                "children": [
+                                                                    {
+                                                                        "name": "GROUPBY",
+                                                                        "partitioned": true,
+                                                                        "id": 0,
+                                                                        "group_on": [
+                                                                            0
+                                                                        ],
+                                                                        "child": {
+                                                                            "name": "MULTISEMIJOIN",
+                                                                            "partitioned": true,
+                                                                            "id": 0,
+                                                                            "equijoin_keys": [],
+                                                                            "guard": {
+                                                                                "name": "REPARTITION",
+                                                                                "num_partitions": 4,
+                                                                                "partitioning": "unknown",
+                                                                                "partition_on": 0,
+                                                                                "children": [
+                                                                                    {
+                                                                                        "name": "FILTER",
+                                                                                        "execution_time": 1.3e-05,
+                                                                                        "actual_rows": 1,
+                                                                                        "estimated_cardinality": 1,
+                                                                                        "children": [
+                                                                                            {
+                                                                                                "name": "SEQUENTIALSCAN",
+                                                                                                "execution_time": 3.1e-05,
+                                                                                                "actual_rows": 1,
+                                                                                                "estimated_cardinality": 1,
+                                                                                                "children": [],
+                                                                                                "relation": "info_type",
+                                                                                                "opt_filter": "info='rating' AND info IS NOT NULL",
+                                                                                                "projection": [
+                                                                                                    {
+                                                                                                        "table_name": "it",
+                                                                                                        "field_name": "id"
+                                                                                                    }
+                                                                                                ]
+                                                                                            }
+                                                                                        ],
+                                                                                        "condition": "(it.id >= 99)"
+                                                                                    }
+                                                                                ]
+                                                                            },
+                                                                            "children": []
+                                                                        }
+                                                                    }
+                                                                ]
+                                                            }
+                                                        }
+                                                    ]
+                                                }
+                                            }
+                                        ]
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "on": [
+                    {
+                        "table_name": "mi_idx",
+                        "field_name": "info"
+                    },
+                    {
+                        "table_name": "t",
+                        "field_name": "title"
+                    }
+                ]
+            }
+        ],
+        "group_by": null,
+        "aggregate": [
+            "min(mi_idx.info)",
+            "min(t.title)"
+        ]
+    },
+    "aliases": {
+        "it": "info_type",
+        "mi_idx": "movie_info_idx",
+        "k": "keyword",
+        "mk": "movie_keyword",
+        "t": "title"
+    }
+}

@@ -1,0 +1,171 @@
+{
+    "execution_time": 0.044032,
+    "root": {
+        "name": "AGGREGATE",
+        "execution_time": 5e-05,
+        "actual_rows": 1,
+        "estimated_cardinality": null,
+        "children": [
+            {
+                "name": "YANNAKAKIS",
+                "root": {
+                    "name": "MULTISEMIJOIN",
+                    "partitioned": false,
+                    "id": 0,
+                    "equijoin_keys": [
+                        [
+                            [
+                                0,
+                                0
+                            ]
+                        ]
+                    ],
+                    "guard": {
+                        "name": "SEQUENTIALSCAN",
+                        "execution_time": 0.003876,
+                        "actual_rows": 327888,
+                        "estimated_cardinality": 65612,
+                        "children": [],
+                        "relation": "votes",
+                        "opt_filter": "CreationDate<='2014-09-12 00:00:00'::TIMESTAMP AND CreationDate IS NOT NULL",
+                        "projection": [
+                            {
+                                "table_name": "v",
+                                "field_name": "PostId"
+                            }
+                        ]
+                    },
+                    "children": [
+                        {
+                            "name": "GROUPBY",
+                            "partitioned": false,
+                            "id": 0,
+                            "group_on": [
+                                1
+                            ],
+                            "child": {
+                                "name": "MULTISEMIJOIN",
+                                "partitioned": false,
+                                "id": 0,
+                                "equijoin_keys": [
+                                    [
+                                        [
+                                            1,
+                                            0
+                                        ]
+                                    ],
+                                    [
+                                        [
+                                            0,
+                                            0
+                                        ]
+                                    ]
+                                ],
+                                "guard": {
+                                    "name": "FILTER",
+                                    "execution_time": 0.000142,
+                                    "actual_rows": 87175,
+                                    "estimated_cardinality": 18395,
+                                    "children": [
+                                        {
+                                            "name": "SEQUENTIALSCAN",
+                                            "execution_time": 0.000713,
+                                            "actual_rows": 87175,
+                                            "estimated_cardinality": 18395,
+                                            "children": [],
+                                            "relation": "posts",
+                                            "opt_filter": "Score>=0 AND Score<=19 AND Score IS NOT NULL AND CommentCount<=10 AND CommentCount IS NOT NULL AND CreationDate<='2014-08-28 13:31:33'::TIMESTAMP AND CreationDate IS NOT NULL",
+                                            "projection": [
+                                                {
+                                                    "table_name": "p",
+                                                    "field_name": "OwnerUserId"
+                                                },
+                                                {
+                                                    "table_name": "p",
+                                                    "field_name": "Id"
+                                                }
+                                            ]
+                                        }
+                                    ],
+                                    "condition": "(p.Id <= 115376)"
+                                },
+                                "children": [
+                                    {
+                                        "name": "GROUPBY",
+                                        "partitioned": false,
+                                        "id": 0,
+                                        "group_on": [
+                                            0
+                                        ],
+                                        "child": {
+                                            "name": "MULTISEMIJOIN",
+                                            "partitioned": false,
+                                            "id": 0,
+                                            "equijoin_keys": [],
+                                            "guard": {
+                                                "name": "SEQUENTIALSCAN",
+                                                "execution_time": 0.003689,
+                                                "actual_rows": 134258,
+                                                "estimated_cardinality": 9684,
+                                                "children": [],
+                                                "relation": "comments",
+                                                "opt_filter": "Score=0 AND Score IS NOT NULL AND CreationDate<='2014-09-10 02:47:53'::TIMESTAMP AND CreationDate IS NOT NULL",
+                                                "projection": [
+                                                    {
+                                                        "table_name": "c",
+                                                        "field_name": "PostId"
+                                                    }
+                                                ]
+                                            },
+                                            "children": []
+                                        }
+                                    },
+                                    {
+                                        "name": "GROUPBY",
+                                        "partitioned": false,
+                                        "id": 0,
+                                        "group_on": [
+                                            0
+                                        ],
+                                        "child": {
+                                            "name": "MULTISEMIJOIN",
+                                            "partitioned": false,
+                                            "id": 0,
+                                            "equijoin_keys": [],
+                                            "guard": {
+                                                "name": "SEQUENTIALSCAN",
+                                                "execution_time": 0.000112,
+                                                "actual_rows": 40324,
+                                                "estimated_cardinality": 8065,
+                                                "children": [],
+                                                "relation": "users",
+                                                "opt_filter": "Id<=55746 AND Id IS NOT NULL",
+                                                "projection": [
+                                                    {
+                                                        "table_name": "u",
+                                                        "field_name": "Id"
+                                                    }
+                                                ]
+                                            },
+                                            "children": []
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            }
+        ],
+        "group_by": null,
+        "aggregate": [
+            "count_star()"
+        ]
+    },
+    "aliases": {
+        "v": "votes",
+        "c": "comments",
+        "p": "posts",
+        "u": "users"
+    }
+}

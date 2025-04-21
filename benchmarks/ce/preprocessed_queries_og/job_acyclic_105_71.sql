@@ -1,1 +1,0 @@
-select count(*) from imdb100, imdb125, imdb56, imdb87 where imdb100.d = imdb125.d and imdb125.d = imdb56.s and imdb56.s = imdb87.s;

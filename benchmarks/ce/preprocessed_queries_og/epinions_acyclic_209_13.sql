@@ -1,1 +1,0 @@
-select count(*) from epinions75937, epinions75926, epinions75913, epinions75927, epinions75922, epinions75921, epinions75898 where epinions75937.s = epinions75926.s and epinions75926.s = epinions75913.s and epinions75913.s = epinions75927.s and epinions75927.d = epinions75922.s and epinions75922.d = epinions75921.s and epinions75921.d = epinions75898.s;
