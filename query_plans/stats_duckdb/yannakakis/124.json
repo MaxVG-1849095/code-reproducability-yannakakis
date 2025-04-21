@@ -1,8 +1,8 @@
 {
-    "execution_time": 0.205997,
+    "execution_time": 0.188453,
     "root": {
         "name": "AGGREGATE",
-        "execution_time": 0.00106,
+        "execution_time": 0.001034,
         "actual_rows": 1,
         "estimated_cardinality": null,
         "children": [
@@ -22,7 +22,7 @@
                     ],
                     "guard": {
                         "name": "SEQUENTIALSCAN",
-                        "execution_time": 0.001152,
+                        "execution_time": 0.00111,
                         "actual_rows": 277294,
                         "estimated_cardinality": 303187,
                         "children": [],
@@ -57,13 +57,13 @@
                                 ],
                                 "guard": {
                                     "name": "FILTER",
-                                    "execution_time": 0.000738,
+                                    "execution_time": 0.000709,
                                     "actual_rows": 34681,
                                     "estimated_cardinality": 65612,
                                     "children": [
                                         {
                                             "name": "SEQUENTIALSCAN",
-                                            "execution_time": 0.002258,
+                                            "execution_time": 0.002169,
                                             "actual_rows": 327234,
                                             "estimated_cardinality": 65612,
                                             "children": [],
@@ -101,13 +101,13 @@
                                             ],
                                             "guard": {
                                                 "name": "FILTER",
-                                                "execution_time": 0.000134,
+                                                "execution_time": 0.000111,
                                                 "actual_rows": 79641,
                                                 "estimated_cardinality": 15970,
                                                 "children": [
                                                     {
                                                         "name": "SEQUENTIALSCAN",
-                                                        "execution_time": 0.000237,
+                                                        "execution_time": 0.000184,
                                                         "actual_rows": 79654,
                                                         "estimated_cardinality": 15970,
                                                         "children": [],
@@ -138,13 +138,13 @@
                                                         "equijoin_keys": [],
                                                         "guard": {
                                                             "name": "FILTER",
-                                                            "execution_time": 0.000107,
+                                                            "execution_time": 9.9e-05,
                                                             "actual_rows": 39794,
                                                             "estimated_cardinality": 8065,
                                                             "children": [
                                                                 {
                                                                     "name": "SEQUENTIALSCAN",
-                                                                    "execution_time": 0.000268,
+                                                                    "execution_time": 0.000195,
                                                                     "actual_rows": 39835,
                                                                     "estimated_cardinality": 8065,
                                                                     "children": [],
@@ -179,9 +179,9 @@
         ]
     },
     "aliases": {
-        "ph": "postHistory",
-        "v": "votes",
+        "u": "users",
         "b": "badges",
-        "u": "users"
+        "ph": "postHistory",
+        "v": "votes"
     }
 }

@@ -66,48 +66,48 @@
 		</thead><tbody>
 	<tr>
 			<td><b>TOTAL TIME</b></td>
-            <td>0.012302</td>
+            <td>0.012409</td>
             <td>100.0%</td>
     </tr>
 
 	<tr>
 			<td><b>Execution Time</b></td>
-            <td>0.010527</td>
-            <td>85.571%</td>
+            <td>0.010601</td>
+            <td>85.429%</td>
     </tr>
 
 	<tr>
 			<td>HASH_JOIN</td>
-            <td>0.008453</td>
-            <td>68.712%</td>
+            <td>0.008384</td>
+            <td>67.563%</td>
     </tr>
 
 	<tr>
 			<td>SEQ_SCAN </td>
-            <td>0.001792</td>
-            <td>14.566%</td>
+            <td>0.0019219999999999999</td>
+            <td>15.488%</td>
     </tr>
 
 	<tr>
 			<td>FILTER</td>
-            <td>0.000216</td>
-            <td>1.7558%</td>
+            <td>0.000223</td>
+            <td>1.7970%</td>
     </tr>
 
 	<tr>
 			<td>UNGROUPED_AGGREGATE</td>
-            <td>6.4e-05</td>
-            <td>0.5202%</td>
+            <td>6.2e-05</td>
+            <td>0.4996%</td>
     </tr>
 
 	<tr>
 			<td>RESULT_COLLECTOR</td>
-            <td>2e-06</td>
-            <td>0.0162%</td>
+            <td>1e-05</td>
+            <td>0.0805%</td>
     </tr>
 </tbody></table>
 	</div>
 	<div class="tf-tree tf-gap-lg"> 
- <ul><li><span class="tf-nc" style=""><div class="node-body"><p> <b>RESULT COLLECTOR (2e-06s) </b></p><p> cardinality = 0 </p></div></span><ul><li><span class="tf-nc" style="background-color: #ffdfba;"><div class="node-body"><p> <b>UNGROUPED AGGREGATE (6.4e-05s) </b></p><p> count_star() </p><p> cardinality = 1 </p></div></span><ul><li><span class="tf-nc" style="background-color: #ffffba;"><div class="node-body"><p> <b>HASH JOIN (0.007258s) </b></p><p> INNER<br>p.OwnerUserId = u.Id<br>----<br>Build Min: 3<br>Build Max: 55746<br>----<br>EC: 883<br> </p><p> cardinality = 326559 </p></div></span><ul><li><span class="tf-nc" style="background-color: #bae1ff;"><div class="node-body"><p> <b>FILTER (0.000123s) </b></p><p> (p.OwnerUserId >= 3)<br>----<br>EC: 18395 </p><p> cardinality = 38605 </p></div></span><ul><li><span class="tf-nc" style="background-color: #baffc9;"><div class="node-body"><p> <b>SEQ SCAN  (0.000941s) </b></p><p> p<br>----<br>OwnerUserId<br>----<br>Filters: Score>=0 AND Score<=15 AND Score IS NOT NULL<br>ViewCount>=0 AND ViewCount<=3002 AND ViewCount IS NOT NULL<br>AnswerCount<=3 AND AnswerCount IS NOT NULL<br>CommentCount<=10 AND CommentCount IS NOT NULL<br>----<br>EC: 18395 </p><p> cardinality = 39244 </p></div></span></li></ul></li><li><span class="tf-nc" style="background-color: #ffffba;"><div class="node-body"><p> <b>HASH JOIN (0.001195s) </b></p><p> INNER<br>c.UserId = u.Id<br>----<br>Build Min: 3<br>Build Max: 55746<br>----<br>EC: 1936<br> </p><p> cardinality = 53564 </p></div></span><ul><li><span class="tf-nc" style="background-color: #baffc9;"><div class="node-body"><p> <b>SEQ SCAN  (0.000596s) </b></p><p> c<br>----<br>UserId<br>----<br>Filters: Score=0 AND Score IS NOT NULL<br>----<br>EC: 9684 </p><p> cardinality = 134887 </p></div></span></li><li><span class="tf-nc" style="background-color: #bae1ff;"><div class="node-body"><p> <b>FILTER (9.3e-05s) </b></p><p> (u.Id BETWEEN 3 AND 55746)<br>----<br>EC: 8065 </p><p> cardinality = 38281 </p></div></span><ul><li><span class="tf-nc" style="background-color: #baffc9;"><div class="node-body"><p> <b>SEQ SCAN  (0.000255s) </b></p><p> u<br>----<br>Id<br>----<br>Filters: DownVotes<=0 AND DownVotes IS NOT NULL<br>CreationDate>='2010-08-23 16:21:10'::TIMESTAMP AND CreationDate<='2014-09-02 09:50:06'::TIMESTAMP AND CreationDate IS NOT NULL<br>----<br>EC: 8065 </p><p> cardinality = 38281 </p></div></span></li></ul></li></ul></li></ul></li></ul></li></ul></li></ul> </div>
+ <ul><li><span class="tf-nc" style=""><div class="node-body"><p> <b>RESULT COLLECTOR (1e-05s) </b></p><p> cardinality = 0 </p></div></span><ul><li><span class="tf-nc" style="background-color: #ffdfba;"><div class="node-body"><p> <b>UNGROUPED AGGREGATE (6.2e-05s) </b></p><p> count_star() </p><p> cardinality = 1 </p></div></span><ul><li><span class="tf-nc" style="background-color: #ffffba;"><div class="node-body"><p> <b>HASH JOIN (0.007209s) </b></p><p> INNER<br>p.OwnerUserId = u.Id<br>----<br>Build Min: 3<br>Build Max: 55746<br>----<br>EC: 883<br> </p><p> cardinality = 326559 </p></div></span><ul><li><span class="tf-nc" style="background-color: #bae1ff;"><div class="node-body"><p> <b>FILTER (0.000124s) </b></p><p> (p.OwnerUserId >= 3)<br>----<br>EC: 18395 </p><p> cardinality = 38605 </p></div></span><ul><li><span class="tf-nc" style="background-color: #baffc9;"><div class="node-body"><p> <b>SEQ SCAN  (0.001019s) </b></p><p> p<br>----<br>OwnerUserId<br>----<br>Filters: Score>=0 AND Score<=15 AND Score IS NOT NULL<br>ViewCount>=0 AND ViewCount<=3002 AND ViewCount IS NOT NULL<br>AnswerCount<=3 AND AnswerCount IS NOT NULL<br>CommentCount<=10 AND CommentCount IS NOT NULL<br>----<br>EC: 18395 </p><p> cardinality = 39244 </p></div></span></li></ul></li><li><span class="tf-nc" style="background-color: #ffffba;"><div class="node-body"><p> <b>HASH JOIN (0.001175s) </b></p><p> INNER<br>c.UserId = u.Id<br>----<br>Build Min: 3<br>Build Max: 55746<br>----<br>EC: 1936<br> </p><p> cardinality = 53564 </p></div></span><ul><li><span class="tf-nc" style="background-color: #baffc9;"><div class="node-body"><p> <b>SEQ SCAN  (0.000665s) </b></p><p> c<br>----<br>UserId<br>----<br>Filters: Score=0 AND Score IS NOT NULL<br>----<br>EC: 9684 </p><p> cardinality = 134887 </p></div></span></li><li><span class="tf-nc" style="background-color: #bae1ff;"><div class="node-body"><p> <b>FILTER (9.9e-05s) </b></p><p> (u.Id BETWEEN 3 AND 55746)<br>----<br>EC: 8065 </p><p> cardinality = 38281 </p></div></span><ul><li><span class="tf-nc" style="background-color: #baffc9;"><div class="node-body"><p> <b>SEQ SCAN  (0.000238s) </b></p><p> u<br>----<br>Id<br>----<br>Filters: DownVotes<=0 AND DownVotes IS NOT NULL<br>CreationDate>='2010-08-23 16:21:10'::TIMESTAMP AND CreationDate<='2014-09-02 09:50:06'::TIMESTAMP AND CreationDate IS NOT NULL<br>----<br>EC: 8065 </p><p> cardinality = 38281 </p></div></span></li></ul></li></ul></li></ul></li></ul></li></ul></li></ul> </div>
 </body>
 </html>

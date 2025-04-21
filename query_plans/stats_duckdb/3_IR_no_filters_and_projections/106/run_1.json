@@ -1,20 +1,20 @@
 {
-    "execution_time": 0.162256,
+    "execution_time": 0.135361,
     "root": {
         "name": "AGGREGATE",
-        "execution_time": 0.000111,
+        "execution_time": 3.1e-05,
         "actual_rows": 1,
         "estimated_cardinality": null,
         "children": [
             {
                 "name": "HASHJOIN",
-                "execution_time": 0.108188,
+                "execution_time": 0.088896,
                 "actual_rows": 569476,
                 "estimated_cardinality": null,
                 "children": [
                     {
                         "name": "SEQUENTIALSCAN",
-                        "execution_time": 0.002272,
+                        "execution_time": 0.00114,
                         "actual_rows": 34773,
                         "estimated_cardinality": 328064,
                         "children": [],
@@ -29,13 +29,13 @@
                     },
                     {
                         "name": "HASHJOIN",
-                        "execution_time": 0.011692,
+                        "execution_time": 0.009556,
                         "actual_rows": 365522,
                         "estimated_cardinality": null,
                         "children": [
                             {
                                 "name": "SEQUENTIALSCAN",
-                                "execution_time": 0.000838,
+                                "execution_time": 0.000651,
                                 "actual_rows": 171115,
                                 "estimated_cardinality": 34861,
                                 "children": [],
@@ -50,19 +50,19 @@
                             },
                             {
                                 "name": "HASHJOIN",
-                                "execution_time": 0.003084,
+                                "execution_time": 0.003243,
                                 "actual_rows": 40568,
                                 "estimated_cardinality": null,
                                 "children": [
                                     {
                                         "name": "FILTER",
-                                        "execution_time": 0.000382,
+                                        "execution_time": 0.000385,
                                         "actual_rows": 89472,
                                         "estimated_cardinality": 12128,
                                         "children": [
                                             {
                                                 "name": "SEQUENTIALSCAN",
-                                                "execution_time": 0.002063,
+                                                "execution_time": 0.009134,
                                                 "actual_rows": 91976,
                                                 "estimated_cardinality": 12128,
                                                 "children": [],
@@ -80,13 +80,13 @@
                                     },
                                     {
                                         "name": "FILTER",
-                                        "execution_time": 0.000106,
+                                        "execution_time": 0.00012,
                                         "actual_rows": 36820,
                                         "estimated_cardinality": 8065,
                                         "children": [
                                             {
                                                 "name": "SEQUENTIALSCAN",
-                                                "execution_time": 0.000454,
+                                                "execution_time": 0.000415,
                                                 "actual_rows": 36820,
                                                 "estimated_cardinality": 8065,
                                                 "children": [],
@@ -151,9 +151,9 @@
         ]
     },
     "aliases": {
+        "u": "users",
         "ph": "postHistory",
-        "v": "votes",
         "c": "comments",
-        "u": "users"
+        "v": "votes"
     }
 }

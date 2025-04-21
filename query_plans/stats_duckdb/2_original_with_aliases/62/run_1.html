@@ -66,44 +66,44 @@
 		</thead><tbody>
 	<tr>
 			<td><b>TOTAL TIME</b></td>
-            <td>0.017434</td>
+            <td>0.019204</td>
             <td>100.0%</td>
     </tr>
 
 	<tr>
 			<td><b>Execution Time</b></td>
-            <td>0.015404</td>
-            <td>88.356%</td>
+            <td>0.017247000000000002</td>
+            <td>89.809%</td>
     </tr>
 
 	<tr>
 			<td>HASH_JOIN</td>
-            <td>0.013112</td>
-            <td>75.209%</td>
+            <td>0.015080000000000001</td>
+            <td>78.525%</td>
     </tr>
 
 	<tr>
 			<td>SEQ_SCAN </td>
-            <td>0.002195</td>
-            <td>12.590%</td>
+            <td>0.002071</td>
+            <td>10.784%</td>
     </tr>
 
 	<tr>
 			<td>FILTER</td>
-            <td>8.2e-05</td>
-            <td>0.4703%</td>
-    </tr>
-
-	<tr>
-			<td>RESULT_COLLECTOR</td>
-            <td>1e-05</td>
-            <td>0.0573%</td>
+            <td>8.8e-05</td>
+            <td>0.4582%</td>
     </tr>
 
 	<tr>
 			<td>UNGROUPED_AGGREGATE</td>
-            <td>5e-06</td>
-            <td>0.0286%</td>
+            <td>6e-06</td>
+            <td>0.0312%</td>
+    </tr>
+
+	<tr>
+			<td>RESULT_COLLECTOR</td>
+            <td>2e-06</td>
+            <td>0.0104%</td>
     </tr>
 
 	<tr>
@@ -114,6 +114,6 @@
 </tbody></table>
 	</div>
 	<div class="tf-tree tf-gap-lg"> 
- <ul><li><span class="tf-nc" style=""><div class="node-body"><p> <b>RESULT COLLECTOR (1e-05s) </b></p><p> cardinality = 0 </p></div></span><ul><li><span class="tf-nc" style="background-color: #ffdfba;"><div class="node-body"><p> <b>UNGROUPED AGGREGATE (5e-06s) </b></p><p> count_star() </p><p> cardinality = 1 </p></div></span><ul><li><span class="tf-nc" style="background-color: #ffffba;"><div class="node-body"><p> <b>HASH JOIN (0.011129s) </b></p><p> INNER<br>v.PostId = pl.RelatedPostId<br>----<br>Build Min: 1<br>Build Max: 115163<br>----<br>EC: 330<br> </p><p> cardinality = 109961 </p></div></span><ul><li><span class="tf-nc" style="background-color: #baffc9;"><div class="node-body"><p> <b>SEQ SCAN  (0.000426s) </b></p><p> v<br>----<br>PostId<br>----<br>Filters: PostId<=115163 AND PostId IS NOT NULL<br>----<br>EC: 328064 </p><p> cardinality = 327818 </p></div></span></li><li><span class="tf-nc" style="background-color: #ffffba;"><div class="node-body"><p> <b>HASH JOIN (0.000788s) </b></p><p> INNER<br>b.UserId = u.Id<br>----<br>Build Min: 2<br>Build Max: 55746<br>----<br>EC: 92<br> </p><p> cardinality = 9266 </p></div></span><ul><li><span class="tf-nc" style="background-color: #baffc9;"><div class="node-body"><p> <b>SEQ SCAN  (5.4e-05s) </b></p><p> b<br>----<br>UserId<br>----<br>EC: 79851 </p><p> cardinality = 79851 </p></div></span></li><li><span class="tf-nc" style="background-color: #ffb3ba;"><div class="node-body"><p> <b>PROJECTION (0.0s) </b></p><p> #0<br>#1<br> </p><p> cardinality = 626 </p></div></span><ul><li><span class="tf-nc" style="background-color: #bae1ff;"><div class="node-body"><p> <b>FILTER (2e-06s) </b></p><p> (u.Id >= 2)<br>----<br>EC: 46 </p><p> cardinality = 626 </p></div></span><ul><li><span class="tf-nc" style="background-color: #ffffba;"><div class="node-body"><p> <b>HASH JOIN (0.000333s) </b></p><p> INNER<br>u.Id = p.OwnerUserId<br>----<br>Build Min: -1<br>Build Max: 55746<br>----<br>EC: 46<br> </p><p> cardinality = 626 </p></div></span><ul><li><span class="tf-nc" style="background-color: #baffc9;"><div class="node-body"><p> <b>SEQ SCAN  (8.7e-05s) </b></p><p> u<br>----<br>Id<br>----<br>Filters: Id<=55746 AND Id IS NOT NULL<br>----<br>EC: 8065 </p><p> cardinality = 40324 </p></div></span></li><li><span class="tf-nc" style="background-color: #ffffba;"><div class="node-body"><p> <b>HASH JOIN (0.000399s) </b></p><p> INNER<br>p.Id = pl.RelatedPostId<br>----<br>Build Min: 1<br>Build Max: 115163<br>----<br>EC: 233<br> </p><p> cardinality = 640 </p></div></span><ul><li><span class="tf-nc" style="background-color: #bae1ff;"><div class="node-body"><p> <b>FILTER (3.5e-05s) </b></p><p> (p.Id <= 115163)<br>----<br>EC: 18395 </p><p> cardinality = 11536 </p></div></span><ul><li><span class="tf-nc" style="background-color: #baffc9;"><div class="node-body"><p> <b>SEQ SCAN  (0.001202s) </b></p><p> p<br>----<br>Id<br>OwnerUserId<br>----<br>Filters: ViewCount<=7710 AND ViewCount IS NOT NULL<br>CommentCount<=12 AND CommentCount IS NOT NULL<br>FavoriteCount>=0 AND FavoriteCount<=4 AND FavoriteCount IS NOT NULL<br>CreationDate>='2010-07-27 03:58:22'::TIMESTAMP AND CreationDate IS NOT NULL<br>----<br>EC: 18395 </p><p> cardinality = 11546 </p></div></span></li></ul></li><li><span class="tf-nc" style="background-color: #ffffba;"><div class="node-body"><p> <b>HASH JOIN (0.000463s) </b></p><p> INNER<br>pl.RelatedPostId = c.PostId<br>----<br>EC: 11102<br> </p><p> cardinality = 2957 </p></div></span><ul><li><span class="tf-nc" style="background-color: #baffc9;"><div class="node-body"><p> <b>SEQ SCAN  (1.1e-05s) </b></p><p> pl<br>----<br>RelatedPostId<br>----<br>EC: 11102 </p><p> cardinality = 11102 </p></div></span></li><li><span class="tf-nc" style="background-color: #bae1ff;"><div class="node-body"><p> <b>FILTER (4.5e-05s) </b></p><p> (c.PostId <= 115163)<br>----<br>EC: 9684 </p><p> cardinality = 8354 </p></div></span><ul><li><span class="tf-nc" style="background-color: #baffc9;"><div class="node-body"><p> <b>SEQ SCAN  (0.000415s) </b></p><p> c<br>----<br>PostId<br>----<br>Filters: Score=2 AND Score IS NOT NULL<br>----<br>EC: 9684 </p><p> cardinality = 8362 </p></div></span></li></ul></li></ul></li></ul></li></ul></li></ul></li></ul></li></ul></li></ul></li></ul></li></ul></li></ul> </div>
+ <ul><li><span class="tf-nc" style=""><div class="node-body"><p> <b>RESULT COLLECTOR (2e-06s) </b></p><p> cardinality = 0 </p></div></span><ul><li><span class="tf-nc" style="background-color: #ffdfba;"><div class="node-body"><p> <b>UNGROUPED AGGREGATE (6e-06s) </b></p><p> count_star() </p><p> cardinality = 1 </p></div></span><ul><li><span class="tf-nc" style="background-color: #ffffba;"><div class="node-body"><p> <b>HASH JOIN (0.013202s) </b></p><p> INNER<br>v.PostId = pl.RelatedPostId<br>----<br>Build Min: 1<br>Build Max: 115163<br>----<br>EC: 330<br> </p><p> cardinality = 109961 </p></div></span><ul><li><span class="tf-nc" style="background-color: #baffc9;"><div class="node-body"><p> <b>SEQ SCAN  (0.000451s) </b></p><p> v<br>----<br>PostId<br>----<br>Filters: PostId<=115163 AND PostId IS NOT NULL<br>----<br>EC: 328064 </p><p> cardinality = 327818 </p></div></span></li><li><span class="tf-nc" style="background-color: #ffffba;"><div class="node-body"><p> <b>HASH JOIN (0.000772s) </b></p><p> INNER<br>b.UserId = u.Id<br>----<br>Build Min: 2<br>Build Max: 55746<br>----<br>EC: 92<br> </p><p> cardinality = 9266 </p></div></span><ul><li><span class="tf-nc" style="background-color: #baffc9;"><div class="node-body"><p> <b>SEQ SCAN  (4.9e-05s) </b></p><p> b<br>----<br>UserId<br>----<br>EC: 79851 </p><p> cardinality = 79851 </p></div></span></li><li><span class="tf-nc" style="background-color: #ffb3ba;"><div class="node-body"><p> <b>PROJECTION (0.0s) </b></p><p> #0<br>#1<br> </p><p> cardinality = 626 </p></div></span><ul><li><span class="tf-nc" style="background-color: #bae1ff;"><div class="node-body"><p> <b>FILTER (2e-06s) </b></p><p> (u.Id >= 2)<br>----<br>EC: 46 </p><p> cardinality = 626 </p></div></span><ul><li><span class="tf-nc" style="background-color: #ffffba;"><div class="node-body"><p> <b>HASH JOIN (0.000318s) </b></p><p> INNER<br>u.Id = p.OwnerUserId<br>----<br>Build Min: -1<br>Build Max: 55746<br>----<br>EC: 46<br> </p><p> cardinality = 626 </p></div></span><ul><li><span class="tf-nc" style="background-color: #baffc9;"><div class="node-body"><p> <b>SEQ SCAN  (8.4e-05s) </b></p><p> u<br>----<br>Id<br>----<br>Filters: Id<=55746 AND Id IS NOT NULL<br>----<br>EC: 8065 </p><p> cardinality = 40324 </p></div></span></li><li><span class="tf-nc" style="background-color: #ffffba;"><div class="node-body"><p> <b>HASH JOIN (0.000354s) </b></p><p> INNER<br>p.Id = pl.RelatedPostId<br>----<br>Build Min: 1<br>Build Max: 115163<br>----<br>EC: 233<br> </p><p> cardinality = 640 </p></div></span><ul><li><span class="tf-nc" style="background-color: #bae1ff;"><div class="node-body"><p> <b>FILTER (3e-05s) </b></p><p> (p.Id <= 115163)<br>----<br>EC: 18395 </p><p> cardinality = 11536 </p></div></span><ul><li><span class="tf-nc" style="background-color: #baffc9;"><div class="node-body"><p> <b>SEQ SCAN  (0.001087s) </b></p><p> p<br>----<br>Id<br>OwnerUserId<br>----<br>Filters: ViewCount<=7710 AND ViewCount IS NOT NULL<br>CommentCount<=12 AND CommentCount IS NOT NULL<br>FavoriteCount>=0 AND FavoriteCount<=4 AND FavoriteCount IS NOT NULL<br>CreationDate>='2010-07-27 03:58:22'::TIMESTAMP AND CreationDate IS NOT NULL<br>----<br>EC: 18395 </p><p> cardinality = 11546 </p></div></span></li></ul></li><li><span class="tf-nc" style="background-color: #ffffba;"><div class="node-body"><p> <b>HASH JOIN (0.000434s) </b></p><p> INNER<br>pl.RelatedPostId = c.PostId<br>----<br>EC: 11102<br> </p><p> cardinality = 2957 </p></div></span><ul><li><span class="tf-nc" style="background-color: #baffc9;"><div class="node-body"><p> <b>SEQ SCAN  (9e-06s) </b></p><p> pl<br>----<br>RelatedPostId<br>----<br>EC: 11102 </p><p> cardinality = 11102 </p></div></span></li><li><span class="tf-nc" style="background-color: #bae1ff;"><div class="node-body"><p> <b>FILTER (5.6e-05s) </b></p><p> (c.PostId <= 115163)<br>----<br>EC: 9684 </p><p> cardinality = 8354 </p></div></span><ul><li><span class="tf-nc" style="background-color: #baffc9;"><div class="node-body"><p> <b>SEQ SCAN  (0.000391s) </b></p><p> c<br>----<br>PostId<br>----<br>Filters: Score=2 AND Score IS NOT NULL<br>----<br>EC: 9684 </p><p> cardinality = 8362 </p></div></span></li></ul></li></ul></li></ul></li></ul></li></ul></li></ul></li></ul></li></ul></li></ul></li></ul></li></ul> </div>
 </body>
 </html>

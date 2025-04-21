@@ -451,7 +451,6 @@ fn poll_next_leaf(
     // - the guard stream returned an error
     let guard_batch = match ready!(guard_stream.poll_next_unpin(cx)) {
         Some(Ok(guard_batch)) => {
-            //println!("guard_batch leaf:{:?}", guard_batch);
             guard_batch
         }
         Some(Err(e)) => return Poll::Ready(Some(Err(e))),

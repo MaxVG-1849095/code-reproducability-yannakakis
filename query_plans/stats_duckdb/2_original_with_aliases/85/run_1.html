@@ -66,48 +66,48 @@
 		</thead><tbody>
 	<tr>
 			<td><b>TOTAL TIME</b></td>
-            <td>0.080693</td>
+            <td>0.085177</td>
             <td>100.0%</td>
     </tr>
 
 	<tr>
 			<td><b>Execution Time</b></td>
-            <td>0.07410400000000002</td>
-            <td>91.834%</td>
+            <td>0.078378</td>
+            <td>92.017%</td>
     </tr>
 
 	<tr>
 			<td>HASH_JOIN</td>
-            <td>0.06865600000000001</td>
-            <td>85.082%</td>
+            <td>0.07255400000000001</td>
+            <td>85.180%</td>
     </tr>
 
 	<tr>
 			<td>SEQ_SCAN </td>
-            <td>0.002945</td>
-            <td>3.6496%</td>
+            <td>0.003186</td>
+            <td>3.7404%</td>
     </tr>
 
 	<tr>
 			<td>UNGROUPED_AGGREGATE</td>
-            <td>0.001657</td>
-            <td>2.0534%</td>
+            <td>0.001733</td>
+            <td>2.0345%</td>
     </tr>
 
 	<tr>
 			<td>FILTER</td>
-            <td>0.000845</td>
-            <td>1.0471%</td>
+            <td>0.000904</td>
+            <td>1.0613%</td>
     </tr>
 
 	<tr>
 			<td>RESULT_COLLECTOR</td>
             <td>1e-06</td>
-            <td>0.0012%</td>
+            <td>0.0011%</td>
     </tr>
 </tbody></table>
 	</div>
 	<div class="tf-tree tf-gap-lg"> 
- <ul><li><span class="tf-nc" style=""><div class="node-body"><p> <b>RESULT COLLECTOR (1e-06s) </b></p><p> cardinality = 0 </p></div></span><ul><li><span class="tf-nc" style="background-color: #ffdfba;"><div class="node-body"><p> <b>UNGROUPED AGGREGATE (0.001657s) </b></p><p> count_star() </p><p> cardinality = 1 </p></div></span><ul><li><span class="tf-nc" style="background-color: #ffffba;"><div class="node-body"><p> <b>HASH JOIN (0.067083s) </b></p><p> INNER<br>c.UserId = v.UserId<br>----<br>Build Min: 3<br>Build Max: 55706<br>----<br>EC: 56721<br> </p><p> cardinality = 10862842 </p></div></span><ul><li><span class="tf-nc" style="background-color: #baffc9;"><div class="node-body"><p> <b>SEQ SCAN  (0.000507s) </b></p><p> c<br>----<br>UserId<br>----<br>Filters: UserId<=55706 AND UserId IS NOT NULL<br>----<br>EC: 174305 </p><p> cardinality = 171462 </p></div></span></li><li><span class="tf-nc" style="background-color: #ffffba;"><div class="node-body"><p> <b>HASH JOIN (0.001573s) </b></p><p> INNER<br>v.UserId = u.Id<br>----<br>EC: 65612<br> </p><p> cardinality = 33533 </p></div></span><ul><li><span class="tf-nc" style="background-color: #bae1ff;"><div class="node-body"><p> <b>FILTER (0.000728s) </b></p><p> (v.UserId >= 3)<br>----<br>EC: 65612 </p><p> cardinality = 34713 </p></div></span><ul><li><span class="tf-nc" style="background-color: #baffc9;"><div class="node-body"><p> <b>SEQ SCAN  (0.002222s) </b></p><p> v<br>----<br>UserId<br>----<br>Filters: CreationDate<='2014-09-11 00:00:00'::TIMESTAMP AND CreationDate IS NOT NULL<br>----<br>EC: 65612 </p><p> cardinality = 327569 </p></div></span></li></ul></li><li><span class="tf-nc" style="background-color: #bae1ff;"><div class="node-body"><p> <b>FILTER (0.000117s) </b></p><p> (u.Id BETWEEN 3 AND 55706)<br>----<br>EC: 8065 </p><p> cardinality = 36356 </p></div></span><ul><li><span class="tf-nc" style="background-color: #baffc9;"><div class="node-body"><p> <b>SEQ SCAN  (0.000216s) </b></p><p> u<br>----<br>Id<br>----<br>Filters: CreationDate>='2010-07-19 20:11:48'::TIMESTAMP AND CreationDate<='2014-07-09 20:37:10'::TIMESTAMP AND CreationDate IS NOT NULL<br>----<br>EC: 8065 </p><p> cardinality = 36356 </p></div></span></li></ul></li></ul></li></ul></li></ul></li></ul></li></ul> </div>
+ <ul><li><span class="tf-nc" style=""><div class="node-body"><p> <b>RESULT COLLECTOR (1e-06s) </b></p><p> cardinality = 0 </p></div></span><ul><li><span class="tf-nc" style="background-color: #ffdfba;"><div class="node-body"><p> <b>UNGROUPED AGGREGATE (0.001733s) </b></p><p> count_star() </p><p> cardinality = 1 </p></div></span><ul><li><span class="tf-nc" style="background-color: #ffffba;"><div class="node-body"><p> <b>HASH JOIN (0.070953s) </b></p><p> INNER<br>c.UserId = v.UserId<br>----<br>Build Min: 3<br>Build Max: 55706<br>----<br>EC: 56721<br> </p><p> cardinality = 10862842 </p></div></span><ul><li><span class="tf-nc" style="background-color: #baffc9;"><div class="node-body"><p> <b>SEQ SCAN  (0.000696s) </b></p><p> c<br>----<br>UserId<br>----<br>Filters: UserId<=55706 AND UserId IS NOT NULL<br>----<br>EC: 174305 </p><p> cardinality = 171462 </p></div></span></li><li><span class="tf-nc" style="background-color: #ffffba;"><div class="node-body"><p> <b>HASH JOIN (0.001601s) </b></p><p> INNER<br>v.UserId = u.Id<br>----<br>EC: 65612<br> </p><p> cardinality = 33533 </p></div></span><ul><li><span class="tf-nc" style="background-color: #bae1ff;"><div class="node-body"><p> <b>FILTER (0.00082s) </b></p><p> (v.UserId >= 3)<br>----<br>EC: 65612 </p><p> cardinality = 34713 </p></div></span><ul><li><span class="tf-nc" style="background-color: #baffc9;"><div class="node-body"><p> <b>SEQ SCAN  (0.002356s) </b></p><p> v<br>----<br>UserId<br>----<br>Filters: CreationDate<='2014-09-11 00:00:00'::TIMESTAMP AND CreationDate IS NOT NULL<br>----<br>EC: 65612 </p><p> cardinality = 327569 </p></div></span></li></ul></li><li><span class="tf-nc" style="background-color: #bae1ff;"><div class="node-body"><p> <b>FILTER (8.4e-05s) </b></p><p> (u.Id BETWEEN 3 AND 55706)<br>----<br>EC: 8065 </p><p> cardinality = 36356 </p></div></span><ul><li><span class="tf-nc" style="background-color: #baffc9;"><div class="node-body"><p> <b>SEQ SCAN  (0.000134s) </b></p><p> u<br>----<br>Id<br>----<br>Filters: CreationDate>='2010-07-19 20:11:48'::TIMESTAMP AND CreationDate<='2014-07-09 20:37:10'::TIMESTAMP AND CreationDate IS NOT NULL<br>----<br>EC: 8065 </p><p> cardinality = 36356 </p></div></span></li></ul></li></ul></li></ul></li></ul></li></ul></li></ul> </div>
 </body>
 </html>

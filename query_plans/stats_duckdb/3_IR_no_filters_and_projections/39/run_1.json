@@ -1,20 +1,20 @@
 {
-    "execution_time": 0.126278,
+    "execution_time": 0.139676,
     "root": {
         "name": "AGGREGATE",
-        "execution_time": 0.000279,
+        "execution_time": 0.000301,
         "actual_rows": 1,
         "estimated_cardinality": null,
         "children": [
             {
                 "name": "HASHJOIN",
-                "execution_time": 0.094175,
+                "execution_time": 0.105046,
                 "actual_rows": 2034610,
                 "estimated_cardinality": null,
                 "children": [
                     {
                         "name": "SEQUENTIALSCAN",
-                        "execution_time": 0.000208,
+                        "execution_time": 0.000387,
                         "actual_rows": 79848,
                         "estimated_cardinality": 79851,
                         "children": [],
@@ -29,19 +29,19 @@
                     },
                     {
                         "name": "HASHJOIN",
-                        "execution_time": 0.010998,
+                        "execution_time": 0.011072,
                         "actual_rows": 194277,
                         "estimated_cardinality": null,
                         "children": [
                             {
                                 "name": "FILTER",
-                                "execution_time": 0.00032,
+                                "execution_time": 0.000318,
                                 "actual_rows": 65017,
                                 "estimated_cardinality": 12128,
                                 "children": [
                                     {
                                         "name": "SEQUENTIALSCAN",
-                                        "execution_time": 0.002299,
+                                        "execution_time": 0.002495,
                                         "actual_rows": 66005,
                                         "estimated_cardinality": 12128,
                                         "children": [],
@@ -59,13 +59,13 @@
                             },
                             {
                                 "name": "HASHJOIN",
-                                "execution_time": 0.001163,
+                                "execution_time": 0.00118,
                                 "actual_rows": 48758,
                                 "estimated_cardinality": null,
                                 "children": [
                                     {
                                         "name": "SEQUENTIALSCAN",
-                                        "execution_time": 0.001001,
+                                        "execution_time": 0.001156,
                                         "actual_rows": 134790,
                                         "estimated_cardinality": 9684,
                                         "children": [],
@@ -80,13 +80,13 @@
                                     },
                                     {
                                         "name": "FILTER",
-                                        "execution_time": 0.0001,
+                                        "execution_time": 9.8e-05,
                                         "actual_rows": 38069,
                                         "estimated_cardinality": 8065,
                                         "children": [
                                             {
                                                 "name": "SEQUENTIALSCAN",
-                                                "execution_time": 0.000365,
+                                                "execution_time": 0.000698,
                                                 "actual_rows": 38069,
                                                 "estimated_cardinality": 8065,
                                                 "children": [],
@@ -151,9 +151,9 @@
         ]
     },
     "aliases": {
-        "ph": "postHistory",
-        "c": "comments",
+        "u": "users",
         "b": "badges",
-        "u": "users"
+        "c": "comments",
+        "ph": "postHistory"
     }
 }

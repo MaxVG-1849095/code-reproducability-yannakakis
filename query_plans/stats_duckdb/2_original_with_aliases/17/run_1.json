@@ -1,7 +1,7 @@
 {
    "name":  "Query", 
-   "result": 0.007467,
-   "timing": 0.007467,
+   "result": 0.007343,
+   "timing": 0.007343,
    "cardinality": 0,
    "extra-info": "SELECT COUNT(*) FROM p, t, v WHERE p.Id = t.ExcerptPostId AND p.OwnerUserId = v.UserId AND p.CreationDate>='2010-07-20 02:01:05'::timestamp;", 
    "timings": [
@@ -10,25 +10,25 @@
    "children": [
     {
       "name": "RESULT_COLLECTOR",
-      "timing":0.000001,
+      "timing":0.000002,
       "cardinality":0,
       "extra_info": "",
       "children": [
        {
          "name": "UNGROUPED_AGGREGATE",
-         "timing":0.000003,
+         "timing":0.000004,
          "cardinality":1,
          "extra_info": "count_star()",
          "children": [
           {
             "name": "HASH_JOIN",
-            "timing":0.004856,
+            "timing":0.004845,
             "cardinality":70752,
             "extra_info": "INNER\nv.UserId = p.OwnerUserId\n\n[INFOSEPARATOR]\nBuild Min: -1\nBuild Max: 55706\n\n[INFOSEPARATOR]\nEC: 6013\n",
             "children": [
              {
                "name": "SEQ_SCAN ",
-               "timing":0.000402,
+               "timing":0.000397,
                "cardinality":328064,
                "extra_info": "v\n[INFOSEPARATOR]\nUserId\n[INFOSEPARATOR]\nEC: 328064",
                "children": [
@@ -37,19 +37,19 @@
 ,
              {
                "name": "HASH_JOIN",
-               "timing":0.000608,
+               "timing":0.000582,
                "cardinality":593,
                "extra_info": "INNER\np.Id = t.ExcerptPostId\n\n[INFOSEPARATOR]\nEC: 18395\n",
                "children": [
                 {
                   "name": "FILTER",
-                  "timing":0.000487,
+                  "timing":0.000466,
                   "cardinality":87360,
                   "extra_info": "((p.OwnerUserId <= 55706) AND (p.Id BETWEEN 2331 AND 114058))\n[INFOSEPARATOR]\nEC: 18395",
                   "children": [
                    {
                      "name": "SEQ_SCAN ",
-                     "timing":0.000301,
+                     "timing":0.000290,
                      "cardinality":91770,
                      "extra_info": "p\n[INFOSEPARATOR]\nId\nOwnerUserId\n[INFOSEPARATOR]\nFilters: CreationDate>='2010-07-20 02:01:05'::TIMESTAMP AND CreationDate IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 18395",
                      "children": [
@@ -60,7 +60,7 @@
 ,
                 {
                   "name": "SEQ_SCAN ",
-                  "timing":0.000005,
+                  "timing":0.000004,
                   "cardinality":1032,
                   "extra_info": "t\n[INFOSEPARATOR]\nExcerptPostId\n[INFOSEPARATOR]\nEC: 1032",
                   "children": [

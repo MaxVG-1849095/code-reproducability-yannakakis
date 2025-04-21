@@ -1,20 +1,20 @@
 {
-    "execution_time": 0.211082,
+    "execution_time": 0.21697,
     "root": {
         "name": "AGGREGATE",
-        "execution_time": 0.000458,
+        "execution_time": 0.000477,
         "actual_rows": 1,
         "estimated_cardinality": null,
         "children": [
             {
                 "name": "HASHJOIN",
-                "execution_time": 0.180465,
+                "execution_time": 0.183072,
                 "actual_rows": 3169724,
                 "estimated_cardinality": null,
                 "children": [
                     {
                         "name": "SEQUENTIALSCAN",
-                        "execution_time": 0.00019,
+                        "execution_time": 0.000367,
                         "actual_rows": 79835,
                         "estimated_cardinality": 79851,
                         "children": [],
@@ -29,7 +29,7 @@
                     },
                     {
                         "name": "HASHJOIN",
-                        "execution_time": 0.002242,
+                        "execution_time": 0.00264,
                         "actual_rows": 70700,
                         "estimated_cardinality": null,
                         "children": [
@@ -41,7 +41,7 @@
                                 "children": [
                                     {
                                         "name": "SEQUENTIALSCAN",
-                                        "execution_time": 0.002477,
+                                        "execution_time": 0.002488,
                                         "actual_rows": 1740,
                                         "estimated_cardinality": 65612,
                                         "children": [],
@@ -59,19 +59,19 @@
                             },
                             {
                                 "name": "HASHJOIN",
-                                "execution_time": 0.002501,
+                                "execution_time": 0.003106,
                                 "actual_rows": 92013,
                                 "estimated_cardinality": null,
                                 "children": [
                                     {
                                         "name": "FILTER",
-                                        "execution_time": 0.000394,
+                                        "execution_time": 0.000852,
                                         "actual_rows": 132704,
                                         "estimated_cardinality": 9684,
                                         "children": [
                                             {
                                                 "name": "SEQUENTIALSCAN",
-                                                "execution_time": 0.00061,
+                                                "execution_time": 0.000744,
                                                 "actual_rows": 134887,
                                                 "estimated_cardinality": 9684,
                                                 "children": [],
@@ -89,13 +89,13 @@
                                     },
                                     {
                                         "name": "FILTER",
-                                        "execution_time": 0.000107,
+                                        "execution_time": 0.000123,
                                         "actual_rows": 37585,
                                         "estimated_cardinality": 8065,
                                         "children": [
                                             {
                                                 "name": "SEQUENTIALSCAN",
-                                                "execution_time": 0.0003,
+                                                "execution_time": 0.000814,
                                                 "actual_rows": 37585,
                                                 "estimated_cardinality": 8065,
                                                 "children": [],
@@ -160,9 +160,9 @@
         ]
     },
     "aliases": {
-        "v": "votes",
-        "c": "comments",
+        "u": "users",
         "b": "badges",
-        "u": "users"
+        "c": "comments",
+        "v": "votes"
     }
 }

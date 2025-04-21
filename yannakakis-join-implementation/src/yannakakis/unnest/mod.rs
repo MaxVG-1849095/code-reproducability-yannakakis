@@ -452,6 +452,7 @@ fn unnest_nestedrel(
             .push(take_from_arrayref::take(col.as_ref(), &row_ids)?);
     }
 
+
     // If the [NestedRel] has itself nested columns, we have to unnest them too.
     for i in (0..rel.schema().nested_fields.len()).rev() {
         let nestedcol = take_rows_from_nestedcol(rel.nested_column(i), &row_ids)?;

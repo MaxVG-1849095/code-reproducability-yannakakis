@@ -1,26 +1,26 @@
 {
-    "execution_time": 0.230535,
+    "execution_time": 0.210943,
     "root": {
         "name": "AGGREGATE",
-        "execution_time": 0.001495,
+        "execution_time": 0.001438,
         "actual_rows": 1,
         "estimated_cardinality": null,
         "children": [
             {
                 "name": "HASHJOIN",
-                "execution_time": 0.204693,
+                "execution_time": 0.186732,
                 "actual_rows": 10223864,
                 "estimated_cardinality": null,
                 "children": [
                     {
                         "name": "FILTER",
-                        "execution_time": 0.000228,
+                        "execution_time": 0.000158,
                         "actual_rows": 79608,
                         "estimated_cardinality": 15970,
                         "children": [
                             {
                                 "name": "SEQUENTIALSCAN",
-                                "execution_time": 0.000592,
+                                "execution_time": 0.000373,
                                 "actual_rows": 79610,
                                 "estimated_cardinality": 15970,
                                 "children": [],
@@ -38,13 +38,13 @@
                     },
                     {
                         "name": "HASHJOIN",
-                        "execution_time": 0.001005,
+                        "execution_time": 0.000872,
                         "actual_rows": 132504,
                         "estimated_cardinality": null,
                         "children": [
                             {
                                 "name": "SEQUENTIALSCAN",
-                                "execution_time": 0.001105,
+                                "execution_time": 0.00088,
                                 "actual_rows": 134659,
                                 "estimated_cardinality": 9684,
                                 "children": [],
@@ -59,7 +59,7 @@
                             },
                             {
                                 "name": "SEQUENTIALSCAN",
-                                "execution_time": 0.000133,
+                                "execution_time": 0.000143,
                                 "actual_rows": 40322,
                                 "estimated_cardinality": 8065,
                                 "children": [],
@@ -107,8 +107,8 @@
         ]
     },
     "aliases": {
-        "c": "comments",
+        "u": "users",
         "b": "badges",
-        "u": "users"
+        "c": "comments"
     }
 }

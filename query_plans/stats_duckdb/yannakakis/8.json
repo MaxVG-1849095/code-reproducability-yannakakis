@@ -1,8 +1,8 @@
 {
-    "execution_time": 0.011307,
+    "execution_time": 0.01138,
     "root": {
         "name": "AGGREGATE",
-        "execution_time": 7e-05,
+        "execution_time": 7.5e-05,
         "actual_rows": 1,
         "estimated_cardinality": null,
         "children": [
@@ -22,7 +22,7 @@
                     ],
                     "guard": {
                         "name": "SEQUENTIALSCAN",
-                        "execution_time": 0.000654,
+                        "execution_time": 0.000662,
                         "actual_rows": 134887,
                         "estimated_cardinality": 9684,
                         "children": [],
@@ -57,13 +57,13 @@
                                 ],
                                 "guard": {
                                     "name": "FILTER",
-                                    "execution_time": 0.000544,
+                                    "execution_time": 0.000586,
                                     "actual_rows": 88137,
                                     "estimated_cardinality": 18395,
                                     "children": [
                                         {
                                             "name": "SEQUENTIALSCAN",
-                                            "execution_time": 0.000436,
+                                            "execution_time": 0.000465,
                                             "actual_rows": 89551,
                                             "estimated_cardinality": 18395,
                                             "children": [],
@@ -98,7 +98,7 @@
                                             "equijoin_keys": [],
                                             "guard": {
                                                 "name": "SEQUENTIALSCAN",
-                                                "execution_time": 0.000121,
+                                                "execution_time": 0.000124,
                                                 "actual_rows": 9480,
                                                 "estimated_cardinality": 5551,
                                                 "children": [],
@@ -128,7 +128,7 @@
     },
     "aliases": {
         "p": "posts",
-        "pl": "postLinks",
-        "c": "comments"
+        "c": "comments",
+        "pl": "postLinks"
     }
 }

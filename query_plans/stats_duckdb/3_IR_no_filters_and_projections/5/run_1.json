@@ -1,20 +1,20 @@
 {
-    "execution_time": 0.498698,
+    "execution_time": 0.530264,
     "root": {
         "name": "AGGREGATE",
-        "execution_time": 0.000577,
+        "execution_time": 0.000595,
         "actual_rows": 1,
         "estimated_cardinality": null,
         "children": [
             {
                 "name": "HASHJOIN",
-                "execution_time": 0.451924,
+                "execution_time": 0.479114,
                 "actual_rows": 7491903,
                 "estimated_cardinality": null,
                 "children": [
                     {
                         "name": "SEQUENTIALSCAN",
-                        "execution_time": 0.001172,
+                        "execution_time": 0.001548,
                         "actual_rows": 34773,
                         "estimated_cardinality": 328064,
                         "children": [],
@@ -29,13 +29,13 @@
                     },
                     {
                         "name": "FILTER",
-                        "execution_time": 0.000401,
+                        "execution_time": 0.00048,
                         "actual_rows": 132704,
                         "estimated_cardinality": 9684,
                         "children": [
                             {
                                 "name": "SEQUENTIALSCAN",
-                                "execution_time": 0.000605,
+                                "execution_time": 0.000685,
                                 "actual_rows": 134887,
                                 "estimated_cardinality": 9684,
                                 "children": [],
@@ -72,7 +72,7 @@
         ]
     },
     "aliases": {
-        "v": "votes",
-        "c": "comments"
+        "c": "comments",
+        "v": "votes"
     }
 }

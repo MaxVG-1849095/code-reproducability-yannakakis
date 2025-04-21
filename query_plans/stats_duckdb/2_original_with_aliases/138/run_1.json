@@ -1,7 +1,7 @@
 {
    "name":  "Query", 
-   "result": 1.237433,
-   "timing": 1.237433,
+   "result": 1.222476,
+   "timing": 1.222476,
    "cardinality": 0,
    "extra-info": "SELECT COUNT(*) FROM t, p, u, v, b WHERE u.Id = b.UserId AND u.Id = p.OwnerUserId AND u.Id = v.UserId AND p.Id = t.ExcerptPostId AND p.CommentCount>=0 AND p.CommentCount<=13 AND u.Reputation>=1 AND b.Date<='2014-09-06 17:33:22'::timestamp;", 
    "timings": [
@@ -16,19 +16,19 @@
       "children": [
        {
          "name": "UNGROUPED_AGGREGATE",
-         "timing":0.000495,
+         "timing":0.000459,
          "cardinality":1,
          "extra_info": "count_star()",
          "children": [
           {
             "name": "HASH_JOIN",
-            "timing":1.118388,
+            "timing":1.098358,
             "cardinality":15677331,
             "extra_info": "INNER\nv.UserId = b.UserId\n\n[INFOSEPARATOR]\nBuild Min: 2\nBuild Max: 55706\n\n[INFOSEPARATOR]\nEC: 132\n",
             "children": [
              {
                "name": "SEQ_SCAN ",
-               "timing":0.002775,
+               "timing":0.001581,
                "cardinality":34773,
                "extra_info": "v\n[INFOSEPARATOR]\nUserId\n[INFOSEPARATOR]\nFilters: UserId>=2 AND UserId IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 328064",
                "children": [
@@ -43,19 +43,19 @@
                "children": [
                 {
                   "name": "FILTER",
-                  "timing":0.000141,
+                  "timing":0.000154,
                   "cardinality":78137,
                   "extra_info": "(b.UserId <= 55706)\n[INFOSEPARATOR]\nEC: 16",
                   "children": [
                    {
                      "name": "HASH_JOIN",
-                     "timing":0.002002,
+                     "timing":0.002011,
                      "cardinality":78137,
                      "extra_info": "INNER\nb.UserId = u.Id\n\n[INFOSEPARATOR]\nBuild Min: 2\nBuild Max: 55746\n\n[INFOSEPARATOR]\nEC: 16\n",
                      "children": [
                       {
                         "name": "SEQ_SCAN ",
-                        "timing":0.000215,
+                        "timing":0.000360,
                         "cardinality":79206,
                         "extra_info": "b\n[INFOSEPARATOR]\nUserId\n[INFOSEPARATOR]\nFilters: Date<='2014-09-06 17:33:22'::TIMESTAMP AND Date IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 15970",
                         "children": [
@@ -70,19 +70,19 @@
                         "children": [
                          {
                            "name": "FILTER",
-                           "timing":0.000002,
+                           "timing":0.000005,
                            "cardinality":580,
                            "extra_info": "(u.Id >= 2)\n[INFOSEPARATOR]\nEC: 41",
                            "children": [
                             {
                               "name": "HASH_JOIN",
-                              "timing":0.000355,
+                              "timing":0.000415,
                               "cardinality":593,
                               "extra_info": "INNER\nu.Id = p.OwnerUserId\n\n[INFOSEPARATOR]\nBuild Min: -1\nBuild Max: 55746\n\n[INFOSEPARATOR]\nEC: 41\n",
                               "children": [
                                {
                                  "name": "SEQ_SCAN ",
-                                 "timing":0.000089,
+                                 "timing":0.000124,
                                  "cardinality":40324,
                                  "extra_info": "u\n[INFOSEPARATOR]\nId\n[INFOSEPARATOR]\nFilters: Id<=55746 AND Id IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 8065",
                                  "children": [
@@ -91,19 +91,19 @@
 ,
                                {
                                  "name": "HASH_JOIN",
-                                 "timing":0.000607,
+                                 "timing":0.001020,
                                  "cardinality":596,
                                  "extra_info": "INNER\np.Id = t.ExcerptPostId\n\n[INFOSEPARATOR]\nEC: 18395\n",
                                  "children": [
                                   {
                                     "name": "FILTER",
-                                    "timing":0.000217,
+                                    "timing":0.000429,
                                     "cardinality":88105,
                                     "extra_info": "(p.Id BETWEEN 2331 AND 114058)\n[INFOSEPARATOR]\nEC: 18395",
                                     "children": [
                                      {
                                        "name": "SEQ_SCAN ",
-                                       "timing":0.000325,
+                                       "timing":0.000488,
                                        "cardinality":91489,
                                        "extra_info": "p\n[INFOSEPARATOR]\nOwnerUserId\nId\n[INFOSEPARATOR]\nFilters: CommentCount>=0 AND CommentCount<=13 AND CommentCount IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 18395",
                                        "children": [
@@ -114,7 +114,7 @@
 ,
                                   {
                                     "name": "SEQ_SCAN ",
-                                    "timing":0.000573,
+                                    "timing":0.008561,
                                     "cardinality":1032,
                                     "extra_info": "t\n[INFOSEPARATOR]\nExcerptPostId\n[INFOSEPARATOR]\nEC: 1032",
                                     "children": [

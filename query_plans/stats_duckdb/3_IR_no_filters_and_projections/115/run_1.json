@@ -1,20 +1,20 @@
 {
-    "execution_time": 0.799666,
+    "execution_time": 0.726223,
     "root": {
         "name": "AGGREGATE",
-        "execution_time": 0.009258,
+        "execution_time": 0.009017,
         "actual_rows": 1,
         "estimated_cardinality": null,
         "children": [
             {
                 "name": "HASHJOIN",
-                "execution_time": 0.699494,
+                "execution_time": 0.632333,
                 "actual_rows": 43927632,
                 "estimated_cardinality": null,
                 "children": [
                     {
                         "name": "SEQUENTIALSCAN",
-                        "execution_time": 0.001691,
+                        "execution_time": 0.001154,
                         "actual_rows": 277348,
                         "estimated_cardinality": 303187,
                         "children": [],
@@ -29,13 +29,13 @@
                     },
                     {
                         "name": "HASHJOIN",
-                        "execution_time": 0.009991,
+                        "execution_time": 0.009809,
                         "actual_rows": 609782,
                         "estimated_cardinality": null,
                         "children": [
                             {
                                 "name": "SEQUENTIALSCAN",
-                                "execution_time": 0.000716,
+                                "execution_time": 0.000634,
                                 "actual_rows": 171069,
                                 "estimated_cardinality": 34861,
                                 "children": [],
@@ -50,19 +50,19 @@
                             },
                             {
                                 "name": "HASHJOIN",
-                                "execution_time": 0.002201,
+                                "execution_time": 0.001541,
                                 "actual_rows": 65775,
                                 "estimated_cardinality": null,
                                 "children": [
                                     {
                                         "name": "FILTER",
-                                        "execution_time": 0.000123,
+                                        "execution_time": 0.000117,
                                         "actual_rows": 77917,
                                         "estimated_cardinality": 15970,
                                         "children": [
                                             {
                                                 "name": "SEQUENTIALSCAN",
-                                                "execution_time": 0.000277,
+                                                "execution_time": 0.000196,
                                                 "actual_rows": 77918,
                                                 "estimated_cardinality": 15970,
                                                 "children": [],
@@ -80,13 +80,13 @@
                                     },
                                     {
                                         "name": "FILTER",
-                                        "execution_time": 0.000115,
+                                        "execution_time": 9.8e-05,
                                         "actual_rows": 39991,
                                         "estimated_cardinality": 8065,
                                         "children": [
                                             {
                                                 "name": "SEQUENTIALSCAN",
-                                                "execution_time": 0.000248,
+                                                "execution_time": 0.000214,
                                                 "actual_rows": 39993,
                                                 "estimated_cardinality": 8065,
                                                 "children": [],
@@ -151,9 +151,9 @@
         ]
     },
     "aliases": {
-        "ph": "postHistory",
-        "c": "comments",
+        "u": "users",
         "b": "badges",
-        "u": "users"
+        "c": "comments",
+        "ph": "postHistory"
     }
 }

@@ -1,7 +1,7 @@
 {
    "name":  "Query", 
-   "result": 0.039312,
-   "timing": 0.039312,
+   "result": 0.035992,
+   "timing": 0.035992,
    "cardinality": 0,
    "extra-info": "SELECT COUNT(*) FROM c, ph, u WHERE c.UserId = u.Id AND ph.UserId = u.Id AND u.Reputation>=1 AND u.Reputation<=7931 AND u.Views<=109 AND u.DownVotes>=0 AND u.CreationDate<='2014-09-12 13:12:56'::timestamp;", 
    "timings": [
@@ -16,19 +16,19 @@
       "children": [
        {
          "name": "UNGROUPED_AGGREGATE",
-         "timing":0.000391,
+         "timing":0.000385,
          "cardinality":1,
          "extra_info": "count_star()",
          "children": [
           {
             "name": "HASH_JOIN",
-            "timing":0.031036,
+            "timing":0.028390,
             "cardinality":2323452,
             "extra_info": "INNER\nph.UserId = u.Id\n\n[INFOSEPARATOR]\nBuild Min: 3\nBuild Max: 55746\n\n[INFOSEPARATOR]\nEC: 262105\n",
             "children": [
              {
                "name": "SEQ_SCAN ",
-               "timing":0.001370,
+               "timing":0.001173,
                "cardinality":277348,
                "extra_info": "ph\n[INFOSEPARATOR]\nUserId\n[INFOSEPARATOR]\nFilters: UserId>=3 AND UserId IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 303187",
                "children": [
@@ -37,13 +37,13 @@
 ,
              {
                "name": "HASH_JOIN",
-               "timing":0.001324,
+               "timing":0.001187,
                "cardinality":69018,
                "extra_info": "INNER\nc.UserId = u.Id\n\n[INFOSEPARATOR]\nBuild Min: 3\nBuild Max: 55746\n\n[INFOSEPARATOR]\nEC: 34861\n",
                "children": [
                 {
                   "name": "SEQ_SCAN ",
-                  "timing":0.000208,
+                  "timing":0.000179,
                   "cardinality":174305,
                   "extra_info": "c\n[INFOSEPARATOR]\nUserId\n[INFOSEPARATOR]\nEC: 174305",
                   "children": [
@@ -52,13 +52,13 @@
 ,
                 {
                   "name": "FILTER",
-                  "timing":0.000132,
+                  "timing":0.000113,
                   "cardinality":39901,
                   "extra_info": "(u.Id BETWEEN 3 AND 55746)\n[INFOSEPARATOR]\nEC: 8065",
                   "children": [
                    {
                      "name": "SEQ_SCAN ",
-                     "timing":0.000443,
+                     "timing":0.000331,
                      "cardinality":39903,
                      "extra_info": "u\n[INFOSEPARATOR]\nId\n[INFOSEPARATOR]\nFilters: Reputation>=1 AND Reputation<=7931 AND Reputation IS NOT NULL\nViews<=109 AND Views IS NOT NULL\nCreationDate<='2014-09-12 13:12:56'::TIMESTAMP AND CreationDate IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 8065",
                      "children": [

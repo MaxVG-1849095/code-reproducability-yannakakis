@@ -1,7 +1,7 @@
 {
    "name":  "Query", 
-   "result": 63.314484,
-   "timing": 63.314484,
+   "result": 59.630434,
+   "timing": 59.630434,
    "cardinality": 0,
    "extra-info": "SELECT COUNT(*) FROM c, v, b, u WHERE u.Id = b.UserId AND u.Id = c.UserId AND u.Id = v.UserId AND c.Score=1 AND c.CreationDate>='2010-08-27 14:12:07'::timestamp AND v.VoteTypeId=5 AND v.CreationDate>='2010-07-19 00:00:00'::timestamp AND v.CreationDate<='2014-09-13 00:00:00'::timestamp AND b.Date<='2014-08-19 10:32:13'::timestamp AND u.Reputation>=1;", 
    "timings": [
@@ -10,31 +10,31 @@
    "children": [
     {
       "name": "RESULT_COLLECTOR",
-      "timing":0.000002,
+      "timing":0.000001,
       "cardinality":0,
       "extra_info": "",
       "children": [
        {
          "name": "UNGROUPED_AGGREGATE",
-         "timing":0.015763,
+         "timing":0.014048,
          "cardinality":1,
          "extra_info": "count_star()",
          "children": [
           {
             "name": "HASH_JOIN",
-            "timing":57.030270,
+            "timing":53.703631,
             "cardinality":537352263,
             "extra_info": "INNER\nv.UserId = u.Id\n\n[INFOSEPARATOR]\nBuild Min: 3\nBuild Max: 55706\n\n[INFOSEPARATOR]\nEC: 520\n",
             "children": [
              {
                "name": "FILTER",
-               "timing":0.001350,
+               "timing":0.000800,
                "cardinality":33690,
                "extra_info": "(v.UserId >= 3)\n[INFOSEPARATOR]\nEC: 27339",
                "children": [
                 {
                   "name": "SEQ_SCAN ",
-                  "timing":0.007387,
+                  "timing":0.005097,
                   "cardinality":33690,
                   "extra_info": "v\n[INFOSEPARATOR]\nUserId\n[INFOSEPARATOR]\nFilters: VoteTypeId=5 AND VoteTypeId IS NOT NULL\nCreationDate>='2010-07-19 00:00:00'::TIMESTAMP AND CreationDate<='2014-09-13 00:00:00'::TIMESTAMP AND CreationDate IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 27339",
                   "children": [
@@ -45,31 +45,31 @@
 ,
              {
                "name": "PROJECTION",
-               "timing":0.000552,
+               "timing":0.000411,
                "cardinality":3203614,
                "extra_info": "#0\n",
                "children": [
                 {
                   "name": "FILTER",
-                  "timing":0.007080,
+                  "timing":0.006451,
                   "cardinality":3203614,
                   "extra_info": "(u.Id <= 55706)\n[INFOSEPARATOR]\nEC: 767",
                   "children": [
                    {
                      "name": "HASH_JOIN",
-                     "timing":0.086030,
+                     "timing":0.076149,
                      "cardinality":3203614,
                      "extra_info": "INNER\nb.UserId = u.Id\n\n[INFOSEPARATOR]\nBuild Min: 3\nBuild Max: 55746\n\n[INFOSEPARATOR]\nEC: 767\n",
                      "children": [
                       {
                         "name": "FILTER",
-                        "timing":0.000214,
+                        "timing":0.000173,
                         "cardinality":77532,
                         "extra_info": "(b.UserId >= 3)\n[INFOSEPARATOR]\nEC: 15970",
                         "children": [
                          {
                            "name": "SEQ_SCAN ",
-                           "timing":0.000831,
+                           "timing":0.000544,
                            "cardinality":77535,
                            "extra_info": "b\n[INFOSEPARATOR]\nUserId\n[INFOSEPARATOR]\nFilters: Date<='2014-08-19 10:32:13'::TIMESTAMP AND Date IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 15970",
                            "children": [
@@ -80,13 +80,13 @@
 ,
                       {
                         "name": "HASH_JOIN",
-                        "timing":0.001272,
+                        "timing":0.001156,
                         "cardinality":24368,
                         "extra_info": "INNER\nc.UserId = u.Id\n\n[INFOSEPARATOR]\nEC: 9684\n",
                         "children": [
                          {
                            "name": "SEQ_SCAN ",
-                           "timing":0.000776,
+                           "timing":0.000737,
                            "cardinality":24733,
                            "extra_info": "c\n[INFOSEPARATOR]\nUserId\n[INFOSEPARATOR]\nFilters: Score=1 AND Score IS NOT NULL\nCreationDate>='2010-08-27 14:12:07'::TIMESTAMP AND CreationDate IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 9684",
                            "children": [
@@ -95,7 +95,7 @@
 ,
                          {
                            "name": "SEQ_SCAN ",
-                           "timing":0.000156,
+                           "timing":0.000133,
                            "cardinality":40322,
                            "extra_info": "u\n[INFOSEPARATOR]\nId\n[INFOSEPARATOR]\nFilters: Id>=3 AND Id<=55746 AND Id IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 8065",
                            "children": [

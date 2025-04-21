@@ -1,7 +1,7 @@
 {
     "name": "Query",
-    "result": 0.023841,
-    "timing": 0.023841,
+    "result": 0.024051,
+    "timing": 0.024051,
     "cardinality": 0,
     "extra-info": "SELECT COUNT(*) FROM c, ph WHERE c.UserId = ph.UserId AND ph.PostHistoryTypeId=1 AND ph.CreationDate>='2010-09-14 11:59:07'::timestamp;",
     "timings": [],
@@ -14,19 +14,19 @@
             "children": [
                 {
                     "name": "UNGROUPED_AGGREGATE",
-                    "timing": 0.000184,
+                    "timing": 0.0002,
                     "cardinality": 1,
                     "extra_info": "count_star()",
                     "children": [
                         {
                             "name": "HASH_JOIN",
-                            "timing": 0.018374,
+                            "timing": 0.019638,
                             "cardinality": 1709781,
                             "extra_info": "INNER\nc.UserId = ph.UserId\n\n[INFOSEPARATOR]\nBuild Min: 3\nBuild Max: 55746\n\n[INFOSEPARATOR]\nEC: 368673\n",
                             "children": [
                                 {
                                     "name": "SEQ_SCAN ",
-                                    "timing": 0.000231,
+                                    "timing": 0.000194,
                                     "cardinality": 174305,
                                     "extra_info": "c\n[INFOSEPARATOR]\nUserId\n[INFOSEPARATOR]\nEC: 174305",
                                     "children": []
@@ -39,7 +39,7 @@
                                     "children": [
                                         {
                                             "name": "SEQ_SCAN ",
-                                            "timing": 0.001521,
+                                            "timing": 0.001481,
                                             "cardinality": 42308,
                                             "extra_info": "ph\n[INFOSEPARATOR]\nUserId\n[INFOSEPARATOR]\nFilters: PostHistoryTypeId=1 AND PostHistoryTypeId IS NOT NULL\nCreationDate>='2010-09-14 11:59:07'::TIMESTAMP AND CreationDate IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 12128",
                                             "children": []

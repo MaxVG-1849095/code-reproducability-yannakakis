@@ -255,6 +255,8 @@ impl MsjBatchPartitioner {
                                 //if any of the regular columns is empty, skip this partition
                                 continue;
                             }
+
+                            
                             let mut inner_cols_final: Vec<NestedColumn> = Vec::new();
                             for (i, col) in val.inner.nested_cols.iter().enumerate() {
                                 let c = take_rows_from_nestedcol(
@@ -294,7 +296,16 @@ impl MsjBatchPartitioner {
                                 // println!("empty batch");
                             }
                         }
-
+                        //print if batch is empty in partition
+                        // if msj_id == 1{
+                        //     if batches.is_empty() {
+                        //         println!("empty batch in partition {}", partition);
+                        //     }
+                        //     else{
+                        //         println!("filled batch in partition {}", partition);
+                        //     }
+                        // }
+                        
                         return Ok(Box::new(
                             batches
                                 .into_iter()

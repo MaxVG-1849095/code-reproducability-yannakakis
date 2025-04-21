@@ -66,48 +66,48 @@
 		</thead><tbody>
 	<tr>
 			<td><b>TOTAL TIME</b></td>
-            <td>0.277249</td>
+            <td>0.290827</td>
             <td>100.0%</td>
     </tr>
 
 	<tr>
 			<td><b>Execution Time</b></td>
-            <td>0.240193</td>
-            <td>86.634%</td>
+            <td>0.244227</td>
+            <td>83.976%</td>
     </tr>
 
 	<tr>
 			<td>HASH_JOIN</td>
-            <td>0.234365</td>
-            <td>84.532%</td>
+            <td>0.237785</td>
+            <td>81.761%</td>
     </tr>
 
 	<tr>
 			<td>SEQ_SCAN </td>
-            <td>0.003962</td>
-            <td>1.4290%</td>
+            <td>0.0045509999999999995</td>
+            <td>1.5648%</td>
     </tr>
 
 	<tr>
 			<td>FILTER</td>
-            <td>0.001591</td>
-            <td>0.5738%</td>
+            <td>0.001608</td>
+            <td>0.5529%</td>
     </tr>
 
 	<tr>
 			<td>UNGROUPED_AGGREGATE</td>
-            <td>0.000272</td>
-            <td>0.0981%</td>
+            <td>0.000282</td>
+            <td>0.0969%</td>
     </tr>
 
 	<tr>
 			<td>RESULT_COLLECTOR</td>
-            <td>3e-06</td>
-            <td>0.0010%</td>
+            <td>1e-06</td>
+            <td>0.0003%</td>
     </tr>
 </tbody></table>
 	</div>
 	<div class="tf-tree tf-gap-lg"> 
- <ul><li><span class="tf-nc" style=""><div class="node-body"><p> <b>RESULT COLLECTOR (3e-06s) </b></p><p> cardinality = 0 </p></div></span><ul><li><span class="tf-nc" style="background-color: #ffdfba;"><div class="node-body"><p> <b>UNGROUPED AGGREGATE (0.000272s) </b></p><p> count_star() </p><p> cardinality = 1 </p></div></span><ul><li><span class="tf-nc" style="background-color: #ffffba;"><div class="node-body"><p> <b>HASH JOIN (0.162717s) </b></p><p> INNER<br>c.PostId = pl.PostId<br>----<br>Build Min: 4<br>Build Max: 115360<br>----<br>EC: 4947<br> </p><p> cardinality = 1957551 </p></div></span><ul><li><span class="tf-nc" style="background-color: #baffc9;"><div class="node-body"><p> <b>SEQ SCAN  (0.000468s) </b></p><p> c<br>----<br>PostId<br>----<br>Filters: PostId>=4 AND PostId<=115360 AND PostId IS NOT NULL<br>----<br>EC: 174305 </p><p> cardinality = 174279 </p></div></span></li><li><span class="tf-nc" style="background-color: #ffffba;"><div class="node-body"><p> <b>HASH JOIN (0.055531s) </b></p><p> INNER<br>p.Id = v.PostId<br>----<br>Build Min: 4<br>Build Max: 115360<br>----<br>EC: 2610<br> </p><p> cardinality = 428079 </p></div></span><ul><li><span class="tf-nc" style="background-color: #baffc9;"><div class="node-body"><p> <b>SEQ SCAN  (0.000249s) </b></p><p> p<br>----<br>Id<br>----<br>Filters: Id>=4 AND Id<=115360 AND Id IS NOT NULL<br>----<br>EC: 91976 </p><p> cardinality = 91955 </p></div></span></li><li><span class="tf-nc" style="background-color: #ffffba;"><div class="node-body"><p> <b>HASH JOIN (0.013283s) </b></p><p> INNER<br>v.PostId = ph.PostId<br>----<br>Build Min: 4<br>Build Max: 115360<br>----<br>EC: 2610<br> </p><p> cardinality = 428079 </p></div></span><ul><li><span class="tf-nc" style="background-color: #bae1ff;"><div class="node-body"><p> <b>FILTER (0.000913s) </b></p><p> (v.PostId BETWEEN 4 AND 115360)<br>----<br>EC: 65612 </p><p> cardinality = 327495 </p></div></span><ul><li><span class="tf-nc" style="background-color: #baffc9;"><div class="node-body"><p> <b>SEQ SCAN  (0.002318s) </b></p><p> v<br>----<br>PostId<br>----<br>Filters: CreationDate>='2010-07-20 00:00:00'::TIMESTAMP AND CreationDate IS NOT NULL<br>----<br>EC: 65612 </p><p> cardinality = 327650 </p></div></span></li></ul></li><li><span class="tf-nc" style="background-color: #ffffba;"><div class="node-body"><p> <b>HASH JOIN (0.002834s) </b></p><p> INNER<br>ph.PostId = pl.PostId<br>----<br>Build Min: 4<br>Build Max: 115360<br>----<br>EC: 3659<br> </p><p> cardinality = 52257 </p></div></span><ul><li><span class="tf-nc" style="background-color: #bae1ff;"><div class="node-body"><p> <b>FILTER (0.000678s) </b></p><p> (ph.PostId BETWEEN 4 AND 115360)<br>----<br>EC: 60637 </p><p> cardinality = 272968 </p></div></span><ul><li><span class="tf-nc" style="background-color: #baffc9;"><div class="node-body"><p> <b>SEQ SCAN  (0.000864s) </b></p><p> ph<br>----<br>PostId<br>----<br>Filters: CreationDate<='2014-06-18 17:14:07'::TIMESTAMP AND CreationDate IS NOT NULL<br>----<br>EC: 60637 </p><p> cardinality = 272988 </p></div></span></li></ul></li><li><span class="tf-nc" style="background-color: #baffc9;"><div class="node-body"><p> <b>SEQ SCAN  (6.3e-05s) </b></p><p> pl<br>----<br>PostId<br>----<br>Filters: LinkTypeId=1 AND LinkTypeId IS NOT NULL<br>CreationDate>='2010-10-19 15:02:42'::TIMESTAMP AND CreationDate IS NOT NULL<br>----<br>EC: 5551 </p><p> cardinality = 10032 </p></div></span></li></ul></li></ul></li></ul></li></ul></li></ul></li></ul></li></ul> </div>
+ <ul><li><span class="tf-nc" style=""><div class="node-body"><p> <b>RESULT COLLECTOR (1e-06s) </b></p><p> cardinality = 0 </p></div></span><ul><li><span class="tf-nc" style="background-color: #ffdfba;"><div class="node-body"><p> <b>UNGROUPED AGGREGATE (0.000282s) </b></p><p> count_star() </p><p> cardinality = 1 </p></div></span><ul><li><span class="tf-nc" style="background-color: #ffffba;"><div class="node-body"><p> <b>HASH JOIN (0.156424s) </b></p><p> INNER<br>c.PostId = pl.PostId<br>----<br>Build Min: 4<br>Build Max: 115360<br>----<br>EC: 4947<br> </p><p> cardinality = 1957551 </p></div></span><ul><li><span class="tf-nc" style="background-color: #baffc9;"><div class="node-body"><p> <b>SEQ SCAN  (0.000797s) </b></p><p> c<br>----<br>PostId<br>----<br>Filters: PostId>=4 AND PostId<=115360 AND PostId IS NOT NULL<br>----<br>EC: 174305 </p><p> cardinality = 174279 </p></div></span></li><li><span class="tf-nc" style="background-color: #ffffba;"><div class="node-body"><p> <b>HASH JOIN (0.064986s) </b></p><p> INNER<br>p.Id = v.PostId<br>----<br>Build Min: 4<br>Build Max: 115360<br>----<br>EC: 2610<br> </p><p> cardinality = 428079 </p></div></span><ul><li><span class="tf-nc" style="background-color: #baffc9;"><div class="node-body"><p> <b>SEQ SCAN  (0.000423s) </b></p><p> p<br>----<br>Id<br>----<br>Filters: Id>=4 AND Id<=115360 AND Id IS NOT NULL<br>----<br>EC: 91976 </p><p> cardinality = 91955 </p></div></span></li><li><span class="tf-nc" style="background-color: #ffffba;"><div class="node-body"><p> <b>HASH JOIN (0.01348s) </b></p><p> INNER<br>v.PostId = ph.PostId<br>----<br>Build Min: 4<br>Build Max: 115360<br>----<br>EC: 2610<br> </p><p> cardinality = 428079 </p></div></span><ul><li><span class="tf-nc" style="background-color: #bae1ff;"><div class="node-body"><p> <b>FILTER (0.000935s) </b></p><p> (v.PostId BETWEEN 4 AND 115360)<br>----<br>EC: 65612 </p><p> cardinality = 327495 </p></div></span><ul><li><span class="tf-nc" style="background-color: #baffc9;"><div class="node-body"><p> <b>SEQ SCAN  (0.002254s) </b></p><p> v<br>----<br>PostId<br>----<br>Filters: CreationDate>='2010-07-20 00:00:00'::TIMESTAMP AND CreationDate IS NOT NULL<br>----<br>EC: 65612 </p><p> cardinality = 327650 </p></div></span></li></ul></li><li><span class="tf-nc" style="background-color: #ffffba;"><div class="node-body"><p> <b>HASH JOIN (0.002895s) </b></p><p> INNER<br>ph.PostId = pl.PostId<br>----<br>Build Min: 4<br>Build Max: 115360<br>----<br>EC: 3659<br> </p><p> cardinality = 52257 </p></div></span><ul><li><span class="tf-nc" style="background-color: #bae1ff;"><div class="node-body"><p> <b>FILTER (0.000673s) </b></p><p> (ph.PostId BETWEEN 4 AND 115360)<br>----<br>EC: 60637 </p><p> cardinality = 272968 </p></div></span><ul><li><span class="tf-nc" style="background-color: #baffc9;"><div class="node-body"><p> <b>SEQ SCAN  (0.001016s) </b></p><p> ph<br>----<br>PostId<br>----<br>Filters: CreationDate<='2014-06-18 17:14:07'::TIMESTAMP AND CreationDate IS NOT NULL<br>----<br>EC: 60637 </p><p> cardinality = 272988 </p></div></span></li></ul></li><li><span class="tf-nc" style="background-color: #baffc9;"><div class="node-body"><p> <b>SEQ SCAN  (6.1e-05s) </b></p><p> pl<br>----<br>PostId<br>----<br>Filters: LinkTypeId=1 AND LinkTypeId IS NOT NULL<br>CreationDate>='2010-10-19 15:02:42'::TIMESTAMP AND CreationDate IS NOT NULL<br>----<br>EC: 5551 </p><p> cardinality = 10032 </p></div></span></li></ul></li></ul></li></ul></li></ul></li></ul></li></ul></li></ul> </div>
 </body>
 </html>

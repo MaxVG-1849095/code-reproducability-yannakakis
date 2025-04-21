@@ -1,8 +1,8 @@
 {
-    "execution_time": 0.300818,
+    "execution_time": 0.258535,
     "root": {
         "name": "AGGREGATE",
-        "execution_time": 0.001583,
+        "execution_time": 0.001594,
         "actual_rows": 1,
         "estimated_cardinality": null,
         "children": [
@@ -22,13 +22,13 @@
                     ],
                     "guard": {
                         "name": "FILTER",
-                        "execution_time": 0.000425,
+                        "execution_time": 0.000253,
                         "actual_rows": 79608,
                         "estimated_cardinality": 15970,
                         "children": [
                             {
                                 "name": "SEQUENTIALSCAN",
-                                "execution_time": 0.00125,
+                                "execution_time": 0.000672,
                                 "actual_rows": 79610,
                                 "estimated_cardinality": 15970,
                                 "children": [],
@@ -66,7 +66,7 @@
                                 ],
                                 "guard": {
                                     "name": "SEQUENTIALSCAN",
-                                    "execution_time": 0.000906,
+                                    "execution_time": 0.000952,
                                     "actual_rows": 134659,
                                     "estimated_cardinality": 9684,
                                     "children": [],
@@ -94,7 +94,7 @@
                                             "equijoin_keys": [],
                                             "guard": {
                                                 "name": "SEQUENTIALSCAN",
-                                                "execution_time": 0.00013,
+                                                "execution_time": 0.00017,
                                                 "actual_rows": 40322,
                                                 "estimated_cardinality": 8065,
                                                 "children": [],
@@ -123,8 +123,8 @@
         ]
     },
     "aliases": {
-        "c": "comments",
+        "u": "users",
         "b": "badges",
-        "u": "users"
+        "c": "comments"
     }
 }

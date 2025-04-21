@@ -1,8 +1,8 @@
 {
-    "execution_time": 0.0669,
+    "execution_time": 0.074261,
     "root": {
         "name": "AGGREGATE",
-        "execution_time": 0.000179,
+        "execution_time": 0.000173,
         "actual_rows": 1,
         "estimated_cardinality": null,
         "children": [
@@ -22,13 +22,13 @@
                     ],
                     "guard": {
                         "name": "FILTER",
-                        "execution_time": 8.2e-05,
+                        "execution_time": 8.4e-05,
                         "actual_rows": 12173,
                         "estimated_cardinality": 18395,
                         "children": [
                             {
                                 "name": "SEQUENTIALSCAN",
-                                "execution_time": 0.001066,
+                                "execution_time": 0.001177,
                                 "actual_rows": 12416,
                                 "estimated_cardinality": 18395,
                                 "children": [],
@@ -66,7 +66,7 @@
                                 ],
                                 "guard": {
                                     "name": "SEQUENTIALSCAN",
-                                    "execution_time": 0.000268,
+                                    "execution_time": 0.000407,
                                     "actual_rows": 79007,
                                     "estimated_cardinality": 15970,
                                     "children": [],
@@ -101,13 +101,13 @@
                                             ],
                                             "guard": {
                                                 "name": "FILTER",
-                                                "execution_time": 0.000281,
+                                                "execution_time": 0.000282,
                                                 "actual_rows": 82287,
                                                 "estimated_cardinality": 12128,
                                                 "children": [
                                                     {
                                                         "name": "SEQUENTIALSCAN",
-                                                        "execution_time": 0.001669,
+                                                        "execution_time": 0.002013,
                                                         "actual_rows": 84319,
                                                         "estimated_cardinality": 12128,
                                                         "children": [],
@@ -138,13 +138,13 @@
                                                         "equijoin_keys": [],
                                                         "guard": {
                                                             "name": "FILTER",
-                                                            "execution_time": 9.8e-05,
+                                                            "execution_time": 0.000112,
                                                             "actual_rows": 38877,
                                                             "estimated_cardinality": 8065,
                                                             "children": [
                                                                 {
                                                                     "name": "SEQUENTIALSCAN",
-                                                                    "execution_time": 0.000186,
+                                                                    "execution_time": 0.000228,
                                                                     "actual_rows": 38877,
                                                                     "estimated_cardinality": 8065,
                                                                     "children": [],
@@ -179,9 +179,9 @@
         ]
     },
     "aliases": {
-        "ph": "postHistory",
+        "u": "users",
         "p": "posts",
         "b": "badges",
-        "u": "users"
+        "ph": "postHistory"
     }
 }

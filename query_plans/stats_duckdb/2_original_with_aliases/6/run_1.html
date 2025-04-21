@@ -66,48 +66,48 @@
 		</thead><tbody>
 	<tr>
 			<td><b>TOTAL TIME</b></td>
-            <td>0.01389</td>
+            <td>0.012441</td>
             <td>100.0%</td>
     </tr>
 
 	<tr>
 			<td><b>Execution Time</b></td>
-            <td>0.011097999999999998</td>
-            <td>79.899%</td>
+            <td>0.010653</td>
+            <td>85.628%</td>
     </tr>
 
 	<tr>
 			<td>HASH_JOIN</td>
-            <td>0.009778</td>
-            <td>70.395%</td>
+            <td>0.009251</td>
+            <td>74.358%</td>
     </tr>
 
 	<tr>
 			<td>SEQ_SCAN </td>
-            <td>0.001082</td>
-            <td>7.7897%</td>
+            <td>0.001152</td>
+            <td>9.2597%</td>
     </tr>
 
 	<tr>
 			<td>FILTER</td>
-            <td>0.000171</td>
-            <td>1.2311%</td>
+            <td>0.000183</td>
+            <td>1.4709%</td>
     </tr>
 
 	<tr>
 			<td>UNGROUPED_AGGREGATE</td>
             <td>6.6e-05</td>
-            <td>0.4751%</td>
+            <td>0.5305%</td>
     </tr>
 
 	<tr>
 			<td>RESULT_COLLECTOR</td>
             <td>1e-06</td>
-            <td>0.0071%</td>
+            <td>0.0080%</td>
     </tr>
 </tbody></table>
 	</div>
 	<div class="tf-tree tf-gap-lg"> 
- <ul><li><span class="tf-nc" style=""><div class="node-body"><p> <b>RESULT COLLECTOR (1e-06s) </b></p><p> cardinality = 0 </p></div></span><ul><li><span class="tf-nc" style="background-color: #ffdfba;"><div class="node-body"><p> <b>UNGROUPED AGGREGATE (6.6e-05s) </b></p><p> count_star() </p><p> cardinality = 1 </p></div></span><ul><li><span class="tf-nc" style="background-color: #ffffba;"><div class="node-body"><p> <b>HASH JOIN (0.009778s) </b></p><p> INNER<br>p.OwnerUserId = b.UserId<br>----<br>Build Min: 2<br>Build Max: 55746<br>----<br>EC: 14389<br> </p><p> cardinality = 428612 </p></div></span><ul><li><span class="tf-nc" style="background-color: #bae1ff;"><div class="node-body"><p> <b>FILTER (0.000171s) </b></p><p> (p.OwnerUserId >= 2)<br>----<br>EC: 18395 </p><p> cardinality = 41462 </p></div></span><ul><li><span class="tf-nc" style="background-color: #baffc9;"><div class="node-body"><p> <b>SEQ SCAN  (0.000775s) </b></p><p> p<br>----<br>OwnerUserId<br>----<br>Filters: AnswerCount>=0 AND AnswerCount<=4 AND AnswerCount IS NOT NULL<br>CommentCount>=0 AND CommentCount<=17 AND CommentCount IS NOT NULL<br>----<br>EC: 18395 </p><p> cardinality = 42172 </p></div></span></li></ul></li><li><span class="tf-nc" style="background-color: #baffc9;"><div class="node-body"><p> <b>SEQ SCAN  (0.000307s) </b></p><p> b<br>----<br>UserId<br>----<br>Filters: Date<='2014-09-11 08:55:52'::TIMESTAMP AND Date IS NOT NULL<br>----<br>EC: 15970 </p><p> cardinality = 79598 </p></div></span></li></ul></li></ul></li></ul></li></ul> </div>
+ <ul><li><span class="tf-nc" style=""><div class="node-body"><p> <b>RESULT COLLECTOR (1e-06s) </b></p><p> cardinality = 0 </p></div></span><ul><li><span class="tf-nc" style="background-color: #ffdfba;"><div class="node-body"><p> <b>UNGROUPED AGGREGATE (6.6e-05s) </b></p><p> count_star() </p><p> cardinality = 1 </p></div></span><ul><li><span class="tf-nc" style="background-color: #ffffba;"><div class="node-body"><p> <b>HASH JOIN (0.009251s) </b></p><p> INNER<br>p.OwnerUserId = b.UserId<br>----<br>Build Min: 2<br>Build Max: 55746<br>----<br>EC: 14389<br> </p><p> cardinality = 428612 </p></div></span><ul><li><span class="tf-nc" style="background-color: #bae1ff;"><div class="node-body"><p> <b>FILTER (0.000183s) </b></p><p> (p.OwnerUserId >= 2)<br>----<br>EC: 18395 </p><p> cardinality = 41462 </p></div></span><ul><li><span class="tf-nc" style="background-color: #baffc9;"><div class="node-body"><p> <b>SEQ SCAN  (0.000887s) </b></p><p> p<br>----<br>OwnerUserId<br>----<br>Filters: AnswerCount>=0 AND AnswerCount<=4 AND AnswerCount IS NOT NULL<br>CommentCount>=0 AND CommentCount<=17 AND CommentCount IS NOT NULL<br>----<br>EC: 18395 </p><p> cardinality = 42172 </p></div></span></li></ul></li><li><span class="tf-nc" style="background-color: #baffc9;"><div class="node-body"><p> <b>SEQ SCAN  (0.000265s) </b></p><p> b<br>----<br>UserId<br>----<br>Filters: Date<='2014-09-11 08:55:52'::TIMESTAMP AND Date IS NOT NULL<br>----<br>EC: 15970 </p><p> cardinality = 79598 </p></div></span></li></ul></li></ul></li></ul></li></ul> </div>
 </body>
 </html>
