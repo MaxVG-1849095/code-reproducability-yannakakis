@@ -423,14 +423,12 @@ impl RepartitionMultiSemiJoin {
         };
         let children_len = input.children().len();
         let batch_clone = batch.clone();
-        let mut flat = false;
         // println!("\n in msj {} partition {}\nbatch: {:?}\n", msj_id,partition,batch);
         match batch_clone {
             SemiJoinResultBatch::Flat(_) => {
                 // println!("flat batch");
                 barrier.wait().await; //wait for all partitions to be present and to have added their inner columns
                 barrier.wait().await; // second barrier to wait for the combine to finish
-                flat = true;
             }
             SemiJoinResultBatch::Nested(nested_batch) => {
 

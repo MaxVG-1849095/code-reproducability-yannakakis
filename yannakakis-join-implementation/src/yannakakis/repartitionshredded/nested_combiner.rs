@@ -253,7 +253,9 @@ impl NestedCombiner {
                             }
                         }
                         None => {
-                            self.offsets[i] = curr_offset as usize;
+                            if i + 1 != self.inner_cols.len() {
+                            self.offsets[i+1] = curr_offset as usize;
+                            }
                         }
                     }
                 }
@@ -284,7 +286,8 @@ impl NestedCombiner {
         self.final_inner_col = final_inner_col.clone().expect("final_inner_col is None");
         self.ready = true;
 
-        // println!("print end of combined:");
+        println!("print end of combined:");
+        println!("final offsets: {:?}", self.offsets);
         // self.print_content();
 
         Ok(self.final_inner_col.clone())
