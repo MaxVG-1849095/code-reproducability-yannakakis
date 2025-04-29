@@ -1,7 +1,7 @@
 use core::panic;
 use std::{sync::Arc, u32};
 
-use datafusion::{arrow, error::DataFusionError};
+use datafusion::error::DataFusionError;
 
 use crate::yannakakis::data::{NestedColumn, NestedRel, NestedSchema, SingularNestedColumn};
 
@@ -68,7 +68,7 @@ impl NestedCombinerWrapper {
             }
         }
         for i in 0..self.nested_combiners.len() {
-            let mut nested_combiner = &mut self.nested_combiners[i];
+            let nested_combiner = &mut self.nested_combiners[i];
             let inner_col = nested_combiner.combine();
             match inner_col {
                 Ok(inner_col) => {
@@ -173,7 +173,7 @@ impl NestedCombiner {
     }
 
     pub fn add_inner_col(&mut self, inner_col: NestedColumn, index: usize) {
-        if (self.ready) {
+        if self.ready {
             return;
         }
         if index != 0 {
@@ -184,7 +184,7 @@ impl NestedCombiner {
     }
 
     pub fn add_none_inner_col(&mut self, index: usize) {
-        if (self.ready) {
+        if self.ready {
             return;
         }
         self.inner_cols[index] = None;
@@ -240,7 +240,7 @@ impl NestedCombiner {
                                 // println!("append other recursive");
                                 // println!(" \n\n\n -----\nfinal nested before append\n: {:?} \n\n other: \n {:?} \n\n", final_nested, inner_nested);
                                 final_nested
-                                    .append_other_2nd_level(inner_nested, curr_offset as usize);
+                                    .append_other_2nd_level(inner_nested);
                                 // println!("final nested after append: {:?}\n -----\n\n", final_nested);
                             }
                             let next_offset = final_nested

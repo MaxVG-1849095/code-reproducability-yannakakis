@@ -3,19 +3,14 @@
 //!
 
 use super::sel::Sel;
-use std::{any::Any, pin::Pin, sync::Arc};
+use std::{any::Any, sync::Arc};
 
-use datafusion::error;
-use datafusion::{
-    arrow::{
+use datafusion::arrow::{
         self,
         array::{ArrayRef, RecordBatch},
-        compute::second,
         datatypes::{DataType, Field, FieldRef, Schema, SchemaRef},
-    },
-    error::DataFusionError,
-};
-use futures::Stream;
+    };
+
 
 /// A [NestedSchema] is like a traditional flat relational schema except that fields may be nested.
 /// Formally, it is a sequence of the form (A1, ..., Am, N1, ..., Nn) where:
@@ -337,7 +332,6 @@ impl SingularNestedColumn {
     fn append_other_nested_singular(
         &mut self,
         other: &SingularNestedColumn,
-        offset: usize,
     ) {
         let mut new_weights = self.weights.clone();
         new_weights.extend(other.weights.iter());
@@ -400,7 +394,6 @@ impl NonSingularNestedColumn {
     pub fn append_other_2nd_level(
         &mut self,
         other: &NonSingularNestedColumn,
-        offset: usize,
     ) {
         
         let self_ns_nested_cols = &mut Arc::make_mut(&mut self.data).nested_cols; 
@@ -415,7 +408,7 @@ impl NonSingularNestedColumn {
                     match other_ns_nested_cols[i] {
                         NestedColumn::NonSingular(ref other_ns_nested_col) => {
                             // println!("------\n------\nself before append: \n{:?} \n\n ------ \n other: \n {:?} ------\n", self, other);
-                            self_ns_nested_col.append_other_nested_non_singular(other_ns_nested_col, offset);
+                            self_ns_nested_col.append_other_nested_non_singular(other_ns_nested_col);
                             // println!("self after append: {:?}------\n------\n", self);
                         }
                         _ => panic!("Expected a non-singular nested column 1"),
@@ -425,7 +418,7 @@ impl NonSingularNestedColumn {
                     match other_ns_nested_cols[i] {
                         NestedColumn::Singular(ref other_s_nested_col) => {
                             // println!("------\n------\nself before append: \n{:?} \n\n ------ \n other: \n {:?} ------\n", self, other);
-                            self_s_nested_col.append_other_nested_singular(other_s_nested_col, offset);
+                            self_s_nested_col.append_other_nested_singular(other_s_nested_col);
                             // println!("self after append: {:?}------\n------\n", self);
                         }
                         _ => panic!("Expected a singular nested column 1"),
@@ -438,7 +431,7 @@ impl NonSingularNestedColumn {
     
 
 
-    fn append_other_nested_non_singular(&mut self, other: &NonSingularNestedColumn, offset: usize) {
+    fn append_other_nested_non_singular(&mut self, other: &NonSingularNestedColumn) {
         let mut new_weights = self.weights.clone();
         new_weights.extend(other.weights.iter());
         self.weights = new_weights;
@@ -456,12 +449,11 @@ impl NonSingularNestedColumn {
         offset: usize,
     ) -> usize {
         let other_ns_regular_cols = other.data.regular_cols.clone();
-        let mut len = 0;
         for (i, col) in other_ns_regular_cols.iter().enumerate() {
             let final_col = self.data.regular_cols[i].clone();
             let mut new_col = final_col.clone();
             new_col = arrow::compute::concat(&[&new_col, col]).unwrap();
-            let mut data = Arc::make_mut(&mut self.data);
+            let data = Arc::make_mut(&mut self.data);
             data.regular_cols[i] = new_col;
         }
 
@@ -486,7 +478,7 @@ impl NonSingularNestedColumn {
             }
         }
 
-        len = new_next.len();
+        let len = new_next.len();
 
         Arc::make_mut(&mut self.data).set_next(Some(new_next));
         // println!("self after append: {:?},\n offset {}", self, offset);

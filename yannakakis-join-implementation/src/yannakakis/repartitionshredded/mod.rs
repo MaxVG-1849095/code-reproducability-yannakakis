@@ -4,10 +4,7 @@ use std::task::{Context, Poll};
 use std::{pin::Pin, sync::Arc};
 
 use batch_partitioner::MsjBatchPartitioner;
-use datafusion::arrow;
-use datafusion::arrow::array::{ArrayRef, RecordBatch, UInt32Array};
 
-use datafusion::datasource::empty;
 use tokio::sync::Barrier;
 
 use datafusion::execution::memory_pool::MemoryReservation;
@@ -21,11 +18,10 @@ use datafusion::{
 use futures::{FutureExt, Stream, StreamExt, TryStreamExt};
 use nested_combiner::NestedCombiner;
 use nested_combiner::NestedCombinerWrapper;
-use tokio::time;
+
 
 use super::data::{
-    Idx, NestedColumn, NestedRel, NestedSchema, NonSingularNestedColumn, SemiJoinResultBatch,
-    SingularNestedColumn,
+    NestedColumn, SemiJoinResultBatch,
 };
 
 use super::multisemijoin::MultiSemiJoinBatchStream;
@@ -69,7 +65,7 @@ struct RepartitionExecState {
         ),
     >,
 
-    debugTester: String,
+    debug_tester: String,
 
     abort_helper: Arc<Vec<SpawnedTask<()>>>,
 
@@ -135,7 +131,6 @@ impl RepartitionExecState {
                 )
                 .collect();
 
-            //TODO: add metrics
             let r_metrics = MsjRepartitionMetrics::new(i, num_output_partitions, &metrics);
 
             let input_task = SpawnedTask::spawn(RepartitionMultiSemiJoin::pull_from_input(
@@ -162,7 +157,7 @@ impl RepartitionExecState {
 
         Self {
             channels: channels,
-            debugTester: "Test".to_string(),
+            debug_tester: "Test".to_string(),
             abort_helper: Arc::new(spawned_tasks),
             inner_cols: Vec::with_capacity(num_input_partitions),
             dummy: 0,
@@ -371,7 +366,6 @@ impl RepartitionMultiSemiJoin {
             //if it is a batch, proceed otherwise break
             Some(batch) => {
                 let b = batch?;
-                let b_clone = b.clone();
                 match b {
                     SemiJoinResultBatch::Flat(_) => {
                         // println!("flat batch");
@@ -404,7 +398,7 @@ impl RepartitionMultiSemiJoin {
                                     nested_combiner.lock().add_empty_inner_col(partition);
                                     barrier.wait().await; //wait for all partitions to be present and to have added their inner columns
                                     barrier.wait().await; // second barrier to wait for the combine to finish
-                                    return (Ok(()));
+                                    return Ok(());
                                 }
                             }
                         }
@@ -418,7 +412,7 @@ impl RepartitionMultiSemiJoin {
                 nested_combiner.lock().add_empty_inner_col(partition);
                 barrier.wait().await; //wait for all partitions to be present and to have added their inner columns
                 barrier.wait().await; // second barrier to wait for the combine to finish
-                return (Ok(()));
+                return Ok(());
             }
         };
         let children_len = input.children().len();
@@ -523,8 +517,8 @@ impl RepartitionMultiSemiJoin {
         // input_task.join().await;
         match input_task.join().await {
             Ok(_) => {
-                for (i, send_channel) in send_channels {
-                    send_channel.send(None).await;
+                for (_i, send_channel) in send_channels {
+                    let _ = send_channel.send(None).await;
                     // println!("sent none to {}", i);
                 }
             }

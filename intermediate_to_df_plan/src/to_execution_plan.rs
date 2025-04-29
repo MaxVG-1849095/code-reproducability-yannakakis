@@ -74,13 +74,13 @@ impl ToPhysicalNode for intermediate_plan::YannakakisNode {
         &self,
         catalog: &Catalog,
         alternative_flatten: bool,
-        partition_key: usize,
+        _partition_key: usize,
     ) -> Result<(DFSchemaRef, Arc<dyn ExecutionPlan>), DataFusionError> {
         async fn groupby_to_plan(
             node: &intermediate_plan::GroupByNode,
             catalog: &Catalog,
             alternative_flatten: bool,
-            id: usize,
+            _id: usize,
         ) -> Result<(DFSchema, Arc<GroupBy>), DataFusionError> {
             let group_on = node.group_on.clone();
             let (child_schema, child) =
