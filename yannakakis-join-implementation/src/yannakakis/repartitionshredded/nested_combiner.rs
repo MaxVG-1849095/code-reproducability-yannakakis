@@ -286,7 +286,7 @@ impl NestedCombiner {
         self.final_inner_col = final_inner_col.clone().expect("final_inner_col is None");
         self.ready = true;
 
-        println!("print end of combined:");
+        // println!("print end of combined:");
         println!("final offsets: {:?}", self.offsets);
         // self.print_content();
 

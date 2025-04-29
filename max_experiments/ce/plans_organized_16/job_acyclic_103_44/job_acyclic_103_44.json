@@ -1,0 +1,121 @@
+{
+    "execution_time": 0.13066,
+    "root": {
+        "name": "AGGREGATE",
+        "execution_time": 0.000219,
+        "actual_rows": 1,
+        "estimated_cardinality": null,
+        "children": [
+            {
+                "name": "YANNAKAKIS",
+                "root": {
+                    "name": "MULTISEMIJOIN",
+                    "partitioned": false,
+                    "id": 0,
+                    "equijoin_keys": [
+                        [
+                            [
+                                0,
+                                0
+                            ]
+                        ]
+                    ],
+                    "guard": {
+                        "name": "SEQUENTIALSCAN",
+                        "execution_time": 0.010563,
+                        "actual_rows": 4518480,
+                        "estimated_cardinality": 4520446,
+                        "children": [],
+                        "relation": "imdb100",
+                        "opt_filter": "d>=1559 AND d<=2525392 AND d IS NOT NULL",
+                        "projection": [
+                            {
+                                "table_name": "imdb100",
+                                "field_name": "d"
+                            }
+                        ]
+                    },
+                    "children": [
+                        {
+                            "name": "GROUPBY",
+                            "partitioned": false,
+                            "id": 0,
+                            "group_on": [
+                                0
+                            ],
+                            "child": {
+                                "name": "MULTISEMIJOIN",
+                                "partitioned": false,
+                                "id": 0,
+                                "equijoin_keys": [
+                                    [
+                                        [
+                                            0,
+                                            0
+                                        ]
+                                    ]
+                                ],
+                                "guard": {
+                                    "name": "SEQUENTIALSCAN",
+                                    "execution_time": 0.00252,
+                                    "actual_rows": 1298240,
+                                    "estimated_cardinality": 1298989,
+                                    "children": [],
+                                    "relation": "imdb7",
+                                    "opt_filter": "s>=1559 AND s<=2525392 AND s IS NOT NULL",
+                                    "projection": [
+                                        {
+                                            "table_name": "imdb7",
+                                            "field_name": "s"
+                                        }
+                                    ]
+                                },
+                                "children": [
+                                    {
+                                        "name": "GROUPBY",
+                                        "partitioned": false,
+                                        "id": 0,
+                                        "group_on": [
+                                            0
+                                        ],
+                                        "child": {
+                                            "name": "MULTISEMIJOIN",
+                                            "partitioned": false,
+                                            "id": 0,
+                                            "equijoin_keys": [],
+                                            "guard": {
+                                                "name": "SEQUENTIALSCAN",
+                                                "execution_time": 0.008357,
+                                                "actual_rows": 6482,
+                                                "estimated_cardinality": 6482,
+                                                "children": [],
+                                                "relation": "imdb57",
+                                                "opt_filter": null,
+                                                "projection": [
+                                                    {
+                                                        "table_name": "imdb57",
+                                                        "field_name": "s"
+                                                    }
+                                                ]
+                                            },
+                                            "children": []
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            }
+        ],
+        "group_by": null,
+        "aggregate": [
+            "count_star()"
+        ]
+    },
+    "aliases": {
+        "imdb57": "imdb57",
+        "imdb7": "imdb7",
+        "imdb100": "imdb100"
+    }
+}

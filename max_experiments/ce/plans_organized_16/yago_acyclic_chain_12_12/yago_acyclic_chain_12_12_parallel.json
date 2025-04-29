@@ -1,0 +1,616 @@
+{
+    "execution_time": 0.176416,
+    "root": {
+        "name": "AGGREGATE",
+        "execution_time": 2e-06,
+        "actual_rows": 1,
+        "estimated_cardinality": null,
+        "children": [
+            {
+                "name": "REPARTITION",
+                "num_partitions": 1,
+                "partitioning": "unknown",
+                "partition_on": 0,
+                "children": [
+                    {
+                        "name": "YANNAKAKIS",
+                        "root": {
+                            "name": "MULTISEMIJOIN",
+                            "partitioned": true,
+                            "id": 0,
+                            "equijoin_keys": [
+                                [
+                                    [
+                                        0,
+                                        0
+                                    ]
+                                ]
+                            ],
+                            "guard": {
+                                "name": "REPARTITION",
+                                "num_partitions": 16,
+                                "partitioning": "unknown",
+                                "partition_on": 0,
+                                "children": [
+                                    {
+                                        "name": "SEQUENTIALSCAN",
+                                        "execution_time": 0.001779,
+                                        "actual_rows": 2124368,
+                                        "estimated_cardinality": 2124368,
+                                        "children": [],
+                                        "relation": "yago2",
+                                        "opt_filter": null,
+                                        "projection": [
+                                            {
+                                                "table_name": "yago2_0",
+                                                "field_name": "s"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            "children": [
+                                {
+                                    "name": "GROUPBY",
+                                    "partitioned": false,
+                                    "id": 0,
+                                    "group_on": [
+                                        0
+                                    ],
+                                    "child": {
+                                        "name": "MULTISEMIJOIN",
+                                        "partitioned": true,
+                                        "id": 0,
+                                        "equijoin_keys": [
+                                            [
+                                                [
+                                                    1,
+                                                    0
+                                                ]
+                                            ]
+                                        ],
+                                        "guard": {
+                                            "name": "REPARTITION",
+                                            "num_partitions": 16,
+                                            "partitioning": "unknown",
+                                            "partition_on": 0,
+                                            "children": [
+                                                {
+                                                    "name": "SEQUENTIALSCAN",
+                                                    "execution_time": 0.00651,
+                                                    "actual_rows": 2077564,
+                                                    "estimated_cardinality": 2124368,
+                                                    "children": [],
+                                                    "relation": "yago2",
+                                                    "opt_filter": "d>=60 AND d<=2968596 AND d IS NOT NULL",
+                                                    "projection": [
+                                                        {
+                                                            "table_name": "yago2_1",
+                                                            "field_name": "s"
+                                                        },
+                                                        {
+                                                            "table_name": "yago2_1",
+                                                            "field_name": "d"
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        },
+                                        "children": [
+                                            {
+                                                "name": "GROUPBY",
+                                                "partitioned": false,
+                                                "id": 0,
+                                                "group_on": [
+                                                    0
+                                                ],
+                                                "child": {
+                                                    "name": "MULTISEMIJOIN",
+                                                    "partitioned": true,
+                                                    "id": 0,
+                                                    "equijoin_keys": [
+                                                        [
+                                                            [
+                                                                1,
+                                                                0
+                                                            ]
+                                                        ]
+                                                    ],
+                                                    "guard": {
+                                                        "name": "REPARTITION",
+                                                        "num_partitions": 16,
+                                                        "partitioning": "unknown",
+                                                        "partition_on": 0,
+                                                        "children": [
+                                                            {
+                                                                "name": "SEQUENTIALSCAN",
+                                                                "execution_time": 0.000875,
+                                                                "actual_rows": 41742,
+                                                                "estimated_cardinality": 41742,
+                                                                "children": [],
+                                                                "relation": "yago21",
+                                                                "opt_filter": null,
+                                                                "projection": [
+                                                                    {
+                                                                        "table_name": "yago21_5",
+                                                                        "field_name": "d"
+                                                                    },
+                                                                    {
+                                                                        "table_name": "yago21_5",
+                                                                        "field_name": "s"
+                                                                    }
+                                                                ]
+                                                            }
+                                                        ]
+                                                    },
+                                                    "children": [
+                                                        {
+                                                            "name": "GROUPBY",
+                                                            "partitioned": false,
+                                                            "id": 0,
+                                                            "group_on": [
+                                                                0
+                                                            ],
+                                                            "child": {
+                                                                "name": "MULTISEMIJOIN",
+                                                                "partitioned": true,
+                                                                "id": 0,
+                                                                "equijoin_keys": [
+                                                                    [
+                                                                        [
+                                                                            1,
+                                                                            0
+                                                                        ]
+                                                                    ]
+                                                                ],
+                                                                "guard": {
+                                                                    "name": "REPARTITION",
+                                                                    "num_partitions": 16,
+                                                                    "partitioning": "unknown",
+                                                                    "partition_on": 0,
+                                                                    "children": [
+                                                                        {
+                                                                            "name": "SEQUENTIALSCAN",
+                                                                            "execution_time": 0.000724,
+                                                                            "actual_rows": 41742,
+                                                                            "estimated_cardinality": 41742,
+                                                                            "children": [],
+                                                                            "relation": "yago21",
+                                                                            "opt_filter": null,
+                                                                            "projection": [
+                                                                                {
+                                                                                    "table_name": "yago21_6",
+                                                                                    "field_name": "s"
+                                                                                },
+                                                                                {
+                                                                                    "table_name": "yago21_6",
+                                                                                    "field_name": "d"
+                                                                                }
+                                                                            ]
+                                                                        }
+                                                                    ]
+                                                                },
+                                                                "children": [
+                                                                    {
+                                                                        "name": "GROUPBY",
+                                                                        "partitioned": false,
+                                                                        "id": 0,
+                                                                        "group_on": [
+                                                                            0
+                                                                        ],
+                                                                        "child": {
+                                                                            "name": "MULTISEMIJOIN",
+                                                                            "partitioned": true,
+                                                                            "id": 0,
+                                                                            "equijoin_keys": [
+                                                                                [
+                                                                                    [
+                                                                                        1,
+                                                                                        0
+                                                                                    ]
+                                                                                ]
+                                                                            ],
+                                                                            "guard": {
+                                                                                "name": "REPARTITION",
+                                                                                "num_partitions": 16,
+                                                                                "partitioning": "unknown",
+                                                                                "partition_on": 0,
+                                                                                "children": [
+                                                                                    {
+                                                                                        "name": "SEQUENTIALSCAN",
+                                                                                        "execution_time": 0.003526,
+                                                                                        "actual_rows": 2124368,
+                                                                                        "estimated_cardinality": 2124368,
+                                                                                        "children": [],
+                                                                                        "relation": "yago2",
+                                                                                        "opt_filter": null,
+                                                                                        "projection": [
+                                                                                            {
+                                                                                                "table_name": "yago2_7",
+                                                                                                "field_name": "d"
+                                                                                            },
+                                                                                            {
+                                                                                                "table_name": "yago2_7",
+                                                                                                "field_name": "s"
+                                                                                            }
+                                                                                        ]
+                                                                                    }
+                                                                                ]
+                                                                            },
+                                                                            "children": [
+                                                                                {
+                                                                                    "name": "GROUPBY",
+                                                                                    "partitioned": false,
+                                                                                    "id": 0,
+                                                                                    "group_on": [
+                                                                                        0
+                                                                                    ],
+                                                                                    "child": {
+                                                                                        "name": "MULTISEMIJOIN",
+                                                                                        "partitioned": true,
+                                                                                        "id": 0,
+                                                                                        "equijoin_keys": [
+                                                                                            [
+                                                                                                [
+                                                                                                    1,
+                                                                                                    0
+                                                                                                ]
+                                                                                            ]
+                                                                                        ],
+                                                                                        "guard": {
+                                                                                            "name": "REPARTITION",
+                                                                                            "num_partitions": 16,
+                                                                                            "partitioning": "unknown",
+                                                                                            "partition_on": 0,
+                                                                                            "children": [
+                                                                                                {
+                                                                                                    "name": "SEQUENTIALSCAN",
+                                                                                                    "execution_time": 0.003977,
+                                                                                                    "actual_rows": 2124368,
+                                                                                                    "estimated_cardinality": 2124368,
+                                                                                                    "children": [],
+                                                                                                    "relation": "yago2",
+                                                                                                    "opt_filter": null,
+                                                                                                    "projection": [
+                                                                                                        {
+                                                                                                            "table_name": "yago2_8",
+                                                                                                            "field_name": "s"
+                                                                                                        },
+                                                                                                        {
+                                                                                                            "table_name": "yago2_8",
+                                                                                                            "field_name": "d"
+                                                                                                        }
+                                                                                                    ]
+                                                                                                }
+                                                                                            ]
+                                                                                        },
+                                                                                        "children": [
+                                                                                            {
+                                                                                                "name": "GROUPBY",
+                                                                                                "partitioned": false,
+                                                                                                "id": 0,
+                                                                                                "group_on": [
+                                                                                                    0
+                                                                                                ],
+                                                                                                "child": {
+                                                                                                    "name": "MULTISEMIJOIN",
+                                                                                                    "partitioned": true,
+                                                                                                    "id": 0,
+                                                                                                    "equijoin_keys": [
+                                                                                                        [
+                                                                                                            [
+                                                                                                                1,
+                                                                                                                0
+                                                                                                            ]
+                                                                                                        ]
+                                                                                                    ],
+                                                                                                    "guard": {
+                                                                                                        "name": "REPARTITION",
+                                                                                                        "num_partitions": 16,
+                                                                                                        "partitioning": "unknown",
+                                                                                                        "partition_on": 0,
+                                                                                                        "children": [
+                                                                                                            {
+                                                                                                                "name": "SEQUENTIALSCAN",
+                                                                                                                "execution_time": 0.006941,
+                                                                                                                "actual_rows": 2124368,
+                                                                                                                "estimated_cardinality": 2124368,
+                                                                                                                "children": [],
+                                                                                                                "relation": "yago2",
+                                                                                                                "opt_filter": null,
+                                                                                                                "projection": [
+                                                                                                                    {
+                                                                                                                        "table_name": "yago2_9",
+                                                                                                                        "field_name": "d"
+                                                                                                                    },
+                                                                                                                    {
+                                                                                                                        "table_name": "yago2_9",
+                                                                                                                        "field_name": "s"
+                                                                                                                    }
+                                                                                                                ]
+                                                                                                            }
+                                                                                                        ]
+                                                                                                    },
+                                                                                                    "children": [
+                                                                                                        {
+                                                                                                            "name": "GROUPBY",
+                                                                                                            "partitioned": false,
+                                                                                                            "id": 0,
+                                                                                                            "group_on": [
+                                                                                                                0
+                                                                                                            ],
+                                                                                                            "child": {
+                                                                                                                "name": "MULTISEMIJOIN",
+                                                                                                                "partitioned": true,
+                                                                                                                "id": 0,
+                                                                                                                "equijoin_keys": [
+                                                                                                                    [
+                                                                                                                        [
+                                                                                                                            1,
+                                                                                                                            0
+                                                                                                                        ]
+                                                                                                                    ]
+                                                                                                                ],
+                                                                                                                "guard": {
+                                                                                                                    "name": "REPARTITION",
+                                                                                                                    "num_partitions": 16,
+                                                                                                                    "partitioning": "unknown",
+                                                                                                                    "partition_on": 0,
+                                                                                                                    "children": [
+                                                                                                                        {
+                                                                                                                            "name": "SEQUENTIALSCAN",
+                                                                                                                            "execution_time": 0.03853,
+                                                                                                                            "actual_rows": 1657423,
+                                                                                                                            "estimated_cardinality": 2124368,
+                                                                                                                            "children": [],
+                                                                                                                            "relation": "yago2",
+                                                                                                                            "opt_filter": "d<=1846570 AND d IS NOT NULL",
+                                                                                                                            "projection": [
+                                                                                                                                {
+                                                                                                                                    "table_name": "yago2_10",
+                                                                                                                                    "field_name": "s"
+                                                                                                                                },
+                                                                                                                                {
+                                                                                                                                    "table_name": "yago2_10",
+                                                                                                                                    "field_name": "d"
+                                                                                                                                }
+                                                                                                                            ]
+                                                                                                                        }
+                                                                                                                    ]
+                                                                                                                },
+                                                                                                                "children": [
+                                                                                                                    {
+                                                                                                                        "name": "GROUPBY",
+                                                                                                                        "partitioned": false,
+                                                                                                                        "id": 0,
+                                                                                                                        "group_on": [
+                                                                                                                            1
+                                                                                                                        ],
+                                                                                                                        "child": {
+                                                                                                                            "name": "MULTISEMIJOIN",
+                                                                                                                            "partitioned": true,
+                                                                                                                            "id": 0,
+                                                                                                                            "equijoin_keys": [
+                                                                                                                                [
+                                                                                                                                    [
+                                                                                                                                        0,
+                                                                                                                                        0
+                                                                                                                                    ]
+                                                                                                                                ]
+                                                                                                                            ],
+                                                                                                                            "guard": {
+                                                                                                                                "name": "REPARTITION",
+                                                                                                                                "num_partitions": 16,
+                                                                                                                                "partitioning": "unknown",
+                                                                                                                                "partition_on": 0,
+                                                                                                                                "children": [
+                                                                                                                                    {
+                                                                                                                                        "name": "SEQUENTIALSCAN",
+                                                                                                                                        "execution_time": 0.000541,
+                                                                                                                                        "actual_rows": 11497,
+                                                                                                                                        "estimated_cardinality": 11497,
+                                                                                                                                        "children": [],
+                                                                                                                                        "relation": "yago39",
+                                                                                                                                        "opt_filter": null,
+                                                                                                                                        "projection": [
+                                                                                                                                            {
+                                                                                                                                                "table_name": "yago39",
+                                                                                                                                                "field_name": "d"
+                                                                                                                                            },
+                                                                                                                                            {
+                                                                                                                                                "table_name": "yago39",
+                                                                                                                                                "field_name": "s"
+                                                                                                                                            }
+                                                                                                                                        ]
+                                                                                                                                    }
+                                                                                                                                ]
+                                                                                                                            },
+                                                                                                                            "children": [
+                                                                                                                                {
+                                                                                                                                    "name": "GROUPBY",
+                                                                                                                                    "partitioned": false,
+                                                                                                                                    "id": 0,
+                                                                                                                                    "group_on": [
+                                                                                                                                        1
+                                                                                                                                    ],
+                                                                                                                                    "child": {
+                                                                                                                                        "name": "MULTISEMIJOIN",
+                                                                                                                                        "partitioned": true,
+                                                                                                                                        "id": 0,
+                                                                                                                                        "equijoin_keys": [
+                                                                                                                                            [
+                                                                                                                                                [
+                                                                                                                                                    0,
+                                                                                                                                                    0
+                                                                                                                                                ]
+                                                                                                                                            ]
+                                                                                                                                        ],
+                                                                                                                                        "guard": {
+                                                                                                                                            "name": "REPARTITION",
+                                                                                                                                            "num_partitions": 16,
+                                                                                                                                            "partitioning": "unknown",
+                                                                                                                                            "partition_on": 0,
+                                                                                                                                            "children": [
+                                                                                                                                                {
+                                                                                                                                                    "name": "SEQUENTIALSCAN",
+                                                                                                                                                    "execution_time": 7.6e-05,
+                                                                                                                                                    "actual_rows": 36183,
+                                                                                                                                                    "estimated_cardinality": 36187,
+                                                                                                                                                    "children": [],
+                                                                                                                                                    "relation": "yago36",
+                                                                                                                                                    "opt_filter": "d>=360 AND d IS NOT NULL",
+                                                                                                                                                    "projection": [
+                                                                                                                                                        {
+                                                                                                                                                            "table_name": "yago36",
+                                                                                                                                                            "field_name": "s"
+                                                                                                                                                        },
+                                                                                                                                                        {
+                                                                                                                                                            "table_name": "yago36",
+                                                                                                                                                            "field_name": "d"
+                                                                                                                                                        }
+                                                                                                                                                    ]
+                                                                                                                                                }
+                                                                                                                                            ]
+                                                                                                                                        },
+                                                                                                                                        "children": [
+                                                                                                                                            {
+                                                                                                                                                "name": "GROUPBY",
+                                                                                                                                                "partitioned": false,
+                                                                                                                                                "id": 0,
+                                                                                                                                                "group_on": [
+                                                                                                                                                    0
+                                                                                                                                                ],
+                                                                                                                                                "child": {
+                                                                                                                                                    "name": "MULTISEMIJOIN",
+                                                                                                                                                    "partitioned": true,
+                                                                                                                                                    "id": 0,
+                                                                                                                                                    "equijoin_keys": [
+                                                                                                                                                        [
+                                                                                                                                                            [
+                                                                                                                                                                1,
+                                                                                                                                                                0
+                                                                                                                                                            ]
+                                                                                                                                                        ]
+                                                                                                                                                    ],
+                                                                                                                                                    "guard": {
+                                                                                                                                                        "name": "REPARTITION",
+                                                                                                                                                        "num_partitions": 16,
+                                                                                                                                                        "partitioning": "unknown",
+                                                                                                                                                        "partition_on": 0,
+                                                                                                                                                        "children": [
+                                                                                                                                                            {
+                                                                                                                                                                "name": "SEQUENTIALSCAN",
+                                                                                                                                                                "execution_time": 0.000646,
+                                                                                                                                                                "actual_rows": 13032,
+                                                                                                                                                                "estimated_cardinality": 13033,
+                                                                                                                                                                "children": [],
+                                                                                                                                                                "relation": "yago48",
+                                                                                                                                                                "opt_filter": "s<=1846651 AND s IS NOT NULL",
+                                                                                                                                                                "projection": [
+                                                                                                                                                                    {
+                                                                                                                                                                        "table_name": "yago48",
+                                                                                                                                                                        "field_name": "s"
+                                                                                                                                                                    },
+                                                                                                                                                                    {
+                                                                                                                                                                        "table_name": "yago48",
+                                                                                                                                                                        "field_name": "d"
+                                                                                                                                                                    }
+                                                                                                                                                                ]
+                                                                                                                                                            }
+                                                                                                                                                        ]
+                                                                                                                                                    },
+                                                                                                                                                    "children": [
+                                                                                                                                                        {
+                                                                                                                                                            "name": "GROUPBY",
+                                                                                                                                                            "partitioned": false,
+                                                                                                                                                            "id": 0,
+                                                                                                                                                            "group_on": [
+                                                                                                                                                                0
+                                                                                                                                                            ],
+                                                                                                                                                            "child": {
+                                                                                                                                                                "name": "MULTISEMIJOIN",
+                                                                                                                                                                "partitioned": true,
+                                                                                                                                                                "id": 0,
+                                                                                                                                                                "equijoin_keys": [],
+                                                                                                                                                                "guard": {
+                                                                                                                                                                    "name": "REPARTITION",
+                                                                                                                                                                    "num_partitions": 16,
+                                                                                                                                                                    "partitioning": "unknown",
+                                                                                                                                                                    "partition_on": 0,
+                                                                                                                                                                    "children": [
+                                                                                                                                                                        {
+                                                                                                                                                                            "name": "SEQUENTIALSCAN",
+                                                                                                                                                                            "execution_time": 0.008651,
+                                                                                                                                                                            "actual_rows": 1536008,
+                                                                                                                                                                            "estimated_cardinality": 2124368,
+                                                                                                                                                                            "children": [],
+                                                                                                                                                                            "relation": "yago2",
+                                                                                                                                                                            "opt_filter": "d>=2212 AND d<=1724217 AND d IS NOT NULL",
+                                                                                                                                                                            "projection": [
+                                                                                                                                                                                {
+                                                                                                                                                                                    "table_name": "yago2_4",
+                                                                                                                                                                                    "field_name": "d"
+                                                                                                                                                                                }
+                                                                                                                                                                            ]
+                                                                                                                                                                        }
+                                                                                                                                                                    ]
+                                                                                                                                                                },
+                                                                                                                                                                "children": []
+                                                                                                                                                            }
+                                                                                                                                                        }
+                                                                                                                                                    ]
+                                                                                                                                                }
+                                                                                                                                            }
+                                                                                                                                        ]
+                                                                                                                                    }
+                                                                                                                                }
+                                                                                                                            ]
+                                                                                                                        }
+                                                                                                                    }
+                                                                                                                ]
+                                                                                                            }
+                                                                                                        }
+                                                                                                    ]
+                                                                                                }
+                                                                                            }
+                                                                                        ]
+                                                                                    }
+                                                                                }
+                                                                            ]
+                                                                        }
+                                                                    }
+                                                                ]
+                                                            }
+                                                        }
+                                                    ]
+                                                }
+                                            }
+                                        ]
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        ],
+        "group_by": null,
+        "aggregate": [
+            "count_star()"
+        ]
+    },
+    "aliases": {
+        "yago2_1": "yago2",
+        "yago39": "yago39",
+        "yago21_5": "yago21",
+        "yago2_0": "yago2",
+        "yago21_6": "yago21",
+        "yago2_8": "yago2",
+        "yago2_9": "yago2",
+        "yago36": "yago36",
+        "yago2_10": "yago2",
+        "yago2_7": "yago2",
+        "yago48": "yago48",
+        "yago2_4": "yago2"
+    }
+}

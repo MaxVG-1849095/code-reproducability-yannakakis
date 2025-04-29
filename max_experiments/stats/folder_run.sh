@@ -1,10 +1,10 @@
 #!/bin/bash
 
 root_dir="../../"
-parquet_data="$root_dir/benchmarks/stats-ceb/parquet-zstd"
+parquet_data="$root_dir/benchmarks/stats-ceb/parquet-zstd-lowercase"
 out_folder="./output" # non-existing output folder
 timings="timings.csv"
-plan="./plans_final"
+plan="./plans_organized_16"
 repetitions=1
 
 # make timings file
@@ -17,6 +17,6 @@ echo "duration(µs),method,variant,query" > $timings
 
 # Run all stats-ceb queries in release mode, with 10 repetitions
 ## --release eventually !
-cargo +nightly run --manifest-path="../../intermediate_to_df_plan/Cargo.toml" --bin exec_ir_plans -- --plans "$plan" --data "$parquet_data" -o "$out_folder" -t $timings --repetitions $repetitions
+cargo +nightly run --release --manifest-path="../../intermediate_to_df_plan/Cargo.toml" --bin exec_ir_plans -- --plans "$plan" --data "$parquet_data" -o "$out_folder" -t $timings --repetitions $repetitions
 
 

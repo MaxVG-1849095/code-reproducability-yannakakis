@@ -1,0 +1,309 @@
+{
+    "execution_time": 0.913887,
+    "root": {
+        "name": "AGGREGATE",
+        "execution_time": 0.000984,
+        "actual_rows": 1,
+        "estimated_cardinality": null,
+        "children": [
+            {
+                "name": "REPARTITION",
+                "num_partitions": 1,
+                "partitioning": "unknown",
+                "partition_on": 0,
+                "children": [
+                    {
+                        "name": "YANNAKAKIS",
+                        "root": {
+                            "name": "MULTISEMIJOIN",
+                            "partitioned": true,
+                            "id": 0,
+                            "equijoin_keys": [
+                                [
+                                    [
+                                        0,
+                                        0
+                                    ]
+                                ],
+                                [
+                                    [
+                                        0,
+                                        0
+                                    ]
+                                ]
+                            ],
+                            "guard": {
+                                "name": "REPARTITION",
+                                "num_partitions": 16,
+                                "partitioning": "unknown",
+                                "partition_on": 0,
+                                "children": [
+                                    {
+                                        "name": "SEQUENTIALSCAN",
+                                        "execution_time": 0.009343,
+                                        "actual_rows": 4295891,
+                                        "estimated_cardinality": 4302340,
+                                        "children": [],
+                                        "relation": "dblp23",
+                                        "opt_filter": "s>=1206438 AND s<=3340551 AND s IS NOT NULL",
+                                        "projection": [
+                                            {
+                                                "table_name": "dblp23",
+                                                "field_name": "s"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            "children": [
+                                {
+                                    "name": "GROUPBY",
+                                    "partitioned": false,
+                                    "id": 0,
+                                    "group_on": [
+                                        0
+                                    ],
+                                    "child": {
+                                        "name": "MULTISEMIJOIN",
+                                        "partitioned": true,
+                                        "id": 0,
+                                        "equijoin_keys": [
+                                            [
+                                                [
+                                                    1,
+                                                    0
+                                                ]
+                                            ]
+                                        ],
+                                        "guard": {
+                                            "name": "REPARTITION",
+                                            "num_partitions": 16,
+                                            "partitioning": "unknown",
+                                            "partition_on": 0,
+                                            "children": [
+                                                {
+                                                    "name": "SEQUENTIALSCAN",
+                                                    "execution_time": 0.002072,
+                                                    "actual_rows": 1115090,
+                                                    "estimated_cardinality": 1115090,
+                                                    "children": [],
+                                                    "relation": "dblp9",
+                                                    "opt_filter": null,
+                                                    "projection": [
+                                                        {
+                                                            "table_name": "dblp9",
+                                                            "field_name": "s"
+                                                        },
+                                                        {
+                                                            "table_name": "dblp9",
+                                                            "field_name": "d"
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        },
+                                        "children": [
+                                            {
+                                                "name": "GROUPBY",
+                                                "partitioned": false,
+                                                "id": 0,
+                                                "group_on": [
+                                                    0
+                                                ],
+                                                "child": {
+                                                    "name": "MULTISEMIJOIN",
+                                                    "partitioned": true,
+                                                    "id": 0,
+                                                    "equijoin_keys": [
+                                                        [
+                                                            [
+                                                                1,
+                                                                0
+                                                            ]
+                                                        ]
+                                                    ],
+                                                    "guard": {
+                                                        "name": "REPARTITION",
+                                                        "num_partitions": 16,
+                                                        "partitioning": "unknown",
+                                                        "partition_on": 0,
+                                                        "children": [
+                                                            {
+                                                                "name": "SEQUENTIALSCAN",
+                                                                "execution_time": 0.005332,
+                                                                "actual_rows": 1102760,
+                                                                "estimated_cardinality": 3823259,
+                                                                "children": [],
+                                                                "relation": "dblp2",
+                                                                "opt_filter": "d<=3341100 AND d IS NOT NULL",
+                                                                "projection": [
+                                                                    {
+                                                                        "table_name": "dblp2",
+                                                                        "field_name": "s"
+                                                                    },
+                                                                    {
+                                                                        "table_name": "dblp2",
+                                                                        "field_name": "d"
+                                                                    }
+                                                                ]
+                                                            }
+                                                        ]
+                                                    },
+                                                    "children": [
+                                                        {
+                                                            "name": "GROUPBY",
+                                                            "partitioned": false,
+                                                            "id": 0,
+                                                            "group_on": [
+                                                                0
+                                                            ],
+                                                            "child": {
+                                                                "name": "MULTISEMIJOIN",
+                                                                "partitioned": true,
+                                                                "id": 0,
+                                                                "equijoin_keys": [
+                                                                    [
+                                                                        [
+                                                                            0,
+                                                                            0
+                                                                        ]
+                                                                    ]
+                                                                ],
+                                                                "guard": {
+                                                                    "name": "REPARTITION",
+                                                                    "num_partitions": 16,
+                                                                    "partitioning": "unknown",
+                                                                    "partition_on": 0,
+                                                                    "children": [
+                                                                        {
+                                                                            "name": "FILTER",
+                                                                            "execution_time": 0.006055,
+                                                                            "actual_rows": 1955071,
+                                                                            "estimated_cardinality": 3572810,
+                                                                            "children": [
+                                                                                {
+                                                                                    "name": "SEQUENTIALSCAN",
+                                                                                    "execution_time": 0.007558,
+                                                                                    "actual_rows": 3552265,
+                                                                                    "estimated_cardinality": 3572810,
+                                                                                    "children": [],
+                                                                                    "relation": "dblp24",
+                                                                                    "opt_filter": "s>=1206437 AND s<=3341100 AND s IS NOT NULL",
+                                                                                    "projection": [
+                                                                                        {
+                                                                                            "table_name": "dblp24",
+                                                                                            "field_name": "s"
+                                                                                        }
+                                                                                    ]
+                                                                                }
+                                                                            ],
+                                                                            "condition": "(dblp24.s >= 2238341)"
+                                                                        }
+                                                                    ]
+                                                                },
+                                                                "children": [
+                                                                    {
+                                                                        "name": "GROUPBY",
+                                                                        "partitioned": false,
+                                                                        "id": 0,
+                                                                        "group_on": [
+                                                                            0
+                                                                        ],
+                                                                        "child": {
+                                                                            "name": "MULTISEMIJOIN",
+                                                                            "partitioned": true,
+                                                                            "id": 0,
+                                                                            "equijoin_keys": [],
+                                                                            "guard": {
+                                                                                "name": "REPARTITION",
+                                                                                "num_partitions": 16,
+                                                                                "partitioning": "unknown",
+                                                                                "partition_on": 0,
+                                                                                "children": [
+                                                                                    {
+                                                                                        "name": "SEQUENTIALSCAN",
+                                                                                        "execution_time": 0.001303,
+                                                                                        "actual_rows": 1102759,
+                                                                                        "estimated_cardinality": 2134627,
+                                                                                        "children": [],
+                                                                                        "relation": "dblp6",
+                                                                                        "opt_filter": "s>=2238341 AND s IS NOT NULL",
+                                                                                        "projection": [
+                                                                                            {
+                                                                                                "table_name": "dblp6",
+                                                                                                "field_name": "s"
+                                                                                            }
+                                                                                        ]
+                                                                                    }
+                                                                                ]
+                                                                            },
+                                                                            "children": []
+                                                                        }
+                                                                    }
+                                                                ]
+                                                            }
+                                                        }
+                                                    ]
+                                                }
+                                            }
+                                        ]
+                                    }
+                                },
+                                {
+                                    "name": "GROUPBY",
+                                    "partitioned": false,
+                                    "id": 0,
+                                    "group_on": [
+                                        0
+                                    ],
+                                    "child": {
+                                        "name": "MULTISEMIJOIN",
+                                        "partitioned": true,
+                                        "id": 0,
+                                        "equijoin_keys": [],
+                                        "guard": {
+                                            "name": "REPARTITION",
+                                            "num_partitions": 16,
+                                            "partitioning": "unknown",
+                                            "partition_on": 0,
+                                            "children": [
+                                                {
+                                                    "name": "SEQUENTIALSCAN",
+                                                    "execution_time": 0.008601,
+                                                    "actual_rows": 5739908,
+                                                    "estimated_cardinality": 5740837,
+                                                    "children": [],
+                                                    "relation": "dblp25",
+                                                    "opt_filter": "s<=3340551 AND s IS NOT NULL",
+                                                    "projection": [
+                                                        {
+                                                            "table_name": "dblp25",
+                                                            "field_name": "s"
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        },
+                                        "children": []
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        ],
+        "group_by": null,
+        "aggregate": [
+            "count_star()"
+        ]
+    },
+    "aliases": {
+        "dblp6": "dblp6",
+        "dblp9": "dblp9",
+        "dblp25": "dblp25",
+        "dblp24": "dblp24",
+        "dblp2": "dblp2",
+        "dblp23": "dblp23"
+    }
+}

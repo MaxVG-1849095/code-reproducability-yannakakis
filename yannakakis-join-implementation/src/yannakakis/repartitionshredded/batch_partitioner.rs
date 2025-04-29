@@ -287,7 +287,7 @@ impl MsjBatchPartitioner {
                             //         Some(total_weights.clone()),
                             //     ));
 
-                            // println!("-----\n[MSJREP PRINT]\n-----\nmsj {} original batch:\n {:?} \n\n\n nested_data: \n {:?}\n nested_offsets: \n {:?} \n total_weights: \n {:?}\n+++++\n new batch for partition {}:\n {:?}\n-----\n-----",msj_id, val, nested_combined,nested_offsets, total_weights,i, new_batch);
+                            println!("-----\n[MSJREP PRINT]\n-----\nmsj {} original batch:\n {:?} \n\n\n nested_data: \n {:?}\n nested_offsets: \n {:?} \n total_weights: \n {:?}\n+++++\n new batch for partition {}:\n {:?}\n-----\n-----",msj_id, val, nested_combined,nested_offsets, total_weights,i, new_batch);
 
                             if new_batch.num_rows() > 0 {
                                 batches.push(new_batch);

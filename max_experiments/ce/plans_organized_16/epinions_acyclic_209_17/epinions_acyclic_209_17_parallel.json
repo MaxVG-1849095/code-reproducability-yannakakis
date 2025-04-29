@@ -1,0 +1,349 @@
+{
+    "execution_time": 0.393269,
+    "root": {
+        "name": "AGGREGATE",
+        "execution_time": 0.007878,
+        "actual_rows": 1,
+        "estimated_cardinality": null,
+        "children": [
+            {
+                "name": "REPARTITION",
+                "num_partitions": 1,
+                "partitioning": "unknown",
+                "partition_on": 0,
+                "children": [
+                    {
+                        "name": "YANNAKAKIS",
+                        "root": {
+                            "name": "MULTISEMIJOIN",
+                            "partitioned": true,
+                            "id": 0,
+                            "equijoin_keys": [
+                                [
+                                    [
+                                        0,
+                                        0
+                                    ]
+                                ],
+                                [
+                                    [
+                                        0,
+                                        0
+                                    ]
+                                ],
+                                [
+                                    [
+                                        0,
+                                        0
+                                    ]
+                                ]
+                            ],
+                            "guard": {
+                                "name": "REPARTITION",
+                                "num_partitions": 16,
+                                "partitioning": "unknown",
+                                "partition_on": 0,
+                                "children": [
+                                    {
+                                        "name": "SEQUENTIALSCAN",
+                                        "execution_time": 3.8e-05,
+                                        "actual_rows": 10197,
+                                        "estimated_cardinality": 10197,
+                                        "children": [],
+                                        "relation": "epinions75923",
+                                        "opt_filter": null,
+                                        "projection": [
+                                            {
+                                                "table_name": "epinions75923",
+                                                "field_name": "s"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            "children": [
+                                {
+                                    "name": "GROUPBY",
+                                    "partitioned": false,
+                                    "id": 0,
+                                    "group_on": [
+                                        0
+                                    ],
+                                    "child": {
+                                        "name": "MULTISEMIJOIN",
+                                        "partitioned": true,
+                                        "id": 0,
+                                        "equijoin_keys": [],
+                                        "guard": {
+                                            "name": "REPARTITION",
+                                            "num_partitions": 16,
+                                            "partitioning": "unknown",
+                                            "partition_on": 0,
+                                            "children": [
+                                                {
+                                                    "name": "SEQUENTIALSCAN",
+                                                    "execution_time": 1.7e-05,
+                                                    "actual_rows": 10181,
+                                                    "estimated_cardinality": 10182,
+                                                    "children": [],
+                                                    "relation": "epinions75898",
+                                                    "opt_filter": "s<=75791 AND s IS NOT NULL",
+                                                    "projection": [
+                                                        {
+                                                            "table_name": "epinions75898",
+                                                            "field_name": "s"
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        },
+                                        "children": []
+                                    }
+                                },
+                                {
+                                    "name": "GROUPBY",
+                                    "partitioned": false,
+                                    "id": 0,
+                                    "group_on": [
+                                        0
+                                    ],
+                                    "child": {
+                                        "name": "MULTISEMIJOIN",
+                                        "partitioned": true,
+                                        "id": 0,
+                                        "equijoin_keys": [],
+                                        "guard": {
+                                            "name": "REPARTITION",
+                                            "num_partitions": 16,
+                                            "partitioning": "unknown",
+                                            "partition_on": 0,
+                                            "children": [
+                                                {
+                                                    "name": "SEQUENTIALSCAN",
+                                                    "execution_time": 1.8e-05,
+                                                    "actual_rows": 10208,
+                                                    "estimated_cardinality": 10209,
+                                                    "children": [],
+                                                    "relation": "epinions75928",
+                                                    "opt_filter": "s<=75791 AND s IS NOT NULL",
+                                                    "projection": [
+                                                        {
+                                                            "table_name": "epinions75928",
+                                                            "field_name": "s"
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        },
+                                        "children": []
+                                    }
+                                },
+                                {
+                                    "name": "GROUPBY",
+                                    "partitioned": false,
+                                    "id": 0,
+                                    "group_on": [
+                                        0
+                                    ],
+                                    "child": {
+                                        "name": "MULTISEMIJOIN",
+                                        "partitioned": true,
+                                        "id": 0,
+                                        "equijoin_keys": [
+                                            [
+                                                [
+                                                    1,
+                                                    0
+                                                ]
+                                            ]
+                                        ],
+                                        "guard": {
+                                            "name": "REPARTITION",
+                                            "num_partitions": 16,
+                                            "partitioning": "unknown",
+                                            "partition_on": 0,
+                                            "children": [
+                                                {
+                                                    "name": "SEQUENTIALSCAN",
+                                                    "execution_time": 3.1e-05,
+                                                    "actual_rows": 10365,
+                                                    "estimated_cardinality": 10366,
+                                                    "children": [],
+                                                    "relation": "epinions75907",
+                                                    "opt_filter": "d<=75863 AND d IS NOT NULL",
+                                                    "projection": [
+                                                        {
+                                                            "table_name": "epinions75907",
+                                                            "field_name": "s"
+                                                        },
+                                                        {
+                                                            "table_name": "epinions75907",
+                                                            "field_name": "d"
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        },
+                                        "children": [
+                                            {
+                                                "name": "GROUPBY",
+                                                "partitioned": false,
+                                                "id": 0,
+                                                "group_on": [
+                                                    0
+                                                ],
+                                                "child": {
+                                                    "name": "MULTISEMIJOIN",
+                                                    "partitioned": true,
+                                                    "id": 0,
+                                                    "equijoin_keys": [
+                                                        [
+                                                            [
+                                                                1,
+                                                                0
+                                                            ]
+                                                        ]
+                                                    ],
+                                                    "guard": {
+                                                        "name": "REPARTITION",
+                                                        "num_partitions": 16,
+                                                        "partitioning": "unknown",
+                                                        "partition_on": 0,
+                                                        "children": [
+                                                            {
+                                                                "name": "SEQUENTIALSCAN",
+                                                                "execution_time": 1.8e-05,
+                                                                "actual_rows": 10169,
+                                                                "estimated_cardinality": 10169,
+                                                                "children": [],
+                                                                "relation": "epinions75916",
+                                                                "opt_filter": null,
+                                                                "projection": [
+                                                                    {
+                                                                        "table_name": "epinions75916",
+                                                                        "field_name": "s"
+                                                                    },
+                                                                    {
+                                                                        "table_name": "epinions75916",
+                                                                        "field_name": "d"
+                                                                    }
+                                                                ]
+                                                            }
+                                                        ]
+                                                    },
+                                                    "children": [
+                                                        {
+                                                            "name": "GROUPBY",
+                                                            "partitioned": false,
+                                                            "id": 0,
+                                                            "group_on": [
+                                                                0
+                                                            ],
+                                                            "child": {
+                                                                "name": "MULTISEMIJOIN",
+                                                                "partitioned": true,
+                                                                "id": 0,
+                                                                "equijoin_keys": [
+                                                                    [
+                                                                        [
+                                                                            1,
+                                                                            0
+                                                                        ]
+                                                                    ]
+                                                                ],
+                                                                "guard": {
+                                                                    "name": "REPARTITION",
+                                                                    "num_partitions": 16,
+                                                                    "partitioning": "unknown",
+                                                                    "partition_on": 0,
+                                                                    "children": [
+                                                                        {
+                                                                            "name": "SEQUENTIALSCAN",
+                                                                            "execution_time": 2.7e-05,
+                                                                            "actual_rows": 10179,
+                                                                            "estimated_cardinality": 10180,
+                                                                            "children": [],
+                                                                            "relation": "epinions75901",
+                                                                            "opt_filter": "s<=75812 AND s IS NOT NULL",
+                                                                            "projection": [
+                                                                                {
+                                                                                    "table_name": "epinions75901",
+                                                                                    "field_name": "s"
+                                                                                },
+                                                                                {
+                                                                                    "table_name": "epinions75901",
+                                                                                    "field_name": "d"
+                                                                                }
+                                                                            ]
+                                                                        }
+                                                                    ]
+                                                                },
+                                                                "children": [
+                                                                    {
+                                                                        "name": "GROUPBY",
+                                                                        "partitioned": false,
+                                                                        "id": 0,
+                                                                        "group_on": [
+                                                                            0
+                                                                        ],
+                                                                        "child": {
+                                                                            "name": "MULTISEMIJOIN",
+                                                                            "partitioned": true,
+                                                                            "id": 0,
+                                                                            "equijoin_keys": [],
+                                                                            "guard": {
+                                                                                "name": "REPARTITION",
+                                                                                "num_partitions": 16,
+                                                                                "partitioning": "unknown",
+                                                                                "partition_on": 0,
+                                                                                "children": [
+                                                                                    {
+                                                                                        "name": "SEQUENTIALSCAN",
+                                                                                        "execution_time": 2.8e-05,
+                                                                                        "actual_rows": 10066,
+                                                                                        "estimated_cardinality": 10067,
+                                                                                        "children": [],
+                                                                                        "relation": "epinions75912",
+                                                                                        "opt_filter": "s<=75845 AND s IS NOT NULL",
+                                                                                        "projection": [
+                                                                                            {
+                                                                                                "table_name": "epinions75912",
+                                                                                                "field_name": "s"
+                                                                                            }
+                                                                                        ]
+                                                                                    }
+                                                                                ]
+                                                                            },
+                                                                            "children": []
+                                                                        }
+                                                                    }
+                                                                ]
+                                                            }
+                                                        }
+                                                    ]
+                                                }
+                                            }
+                                        ]
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        ],
+        "group_by": null,
+        "aggregate": [
+            "count_star()"
+        ]
+    },
+    "aliases": {
+        "epinions75907": "epinions75907",
+        "epinions75928": "epinions75928",
+        "epinions75923": "epinions75923",
+        "epinions75898": "epinions75898",
+        "epinions75901": "epinions75901",
+        "epinions75912": "epinions75912",
+        "epinions75916": "epinions75916"
+    }
+}

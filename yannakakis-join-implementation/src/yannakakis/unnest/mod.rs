@@ -273,6 +273,7 @@ pub fn unnest(
     let result: RecordBatch = match batch {
         SemiJoinResultBatch::Flat(batch) => batch,
         SemiJoinResultBatch::Nested(mut nestedbatch) => {
+            // println!("unnesting batch");
             // Pre-allocate two buffers that will be used throughout the unnesting.
             let sum_weights = nestedbatch.total_weights().iter().sum::<Idx>();
             let mut buffer1 = Vec::<Idx>::with_capacity(sum_weights as usize);

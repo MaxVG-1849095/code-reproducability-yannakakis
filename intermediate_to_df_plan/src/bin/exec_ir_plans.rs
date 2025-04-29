@@ -9,12 +9,18 @@ use std::{
 
 use clap::Parser;
 use datafusion::{
-    arrow::util::pretty::pretty_format_batches, physical_plan::display::DisplayableExecutionPlan, prelude::{SessionConfig, SessionContext}
+    arrow::{self, util::pretty::pretty_format_batches}, physical_plan::display::DisplayableExecutionPlan, prelude::{SessionConfig, SessionContext}
 };
 use intermediate_to_df_plan::{
     time_execution, to_execution_plan,
     util::{metrics, yann_detailed_metrics, Catalog},
 };
+
+use std::fs::File;
+use arrow::csv::Writer;
+use arrow::record_batch::RecordBatch;
+use arrow::compute::concat_batches;
+use std::sync::Arc;
 
 #[derive(Parser, Debug, Clone)]
 #[command(version, about, long_about = None)]
@@ -178,6 +184,9 @@ async fn exec_plan(
 
         let result_clone = results.clone();
 
+        // write results to file
+        write_batches_to_csv(results.clone(), "output.csv");
+
         println!("{}", pretty_format_batches(&results)?.to_string());
         //print amount of rows
         // println!("Rows: {}", results[0].num_rows());
@@ -191,6 +200,8 @@ async fn exec_plan(
         println!("schema: {:?}", result_clone[0].schema());
         println!("Execution time: {:?}", duration);
         durations.push(duration);
+
+        
 
         let mut extra_param_field_names = extra_param_field_names.clone();
         extra_param_field_names.insert(0, "path".into());
@@ -235,6 +246,28 @@ async fn exec_plan(
     Ok(())
 }
 
+use std::fs::OpenOptions;
+
+fn write_batches_to_csv(results: Vec<RecordBatch>, output_path: &str) -> Result<(), Box<dyn Error>> {
+    if results.is_empty() {
+        return Ok(());
+    }
+
+    let schema = results[0].schema();
+    let combined_batch = concat_batches(&schema, &results)?;
+
+    let file = OpenOptions::new()
+        .write(true)
+        .append(true)
+        .create(true)
+        .open(output_path)?;
+
+    let mut writer = Writer::new(file);
+
+    writer.write(&combined_batch)?;
+
+    Ok(())
+}
 /// Write record to existing csv file with given timings (as µs).
 fn write_timings<W: std::io::Write>(
     csv_wtr: &mut csv::Writer<W>,

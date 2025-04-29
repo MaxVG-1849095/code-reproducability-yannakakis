@@ -397,7 +397,6 @@ impl NonSingularNestedColumn {
     }
 
     //function to append a given nested column to the current one, it is to be called on the second nested level since here is no need to append data among other things
-    // ! does not work if either is nonsingular!
     pub fn append_other_2nd_level(
         &mut self,
         other: &NonSingularNestedColumn,
