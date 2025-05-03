@@ -4,8 +4,6 @@ use std::pin::Pin;
 use std::sync::Arc;
 use std::task::Poll;
 
-use datafusion::arrow::datatypes::Schema;
-use datafusion::catalog::schema;
 use datafusion::execution::RecordBatchStream;
 use datafusion::physical_plan::metrics::MetricsSet;
 use datafusion::physical_plan::stream::RecordBatchStreamAdapter;
@@ -400,7 +398,7 @@ impl MultiSemiJoinStream {
         &self.guard_stream
     }
 
-    pub fn materialized_children_futs(&self) -> &Vec<OnceFut<GroupedRelRef>> {
+    pub(crate) fn materialized_children_futs(&self) -> &Vec<OnceFut<GroupedRelRef>> {
         &self.materialized_children_futs
     }
 
@@ -408,7 +406,7 @@ impl MultiSemiJoinStream {
         &self.semijoin_keys
     }
 
-    pub fn semijoin_metrics(&self) -> &SemiJoinMetrics {
+    pub(crate) fn semijoin_metrics(&self) -> &SemiJoinMetrics {
         &self.semijoin_metrics
     }
 

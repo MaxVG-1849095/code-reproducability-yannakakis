@@ -1,0 +1,137 @@
+{
+    "execution_time": 3.03845,
+    "root": {
+        "name": "AGGREGATE",
+        "execution_time": 0.025638,
+        "actual_rows": 1,
+        "estimated_cardinality": null,
+        "children": [
+            {
+                "name": "YANNAKAKIS",
+                "root": {
+                    "name": "MULTISEMIJOIN",
+                    "partitioned": false,
+                    "id": 5,
+                    "equijoin_keys": [
+                        [
+                            [
+                                0,
+                                0
+                            ]
+                        ]
+                    ],
+                    "guard": {
+                        "name": "REPARTITION",
+                        "num_partitions": 16,
+                        "partition_on": 0,
+                        "partitioning": "unknown",
+                        "children": [
+                            {
+                                "name": "SEQUENTIALSCAN",
+                                "children": [],
+                                "relation": "movie_info",
+                                "opt_filter": "movie_id>=2 AND movie_id<=2525971 AND movie_id IS NOT NULL",
+                                "projection": [
+                                    {
+                                        "table_name": "mi",
+                                        "field_name": "movie_id"
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    "children": [
+                        {
+                            "name": "GROUPBY",
+                            "partitioned": true,
+                            "id": 4,
+                            "group_on": [
+                                0
+                            ],
+                            "child": {
+                                "name": "MULTISEMIJOIN",
+                                "partitioned": true,
+                                "id": 3,
+                                "equijoin_keys": [
+                                    [
+                                        [
+                                            0,
+                                            0
+                                        ]
+                                    ]
+                                ],
+                                "guard": {
+                                    "name": "REPARTITION",
+                                    "num_partitions": 16,
+                                    "partitioning": "unknown",
+                                    "partition_on": 0,
+                                    "children": [
+                                        {
+                                            "name": "SEQUENTIALSCAN",
+                                            "children": [],
+                                            "relation": "movie_keyword",
+                                            "opt_filter": null,
+                                            "projection": [
+                                                {
+                                                    "table_name": "mk",
+                                                    "field_name": "movie_id"
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                },
+                                "children": [
+                                    {
+                                        "name": "GROUPBY",
+                                        "partitioned": true,
+                                        "id": 2,
+                                        "group_on": [
+                                            0
+                                        ],
+                                        "child": {
+                                            "name": "MULTISEMIJOIN",
+                                            "partitioned": true,
+                                            "id": 1,
+                                            "equijoin_keys": [],
+                                            "guard": {
+                                                "name": "REPARTITION",
+                                                "num_partitions": 16,
+                                                "partitioning": "unknown",
+                                                "partition_on": 0,
+                                                "children": [
+                                                    {
+                                                        "name": "SEQUENTIALSCAN",
+                                                        "execution_time": 0.005458,
+                                                        "children": [],
+                                                        "relation": "title",
+                                                        "opt_filter": "id>=2 AND id<=2525971 AND id IS NOT NULL",
+                                                        "projection": [
+                                                            {
+                                                                "table_name": "t",
+                                                                "field_name": "id"
+                                                            }
+                                                        ]
+                                                    }
+                                                ]
+                                            },
+                                            "children": []
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            }
+        ],
+        "group_by": null,
+        "aggregate": [
+            "count_star()"
+        ]
+    },
+    "aliases": {
+        "t": "title",
+        "mk": "movie_keyword",
+        "mi": "movie_info"
+    }
+}

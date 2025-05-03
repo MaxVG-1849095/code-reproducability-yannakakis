@@ -219,6 +219,7 @@ impl NestedCombiner {
                 Some(NestedColumn::Singular(ref mut s)) => match inner_col {
                     Some(NestedColumn::Singular(ref inner_s)) => {
                         s.weights.extend(inner_s.weights.iter());
+                        println!("singular", );
                     }
                     Some(NestedColumn::NonSingular(ref inner_ns)) => {
                         let mut new_weights = s.weights.clone();
@@ -251,6 +252,7 @@ impl NestedCombiner {
                                 self.offsets[i + 1] = next_offset;
                                 curr_offset = self.offsets[i + 1] as u32;
                             }
+                            println!("nonsingular");
                         }
                         None => {
                             if i + 1 != self.inner_cols.len() {
@@ -287,7 +289,7 @@ impl NestedCombiner {
         self.ready = true;
 
         // println!("print end of combined:");
-        println!("final offsets: {:?}", self.offsets);
+        // println!("final offsets: {:?}", self.offsets);
         // self.print_content();
 
         Ok(self.final_inner_col.clone())

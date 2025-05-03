@@ -4,13 +4,14 @@ root_dir="../../"
 parquet_data="$root_dir/benchmarks/imdb/parquet-zstd"
 out_folder="./output" # non-existing output folder
 timings="timings.csv"
-plan="./plans_organized"
-repetitions=1
+plan="./plans_organized_16"
+repetitions=10
 
 # make timings file
 touch $timings
 #write header
 echo "duration(µs),method,variant,query" > $timings
+
 
 # adding the --manifest-path flag causes cargo to ignore the rust-toolchain.toml file
 # so we need to specify the toolchain manually

@@ -393,7 +393,7 @@ impl RepartitionMultiSemiJoin {
                                     }
                                 }
                                 None => {
-                                    println!("partition {} has no batch", partition);
+                                    // println!("partition {} has no batch", partition);
                                     //the partition is completely empty
                                     nested_combiner.lock().add_empty_inner_col(partition);
                                     barrier.wait().await; //wait for all partitions to be present and to have added their inner columns
@@ -407,7 +407,7 @@ impl RepartitionMultiSemiJoin {
                 }
             },
             None => {
-                println!("partition {} has no batch", partition);
+                // println!("partition {} has no batch", partition);
                 //the partition is completely empty
                 nested_combiner.lock().add_empty_inner_col(partition);
                 barrier.wait().await; //wait for all partitions to be present and to have added their inner columns

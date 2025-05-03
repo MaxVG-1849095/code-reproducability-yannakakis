@@ -5,16 +5,13 @@ use datafusion::{
     error::DataFusionError,
 };
 
-use crate::yannakakis::{
-    data::{
+use crate::yannakakis::data::{
         Idx, NestedBatch, NestedColumn, NestedRel, NonSingularNestedColumn, SemiJoinResultBatch,
         SingularNestedColumn,
-    },
-    repartitionshredded::batch_partitioner,
-};
+    };
 use datafusion::arrow::compute::take;
 
-use datafusion::common::hash_utils::{self, create_hashes};
+use datafusion::common::hash_utils::create_hashes;
 // partitioner for batches based on a partitioning
 pub struct MsjBatchPartitioner {
     state: MsjBatchPartitionerState,
@@ -74,10 +71,10 @@ impl MsjBatchPartitioner {
         &mut self,
         batch: SemiJoinResultBatch,
         partition: usize,
-        msj_id: usize,
+        _msj_id: usize,
         nested_combined: &Vec<Option<Arc<NestedRel>>>,
         nested_offsets: &Vec<Vec<usize>>,
-        total_weights: &Vec<u32>,
+        _total_weights: &Vec<u32>,
     ) -> Result<
         impl Iterator<Item = Result<(usize, SemiJoinResultBatch), DataFusionError>>,
         DataFusionError,

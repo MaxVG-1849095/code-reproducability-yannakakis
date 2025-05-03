@@ -15,7 +15,6 @@ use datafusion::execution::TaskContext;
 use datafusion::physical_plan::metrics::ExecutionPlanMetricsSet;
 use datafusion::physical_plan::metrics::MetricsSet;
 
-use crate::sel;
 use crate::yannakakis::util::write_metrics_as_json;
 
 // use super::multisemijoin::MultiSemiJoin;

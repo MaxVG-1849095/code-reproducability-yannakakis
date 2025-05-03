@@ -8,7 +8,7 @@ use crate::yannakakis::data::{
     Idx, NestedColumn, NestedRel, NestedSchema, NonSingularNestedColumn, SemiJoinResultBatch,
     SingularNestedColumn,
 };
-use crate::yannakakis::multisemijoin::{MultiSemiJoin, SendableSemiJoinResultBatchStream};
+use crate::yannakakis::multisemijoin::SendableSemiJoinResultBatchStream;
 use crate::yannakakis::repartitionshredded::MultiSemiJoinWrapper;
 use crate::yannakakis::schema::YannakakisSchema;
 use datafusion::arrow::array::{ArrayRef, RecordBatch};

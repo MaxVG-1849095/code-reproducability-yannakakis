@@ -577,11 +577,17 @@ impl ToPhysicalNode for intermediate_plan::RepartitionExecNode {
         let num_partitions = self.num_partitions;
         // let schema = input.schema();
 
-        // let partitioning = Partitioning::RoundRobinBatch(num_partitions); 
-
-        // let column_expr = Arc::new(Column::new("id", self.partition_on));
-        let column_expr = Arc::new(Column::new("id", partition_key));
-        let partitioning = Partitioning::Hash(vec![column_expr], num_partitions);
+        let partitioning;
+        if self.partitioning == "round-robin"{
+            partitioning = Partitioning::RoundRobinBatch(num_partitions); 
+            println!("made round robin");
+        }
+        else{
+            // let column_expr = Arc::new(Column::new("id", self.partition_on));
+            let column_expr = Arc::new(Column::new("id", partition_key));
+            partitioning = Partitioning::Hash(vec![column_expr], num_partitions);
+        }
+        
 
         let repartition = datafusion::physical_plan::repartition::RepartitionExec::try_new(
             input,

@@ -182,10 +182,9 @@ async fn exec_plan(
         }
         let (results, duration) = time_execution(plan.clone(), task_ctx.clone()).await?;
 
-        let result_clone = results.clone();
 
         // write results to file
-        write_batches_to_csv(results.clone(), "output.csv");
+        let _ = write_batches_to_csv(results.clone(), "output_{repetitions}.csv");
 
         println!("{}", pretty_format_batches(&results)?.to_string());
         //print amount of rows
@@ -197,7 +196,7 @@ async fn exec_plan(
             batch_count += 1;
         }
         println!("Batches: {}, Rows: {}",batch_count, results_count);
-        println!("schema: {:?}", result_clone[0].schema());
+        // println!("schema: {:?}", result_clone[0].schema());
         println!("Execution time: {:?}", duration);
         durations.push(duration);
 
@@ -243,10 +242,38 @@ async fn exec_plan(
     let avg_duration = durations.iter().sum::<Duration>() / repetitions as u32;
     println!("Average execution time: {:?}", avg_duration);
 
+    // write durations to csv
+    write_durations_to_csv(path, durations, "timings_{repetitions}.csv")?;
+
     Ok(())
 }
 
 use std::fs::OpenOptions;
+use csv::Writer as csvWriter;
+/// Writes the filename and associated durations (in milliseconds) to a CSV file.
+fn write_durations_to_csv(file_path: PathBuf, durations: Vec<Duration>, output_csv: &str) -> Result<(), Box<dyn Error>> {
+    let file_name = file_path.file_name()
+        .and_then(|name| name.to_str())
+        .unwrap_or("unknown");
+
+    let durations_in_ms: Vec<String> = durations
+        .iter()
+        .map(|d| d.as_millis().to_string())
+        .collect();
+
+    let file = File::create(output_csv)?;
+    let mut writer = csvWriter::from_writer(file);
+
+    // Write the filename and durations in a single row
+    let mut row: Vec<String> = vec![file_name.to_string()];
+    row.extend(durations_in_ms);
+    writer.write_record(&row)?;
+
+    writer.flush()?;
+    Ok(())
+}
+
+
 
 fn write_batches_to_csv(results: Vec<RecordBatch>, output_path: &str) -> Result<(), Box<dyn Error>> {
     if results.is_empty() {
@@ -268,6 +295,8 @@ fn write_batches_to_csv(results: Vec<RecordBatch>, output_path: &str) -> Result<
 
     Ok(())
 }
+
+
 /// Write record to existing csv file with given timings (as µs).
 fn write_timings<W: std::io::Write>(
     csv_wtr: &mut csv::Writer<W>,
