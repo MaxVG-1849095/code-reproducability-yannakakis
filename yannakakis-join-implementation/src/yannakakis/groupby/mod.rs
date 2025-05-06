@@ -130,7 +130,7 @@ impl GroupBy {
         metrics.input_rows.add(total_rows);
         metrics.input_batches.add(batches.len());
 
-        println!("Groupby materialize on partition {}, id {}, with {} rows", partition, self.id, total_rows);
+        // println!("Groupby materialize on partition {}, id {}, with {} rows", partition, self.id, total_rows);
 
 
         // Measure total time spent by grouping the input tuples

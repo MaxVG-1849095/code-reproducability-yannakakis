@@ -16,7 +16,7 @@ use datafusion::{
     prelude::{ParquetReadOptions, SessionContext},
 };
 use yannakakis_join_implementation::{
-    display::ExtDisplayableExecutionPlan, yannakakis::flatten::Flatten,
+    display::ExtDisplayableExecutionPlan, yannakakis::{flatten::Flatten, unnest::Unnest},
 };
 
 use crate::intermediate_plan::{self, Plan};
@@ -104,12 +104,13 @@ pub fn metrics(plan: &Arc<dyn ExecutionPlan>) -> String {
 /// It searches top-down for the first [Flatten] or [Unnest] node and returns its detailed metrics.
 /// Returns None if no [Flatten] or [Unnest] node is found.
 pub fn yann_detailed_metrics(plan: &Arc<dyn ExecutionPlan>) -> Option<String> {
-    match plan.as_any().downcast_ref::<Flatten>() {
-        Some(flatten) => Some(
+    match plan.as_any().downcast_ref::<Unnest>() {
+        Some(flatten) => {
+            Some(
             flatten
                 .as_json()
                 .expect("Error while writing flatten metrics to json string."),
-        ),
+        )}
         None => {
             for child in plan.children() {
                 let metrics = yann_detailed_metrics(&child);

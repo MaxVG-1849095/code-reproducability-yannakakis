@@ -179,9 +179,6 @@ impl MultiSemiJoin {
         &self.semijoin_keys
     }
 
-    pub fn metrics(&self) -> MetricsSet {
-        self.metrics.clone_inner()
-    }
 
     pub fn guard_partition_count(&self) -> usize {
         self.guard_partition_count
@@ -324,6 +321,9 @@ impl MultiSemiJoinWrapper for MultiSemiJoin {
 
     fn id(&self) -> usize {
         self.id
+    }
+    fn metrics(&self) -> MetricsSet {
+        self.metrics.clone_inner()
     }
 }
 

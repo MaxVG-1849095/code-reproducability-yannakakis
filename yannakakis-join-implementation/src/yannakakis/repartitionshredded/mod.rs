@@ -5,10 +5,11 @@ use std::{pin::Pin, sync::Arc};
 
 use batch_partitioner::MsjBatchPartitioner;
 
+use datafusion::physical_plan::Metric;
 use tokio::sync::Barrier;
 
 use datafusion::execution::memory_pool::MemoryReservation;
-use datafusion::physical_plan::metrics::ExecutionPlanMetricsSet;
+use datafusion::physical_plan::metrics::{ExecutionPlanMetricsSet, MetricsSet};
 
 use datafusion::{
     error::DataFusionError,
@@ -19,10 +20,7 @@ use futures::{FutureExt, Stream, StreamExt, TryStreamExt};
 use nested_combiner::NestedCombiner;
 use nested_combiner::NestedCombinerWrapper;
 
-
-use super::data::{
-    NestedColumn, SemiJoinResultBatch,
-};
+use super::data::{NestedColumn, SemiJoinResultBatch};
 
 use super::multisemijoin::MultiSemiJoinBatchStream;
 use super::{
@@ -31,6 +29,7 @@ use super::{
     multisemijoin::{MultiSemiJoin, SendableSemiJoinResultBatchStream},
 };
 use crate::yannakakis::multisemijoin::MultiSemiJoinStreamAdapter;
+use crate::yannakakis::util::write_metrics_as_json;
 
 use distributor_channels::{channels, DistributionReceiver, DistributionSender};
 use hashbrown::HashMap;
@@ -133,6 +132,7 @@ impl RepartitionExecState {
 
             let r_metrics = MsjRepartitionMetrics::new(i, num_output_partitions, &metrics);
 
+
             let input_task = SpawnedTask::spawn(RepartitionMultiSemiJoin::pull_from_input(
                 Arc::clone(&input),
                 i,
@@ -185,6 +185,7 @@ pub trait MultiSemiJoinWrapper: Debug + Send + Sync {
     fn semijoin_keys(&self) -> &Vec<Vec<usize>>;
     fn partitioned(&self) -> bool;
     fn id(&self) -> usize;
+    fn metrics(&self) -> MetricsSet;
 }
 
 //repartitionexec operator to be placed on top of a multisemijoin
@@ -256,6 +257,8 @@ impl RepartitionMultiSemiJoin {
         partition: usize,
         context: Arc<TaskContext>,
     ) -> Result<SendableSemiJoinResultBatchStream, DataFusionError> {
+
+        
         //clone all necessary variables to be used in the async block
         let rep_state = Arc::clone(&self.state);
         let schema = self.child.schema().clone();
@@ -264,7 +267,6 @@ impl RepartitionMultiSemiJoin {
         let child = Arc::clone(&self.child);
         let rep_key = self.partition_key;
         let metrics = self.metrics.clone();
-
         // println!("repartitionmsj execute");
         //create stream object to be returned
         let stream = futures::stream::once(async move {
@@ -312,12 +314,8 @@ impl RepartitionMultiSemiJoin {
         // Ok(Box::pin(stream))
 
         let stream = MultiSemiJoinStreamAdapter::new(self.child.schema().clone(), stream);
-
         Ok(Box::pin(stream))
 
-        // let child_stream = self.child.execute(partition, context)?;
-        // return Ok(child_stream);
-        // }
     }
 
     //function to pull data from an input plan and feed it to output channels
@@ -342,7 +340,7 @@ impl RepartitionMultiSemiJoin {
     where
         NestedCombiner: Send + Sync,
     {
-        // println!("pull from input on partition {}", partition);
+        let r_time = metrics.repartition_time.timer(); //repartition time
         //start fetch time
         let timer = metrics.fetch_time.timer();
         let mut input_stream = input.execute(partition, context)?;
@@ -383,7 +381,9 @@ impl RepartitionMultiSemiJoin {
                                         SemiJoinResultBatch::Flat(_) => {
                                             println!("flat batch, ERROR");
                                             // this should not happen, we should only get nested batches
-                                            panic!("flat batch in repartition where its shouldnt be");
+                                            panic!(
+                                                "flat batch in repartition where its shouldnt be"
+                                            );
                                             break;
                                         }
                                         SemiJoinResultBatch::Nested(nested_batch) => {
@@ -396,22 +396,30 @@ impl RepartitionMultiSemiJoin {
                                     // println!("partition {} has no batch", partition);
                                     //the partition is completely empty
                                     nested_combiner.lock().add_empty_inner_col(partition);
+                                    let b_timer = metrics.barrier_time_1.timer();
                                     barrier.wait().await; //wait for all partitions to be present and to have added their inner columns
+                                    b_timer.done();
+                                    let b_timer = metrics.barrier_time_2.timer();
                                     barrier.wait().await; // second barrier to wait for the combine to finish
+                                    b_timer.done();
                                     return Ok(());
                                 }
                             }
                         }
-                    SemiJoinResultBatch::Nested(n_b)
+                        SemiJoinResultBatch::Nested(n_b)
                     }
                 }
-            },
+            }
             None => {
                 // println!("partition {} has no batch", partition);
                 //the partition is completely empty
                 nested_combiner.lock().add_empty_inner_col(partition);
+                let b_timer = metrics.barrier_time_1.timer();
                 barrier.wait().await; //wait for all partitions to be present and to have added their inner columns
+                b_timer.done();
+                let b_timer = metrics.barrier_time_2.timer();
                 barrier.wait().await; // second barrier to wait for the combine to finish
+                b_timer.done();
                 return Ok(());
             }
         };
@@ -421,11 +429,14 @@ impl RepartitionMultiSemiJoin {
         match batch_clone {
             SemiJoinResultBatch::Flat(_) => {
                 // println!("flat batch");
+                let b_timer = metrics.barrier_time_1.timer();
                 barrier.wait().await; //wait for all partitions to be present and to have added their inner columns
+                b_timer.done();
+                let b_timer = metrics.barrier_time_2.timer();
                 barrier.wait().await; // second barrier to wait for the combine to finish
+                b_timer.done();
             }
             SemiJoinResultBatch::Nested(nested_batch) => {
-
                 // println!("\n------\nmsjrep {}\nadding inner col to nested combiner from partition {} \n inner_col: {:?}\n------", msj_id,partition, nested_batch.inner.nested_cols[0]);
                 for i in 0..children_len {
                     //for each child, add the inner column to the combiner
@@ -441,29 +452,32 @@ impl RepartitionMultiSemiJoin {
                         );
                     }
                 }
+                let b_timer = metrics.barrier_time_1.timer();
                 barrier.wait().await; //wait for all partitions to be present and to have added their inner columns
+                b_timer.done();
                                       // println!("-----\n partition {}\n nested batch regular cols: {:?}\n nested batch nested cols: {:?}\n-----", partition,nested_batch.inner.regular_cols, nested_batch.inner.nested_cols);
-                if nested_combiner.lock().combined() { //first partition to arrive here has to combine
+                if nested_combiner.lock().combined() {
+                    //first partition to arrive here has to combine
                     nested_combiner.lock().check_singular_non_singular();
                     // we know we can call combine since a barrier made sure that all partitions were present
+                    let c_timer = metrics.combine_timer.timer();
                     let _ = nested_combiner.lock().combine();
+                    c_timer.done();
                 }
+                let b_timer = metrics.barrier_time_2.timer();
                 barrier.wait().await; // second barrier to wait for the combine to finish
+                b_timer.done();
             }
         }
 
+
+        let l_time = metrics.lock_time.timer(); //lock time
         let nested_data = nested_combiner.lock().get_final_inner_col_data().clone();
         let total_weights = nested_combiner.lock().get_final_total_weights().clone();
-        // println!(
-        //     "nested data length: {} in partition {} for id {}",
-        //     nested_data.len(),
-        //     partition,
-        //     msj_id
-        // );
-        // println!("nested data: {:?}", nested_data);
-
         let offsets = nested_combiner.lock().get_offsets().clone();
+        l_time.done();
         let mut first_iter = true;
+        
         // loop to pull data from input and send it to the output channels
         loop {
             //get batch from input stream, break the loop if there is no next
@@ -489,13 +503,13 @@ impl RepartitionMultiSemiJoin {
                 &total_weights,
             )? {
                 let (partition_send, batch) = res?;
-                let timer = metrics.send_time[partition_send].timer();
+                let timer = metrics.send_time.timer(); //send timer for sending the batch
                 //choose the output channel to send to, if we set this to 0 we will send everything to the first partition
                 if let Some((send_channel, reservation)) = send_channnels.get_mut(&partition_send) {
                     //this partition is the partition we are sending to
                     let size = batch.get_array_memory_size();
                     reservation.lock().try_grow(size)?;
-                    
+
                     if send_channel.send(Some(Ok(batch))).await.is_err() {
                         //if send is unsuccessful, shrink
                         reservation.lock().shrink(size);
@@ -506,6 +520,7 @@ impl RepartitionMultiSemiJoin {
         }
         // nested_combiner.lock().print_content();
         // println!("pull from input on partition {} done", partition);
+        r_time.done();
         Ok(()) //success
     }
 
@@ -535,9 +550,7 @@ impl RepartitionMultiSemiJoin {
         }
     }
 
-    fn any_regular_col_empty(
-        nested_batch: &NestedBatch,
-    ) -> bool {
+    fn any_regular_col_empty(nested_batch: &NestedBatch) -> bool {
         for i in 0..nested_batch.inner.regular_cols.len() {
             if nested_batch.inner.regular_cols[i].is_empty() {
                 return true;
@@ -562,7 +575,17 @@ impl MultiSemiJoinWrapper for RepartitionMultiSemiJoin {
     }
 
     fn as_json(&self, output: &mut String) -> Result<(), std::fmt::Error> {
-        self.child.as_json(output)
+        use std::fmt::Write;
+
+        write!(output, "{{ \"operator\": \"SEMIJOINREPARTITION\"")?;
+        write_metrics_as_json(&Some(self.metrics()), output)?;
+
+        write!(output, ", \"children\": [")?;
+        self.child.as_json(output)?;
+
+        write!(output, "]}}")?;
+
+        Ok(())
     }
 
     fn collect_metrics(&self, output_buffer: &mut String, indent: usize) {
@@ -586,6 +609,10 @@ impl MultiSemiJoinWrapper for RepartitionMultiSemiJoin {
 
     fn id(&self) -> usize {
         self.child.id()
+    }
+
+    fn metrics(&self) -> MetricsSet {
+        self.metrics.clone_inner()
     }
 }
 
