@@ -2,17 +2,28 @@
 
 use datafusion::physical_plan::metrics::{self, ExecutionPlanMetricsSet, MetricBuilder};
 
+
+
 #[derive(Clone, Debug)]
 pub(super) struct MsjRepartitionMetrics{
     //total time spent by this operator
     pub total_time: metrics::Time,
-    
-    pub fetch_time: metrics::Time,
 
+    pub execute_time : metrics::Time,
+    //time spent fetching child stream
+    pub fetch_time: metrics::Time,
+    //total time for pull_from_input
     pub repartition_time: metrics::Time,
 
-    pub send_time: Vec<metrics::Time>,
+    pub send_time: metrics::Time,
+    //time spent waiting for the barrier
+    pub barrier_time_1: metrics::Time, 
+    //time spent waiting for the barrier
+    pub barrier_time_2: metrics::Time,
+    //time spent combining the nested columns
+    pub combine_timer: metrics::Time,
 
+    pub lock_time: metrics::Time,
 }
 
 impl MsjRepartitionMetrics {
@@ -22,25 +33,26 @@ impl MsjRepartitionMetrics {
         metrics: &ExecutionPlanMetricsSet,
     ) -> Self {
         let total_time = MetricBuilder::new(metrics).elapsed_compute(input_partition);
-        let fetch_time = MetricBuilder::new(metrics).subset_time("fetch", input_partition);
-        let repartition_time = MetricBuilder::new(metrics).subset_time("repartition", input_partition);
+        let execute_time = MetricBuilder::new(metrics).elapsed_compute(input_partition);
+        let fetch_time = MetricBuilder::new(metrics).subset_time("fetch_time", input_partition);
+        let repartition_time = MetricBuilder::new(metrics).subset_time("repartition_time", input_partition);
         // Time in nanos for sending resulting batches to channels
-        let send_time = (0..num_output_partitions)
-            .map(|output_partition| {
-                let label =
-                    metrics::Label::new("outputPartition", output_partition.to_string());
-                MetricBuilder::new(metrics)
-                    .with_label(label)
-                    .subset_time("send_time", input_partition)
-            })
-            .collect();
-
+        let send_time = MetricBuilder::new(metrics).subset_time("send_time", input_partition);
+        let barrier_time_1 = MetricBuilder::new(metrics).subset_time("barrier_time_1", input_partition);
+        let barrier_time_2 = MetricBuilder::new(metrics).subset_time("barrier_time_2", input_partition);
+        let combine_timer = MetricBuilder::new(metrics).subset_time("combine_timer", input_partition);
+        let lock_time = MetricBuilder::new(metrics).subset_time("lock_time", input_partition);
 
         Self {
             total_time,
+            execute_time,
             fetch_time,
             repartition_time,
             send_time,
+            barrier_time_1,
+            barrier_time_2,
+            combine_timer,
+            lock_time,
         }
     }
 }
