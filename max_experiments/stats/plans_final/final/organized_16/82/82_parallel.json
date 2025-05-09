@@ -1,0 +1,162 @@
+{
+    "execution_time": 0.03779,
+    "root": {
+        "name": "AGGREGATE",
+        "execution_time": 0.000296,
+        "actual_rows": 1,
+        "estimated_cardinality": null,
+        "children": [
+            {
+                "name": "REPARTITION",
+                "num_partitions": 1,
+                "partitioning": "round-robin",
+                "partition_on": 0,
+                "children": [
+                    {
+                        "name": "YANNAKAKIS",
+                        "root": {
+                            "name": "MULTISEMIJOIN",
+                            "partitioned": false,
+                            "id": 0,
+                            "equijoin_keys": [
+                                [
+                                    [
+                                        0,
+                                        0
+                                    ]
+                                ]
+                            ],
+                            "guard": {
+                                "name": "REPARTITION",
+                                "num_partitions": 16,
+                                "partitioning": "unknown",
+                                "partition_on": 0,
+                                "children": [
+                                    {
+                                        "name": "SEQUENTIALSCAN",
+                                        "execution_time": 0.001547,
+                                        "actual_rows": 277348,
+                                        "estimated_cardinality": 303187,
+                                        "children": [],
+                                        "relation": "postHistory",
+                                        "opt_filter": "UserId>=3 AND UserId IS NOT NULL",
+                                        "projection": [
+                                            {
+                                                "table_name": "ph",
+                                                "field_name": "UserId"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            },
+                            "children": [
+                                {
+                                    "name": "GROUPBY",
+                                    "partitioned": false,
+                                    "id": 0,
+                                    "group_on": [
+                                        0
+                                    ],
+                                    "child": {
+                                        "name": "MULTISEMIJOIN",
+                                        "partitioned": true,
+                                        "id": 0,
+                                        "equijoin_keys": [
+                                            [
+                                                [
+                                                    0,
+                                                    0
+                                                ]
+                                            ]
+                                        ],
+                                        "guard": {
+                                            "name": "REPARTITION",
+                                            "num_partitions": 16,
+                                            "partitioning": "unknown",
+                                            "partition_on": 0,
+                                            "children": [
+                                                {
+                                                    "name": "SEQUENTIALSCAN",
+                                                    "execution_time": 0.000773,
+                                                    "actual_rows": 172293,
+                                                    "estimated_cardinality": 34861,
+                                                    "children": [],
+                                                    "relation": "comments",
+                                                    "opt_filter": "CreationDate>='2010-08-09 07:24:50'::TIMESTAMP AND CreationDate<='2014-09-10 03:46:02'::TIMESTAMP AND CreationDate IS NOT NULL",
+                                                    "projection": [
+                                                        {
+                                                            "table_name": "c",
+                                                            "field_name": "UserId"
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        },
+                                        "children": [
+                                            {
+                                                "name": "GROUPBY",
+                                                "partitioned": false,
+                                                "id": 0,
+                                                "group_on": [
+                                                    0
+                                                ],
+                                                "child": {
+                                                    "name": "MULTISEMIJOIN",
+                                                    "partitioned": true,
+                                                    "id": 0,
+                                                    "equijoin_keys": [],
+                                                    "guard": {
+                                                        "name": "REPARTITION",
+                                                        "num_partitions": 16,
+                                                        "partitioning": "unknown",
+                                                        "partition_on": 0,
+                                                        "children": [
+                                                            {
+                                                                "name": "FILTER",
+                                                                "execution_time": 0.000133,
+                                                                "actual_rows": 39443,
+                                                                "estimated_cardinality": 8065,
+                                                                "children": [
+                                                                    {
+                                                                        "name": "SEQUENTIALSCAN",
+                                                                        "execution_time": 0.000361,
+                                                                        "actual_rows": 39444,
+                                                                        "estimated_cardinality": 8065,
+                                                                        "children": [],
+                                                                        "relation": "users",
+                                                                        "opt_filter": "Views<=80 AND Views IS NOT NULL AND CreationDate>='2010-08-02 20:31:12'::TIMESTAMP AND CreationDate IS NOT NULL",
+                                                                        "projection": [
+                                                                            {
+                                                                                "table_name": "u",
+                                                                                "field_name": "Id"
+                                                                            }
+                                                                        ]
+                                                                    }
+                                                                ],
+                                                                "condition": "(u.Id BETWEEN 3 AND 55746)"
+                                                            }
+                                                        ]
+                                                    },
+                                                    "children": []
+                                                }
+                                            }
+                                        ]
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        ],
+        "group_by": null,
+        "aggregate": [
+            "count_star()"
+        ]
+    },
+    "aliases": {
+        "ph": "postHistory",
+        "c": "comments",
+        "u": "users"
+    }
+}

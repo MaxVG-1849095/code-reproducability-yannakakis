@@ -6,9 +6,9 @@ use datafusion::{
 };
 
 use crate::yannakakis::data::{
-        Idx, NestedBatch, NestedColumn, NestedRel, NonSingularNestedColumn, SemiJoinResultBatch,
-        SingularNestedColumn,
-    };
+    Idx, NestedBatch, NestedColumn, NestedRel, NonSingularNestedColumn, SemiJoinResultBatch,
+    SingularNestedColumn,
+};
 use datafusion::arrow::compute::take;
 
 use datafusion::common::hash_utils::create_hashes;
@@ -40,6 +40,7 @@ impl MsjBatchPartitioner {
         partition_key: usize,
         msj_id: usize,
         timer: datafusion::physical_plan::metrics::Time,
+        partition: usize,
     ) -> Result<Self, DataFusionError> {
         let state = match partition_id {
             0 => MsjBatchPartitionerState::Hash {
@@ -50,7 +51,7 @@ impl MsjBatchPartitioner {
             },
             1 => MsjBatchPartitionerState::RoundRobin {
                 num_partitions,
-                next_idx: 0,
+                next_idx: partition,
             },
             other => {
                 return Err(DataFusionError::NotImplemented(format!(
@@ -87,8 +88,15 @@ impl MsjBatchPartitioner {
                 next_idx,
             } => {
                 let idx = *next_idx;
+                // println!("round-robin {}", idx);
                 *next_idx = (*next_idx + 1) % *num_partitions;
-                Box::new(std::iter::once(Ok((idx, batch))))
+                // println!("next idx {} \n batch: {:?}", *next_idx, batch);
+                // Box::new(std::iter::once(Ok((idx, batch))))
+                return Ok(Box::new(std::iter::once(Ok((idx, batch))))
+                    as Box<
+                        dyn Iterator<Item = Result<(usize, SemiJoinResultBatch), DataFusionError>>
+                            + Send,
+                    >);
             }
             MsjBatchPartitionerState::Hash {
                 random_state,
@@ -187,12 +195,6 @@ impl MsjBatchPartitioner {
 
                         let children_len = val.inner.nested_cols.len();
                         let schema = val.schema().clone();
-                        // let mut nested_combined_val = &Arc::new(NestedRel::empty_no_next(schema));
-                        // if nested_combined[0].is_some() {
-                        //     //FIXME: no [0]
-                        //     println!("unwrapping on nested_combined[0]");
-                        //     nested_combined_val = nested_combined[0].as_ref().unwrap();
-                        // }
 
                         let mut nested_combined_vals = Vec::new();
                         // fill vector with empty nested columns
@@ -203,32 +205,25 @@ impl MsjBatchPartitioner {
                         }
                         let mut empty = true;
                         for i in 0..children_len {
-                            if nested_combined[i].is_some() { //append the value
+                            if nested_combined[i].is_some() {
+                                //append the value
                                 if empty {
                                     nested_combined_vals = Vec::new();
                                     empty = false;
                                 }
                                 let nested_combined_val = nested_combined[i].as_ref().unwrap();
                                 nested_combined_vals.push(nested_combined_val.clone());
-                            }
-                            else{ //append empty value
+                            } else {
+                                //append empty value
                                 // println!("nested_combined[{}] is None", i);
-                                if empty{
+                                if empty {
                                     nested_combined_vals = Vec::new();
                                     empty = false;
                                 }
-                                nested_combined_vals.push(Arc::new(NestedRel::empty_no_next(val.schema().clone())));
+                                nested_combined_vals
+                                    .push(Arc::new(NestedRel::empty_no_next(val.schema().clone())));
                             }
                         }
-
-                        // println!("nested_combined_vals length: {:?} children len: {:?}", nested_combined_vals.len(), children_len);
-
-
-                        // println!(
-                        //     " ------\nnested_combined_vals: {:?} -----\n",
-                        //     nested_combined_vals
-                        // );
-
                         //rebuild a batch for each partition
                         for i in 0..num_partitions {
                             let arr: Vec<u32> = indices[i].iter().map(|x| *x as u32).collect();
@@ -253,7 +248,6 @@ impl MsjBatchPartitioner {
                                 continue;
                             }
 
-                            
                             let mut inner_cols_final: Vec<NestedColumn> = Vec::new();
                             for (i, col) in val.inner.nested_cols.iter().enumerate() {
                                 let c = take_rows_from_nestedcol(
@@ -265,24 +259,11 @@ impl MsjBatchPartitioner {
                                 inner_cols_final.push(c);
                             }
 
-                            // println!(
-                            //     "inner_cols_final length: {:?}, nested_combined length {}",
-                            //     inner_cols_final.len(),
-                            //     nested_combined.len()
-                            // );
                             let new_batch = SemiJoinResultBatch::Nested(NestedBatch::new(
                                 schema,
                                 regular_cols,
                                 inner_cols_final,
                             ));
-
-                            // let new_batch =
-                            //     SemiJoinResultBatch::Nested(NestedBatch::new_with_totalweights(
-                            //         schema,
-                            //         regular_cols,
-                            //         inner_cols_final,
-                            //         Some(total_weights.clone()),
-                            //     ));
 
                             // println!("-----\n[MSJREP PRINT]\n-----\nmsj {} original batch:\n {:?} \n\n\n nested_data: \n {:?}\n nested_offsets: \n {:?} \n total_weights: \n {:?}\n+++++\n new batch for partition {}:\n {:?}\n-----\n-----",_msj_id, val, nested_combined,nested_offsets, _total_weights,i, new_batch);
 
@@ -293,16 +274,7 @@ impl MsjBatchPartitioner {
                                 // println!("empty batch");
                             }
                         }
-                        //print if batch is empty in partition
-                        // if msj_id == 1{
-                        //     if batches.is_empty() {
-                        //         println!("empty batch in partition {}", partition);
-                        //     }
-                        //     else{
-                        //         println!("filled batch in partition {}", partition);
-                        //     }
-                        // }
-                        
+
                         return Ok(Box::new(
                             batches
                                 .into_iter()

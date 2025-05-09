@@ -75,7 +75,7 @@ struct Args {
 //TODO: multithreaded runtime
 // Single threaded, also known as "current_thread" runtime in Tokio
 // src: https://docs.rs/tokio/latest/tokio/attr.main.html#using-current-thread-runtime
-#[tokio::main(flavor = "multi_thread", worker_threads = 16)]
+#[tokio::main(flavor = "multi_thread")]
 // #[tokio::main]
 // #[tokio::main(flavor = "current_thread")]
 
@@ -179,7 +179,7 @@ async fn exec_plan(
             
             let display_plan = DisplayableExecutionPlan::with_full_metrics(plan.as_ref());
             
-            // println!("{}", display_plan.indent(true));
+            println!("{}", display_plan.indent(true));
         }
         let (results, duration) = time_execution(plan.clone(), task_ctx.clone()).await?;
 

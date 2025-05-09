@@ -580,7 +580,7 @@ impl ToPhysicalNode for intermediate_plan::RepartitionExecNode {
         let partitioning;
         if self.partitioning == "round-robin"{
             partitioning = Partitioning::RoundRobinBatch(num_partitions); 
-            println!("made round robin");
+            // println!("made round robin");
         }
         else{
             // let column_expr = Arc::new(Column::new("id", self.partition_on));

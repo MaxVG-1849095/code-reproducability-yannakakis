@@ -209,7 +209,7 @@ impl ExecutionPlan for Unnest {
         let yann_schema = &self.schema;
 
         // Flatten each batch, resulting in a stream of RecordBatches
-        println!("unnesting batches for partition {}", partition);
+        // println!("unnesting batches for partition {}", partition);
         unnest_batches(batches, yann_schema.clone(), metrics)
     }
 }
