@@ -9,7 +9,7 @@ pub(super) struct MsjRepartitionMetrics{
     //total time spent by this operator
     pub total_time: metrics::Time,
 
-    pub test_time : metrics::Time,
+    pub first_batch_time : metrics::Time,
     //time spent fetching child stream
     pub fetch_time: metrics::Time,
     //total time for pull_from_input
@@ -33,7 +33,7 @@ impl MsjRepartitionMetrics {
         metrics: &ExecutionPlanMetricsSet,
     ) -> Self {
         let total_time = MetricBuilder::new(metrics).elapsed_compute(input_partition);
-        let test_time = MetricBuilder::new(metrics).subset_time("test_time", input_partition);
+        let first_batch_time = MetricBuilder::new(metrics).subset_time("first_batch_time", input_partition);
         let fetch_time = MetricBuilder::new(metrics).subset_time("fetch_time", input_partition);
         let repartition_time = MetricBuilder::new(metrics).subset_time("repartition_time", input_partition);
         // Time in nanos for sending resulting batches to channels
@@ -45,7 +45,7 @@ impl MsjRepartitionMetrics {
 
         Self {
             total_time,
-            test_time,
+            first_batch_time,
             fetch_time,
             repartition_time,
             send_time,

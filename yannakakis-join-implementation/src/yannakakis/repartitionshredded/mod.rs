@@ -363,7 +363,7 @@ impl RepartitionMultiSemiJoin {
         )?;
         
         // ! sync needed between threads, the partitioner needs the nested columns of all partitions to be present in order to join it --> barrier
-        let test_timer = metrics.test_time.timer(); //test time
+        let test_timer = metrics.first_batch_time.timer(); //test time
         //get first batch from input stream, this will be used to create nested columns!
         let batch = input_stream.next().await; //as long as there is a next in the input stream
         test_timer.done();
