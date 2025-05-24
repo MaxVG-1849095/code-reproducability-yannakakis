@@ -1,0 +1,204 @@
+{
+    "execution_time": 0.434384,
+    "root": {
+        "name": "AGGREGATE",
+        "execution_time": 0.001619,
+        "actual_rows": 1,
+        "estimated_cardinality": null,
+        "children": [
+            {
+                "name": "YANNAKAKIS",
+                "root": {
+                    "name": "MULTISEMIJOIN",
+                    "partitioned": false,
+                    "id": 0,
+                    "partitioning": "hash",
+                    "equijoin_keys": [
+                        [
+                            [
+                                0,
+                                0
+                            ]
+                        ]
+                    ],
+                    "guard": {
+                        "name": "SEQUENTIALSCAN",
+                        "execution_time": 0.010965,
+                        "actual_rows": 4520428,
+                        "estimated_cardinality": 4520446,
+                        "children": [],
+                        "relation": "imdb100",
+                        "opt_filter": "d>=30 AND d<=2525745 AND d IS NOT NULL",
+                        "projection": [
+                            {
+                                "table_name": "imdb100",
+                                "field_name": "d"
+                            }
+                        ]
+                    },
+                    "children": [
+                        {
+                            "name": "GROUPBY",
+                            "partitioned": false,
+                            "id": 0,
+                            "group_on": [
+                                0
+                            ],
+                            "child": {
+                                "name": "MULTISEMIJOIN",
+                                "partitioned": false,
+                                "id": 0,
+                                "partitioning": "hash",
+                                "equijoin_keys": [
+                                    [
+                                        [
+                                            0,
+                                            0
+                                        ]
+                                    ]
+                                ],
+                                "guard": {
+                                    "name": "SEQUENTIALSCAN",
+                                    "execution_time": 0.00184,
+                                    "actual_rows": 1333575,
+                                    "estimated_cardinality": 1333580,
+                                    "children": [],
+                                    "relation": "imdb2",
+                                    "opt_filter": "d>=30 AND d IS NOT NULL",
+                                    "projection": [
+                                        {
+                                            "table_name": "imdb2",
+                                            "field_name": "d"
+                                        }
+                                    ]
+                                },
+                                "children": [
+                                    {
+                                        "name": "GROUPBY",
+                                        "partitioned": false,
+                                        "id": 0,
+                                        "group_on": [
+                                            0
+                                        ],
+                                        "child": {
+                                            "name": "MULTISEMIJOIN",
+                                            "partitioned": false,
+                                            "id": 0,
+                                            "partitioning": "hash",
+                                            "equijoin_keys": [
+                                                [
+                                                    [
+                                                        0,
+                                                        0
+                                                    ]
+                                                ]
+                                            ],
+                                            "guard": {
+                                                "name": "SEQUENTIALSCAN",
+                                                "execution_time": 0.002562,
+                                                "actual_rows": 1325329,
+                                                "estimated_cardinality": 1325361,
+                                                "children": [],
+                                                "relation": "imdb13",
+                                                "opt_filter": "s>=30 AND s<=2525793 AND s IS NOT NULL",
+                                                "projection": [
+                                                    {
+                                                        "table_name": "imdb13",
+                                                        "field_name": "s"
+                                                    }
+                                                ]
+                                            },
+                                            "children": [
+                                                {
+                                                    "name": "GROUPBY",
+                                                    "partitioned": false,
+                                                    "id": 0,
+                                                    "group_on": [
+                                                        0
+                                                    ],
+                                                    "child": {
+                                                        "name": "MULTISEMIJOIN",
+                                                        "partitioned": false,
+                                                        "id": 0,
+                                                        "partitioning": "hash",
+                                                        "equijoin_keys": [
+                                                            [
+                                                                [
+                                                                    0,
+                                                                    0
+                                                                ]
+                                                            ]
+                                                        ],
+                                                        "guard": {
+                                                            "name": "SEQUENTIALSCAN",
+                                                            "execution_time": 0.000696,
+                                                            "actual_rows": 459923,
+                                                            "estimated_cardinality": 459925,
+                                                            "children": [],
+                                                            "relation": "imdb17",
+                                                            "opt_filter": "s>=30 AND s IS NOT NULL",
+                                                            "projection": [
+                                                                {
+                                                                    "table_name": "imdb17",
+                                                                    "field_name": "s"
+                                                                }
+                                                            ]
+                                                        },
+                                                        "children": [
+                                                            {
+                                                                "name": "GROUPBY",
+                                                                "partitioned": false,
+                                                                "id": 0,
+                                                                "group_on": [
+                                                                    0
+                                                                ],
+                                                                "child": {
+                                                                    "name": "MULTISEMIJOIN",
+                                                                    "partitioned": false,
+                                                                    "id": 0,
+                                                                    "partitioning": "hash",
+                                                                    "equijoin_keys": [],
+                                                                    "guard": {
+                                                                        "name": "SEQUENTIALSCAN",
+                                                                        "execution_time": 0.000421,
+                                                                        "actual_rows": 316097,
+                                                                        "estimated_cardinality": 316100,
+                                                                        "children": [],
+                                                                        "relation": "imdb124",
+                                                                        "opt_filter": "d<=2525793 AND d IS NOT NULL",
+                                                                        "projection": [
+                                                                            {
+                                                                                "table_name": "imdb124",
+                                                                                "field_name": "d"
+                                                                            }
+                                                                        ]
+                                                                    },
+                                                                    "children": []
+                                                                }
+                                                            }
+                                                        ]
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            }
+        ],
+        "group_by": null,
+        "aggregate": [
+            "count_star()"
+        ]
+    },
+    "aliases": {
+        "imdb124": "imdb124",
+        "imdb17": "imdb17",
+        "imdb100": "imdb100",
+        "imdb2": "imdb2",
+        "imdb13": "imdb13"
+    }
+}

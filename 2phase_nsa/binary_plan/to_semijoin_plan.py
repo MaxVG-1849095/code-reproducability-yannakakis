@@ -52,7 +52,7 @@ class MultiSemiJoin:
         def helper(node: MultiSemiJoin):
             children = [helper(child) for child in node.children]
 
-            return {"guard": node.guard, "children": children, "partitioned": False, "id": 0}
+            return {"guard": node.guard, "children": children, "partitioned": False, "id": 0, "partitioning": "hash"}
 
         semijoin_plan = helper(self)
         result = {"semijoin_plan": semijoin_plan, "replacements": []}

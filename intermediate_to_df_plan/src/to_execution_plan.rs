@@ -133,7 +133,8 @@ impl ToPhysicalNode for intermediate_plan::YannakakisNode {
 
             let msj: Box<dyn MultiSemiJoinWrapper>;
             if node.partitioned{
-                msj = Box::new(RepartitionMultiSemiJoin::try_new(guard, children, node.equijoin_keys.clone(), node.id, partition_key).unwrap());
+                let partitioning = &node.partitioning;
+                msj = Box::new(RepartitionMultiSemiJoin::try_new(guard, children, node.equijoin_keys.clone(), node.id, partition_key, partitioning.to_string()).unwrap());
             }
             else{
                 msj = Box::new(MultiSemiJoin::new(guard, children, node.equijoin_keys.clone(), node.id));

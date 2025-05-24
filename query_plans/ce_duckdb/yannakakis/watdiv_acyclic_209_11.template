@@ -1,0 +1,175 @@
+{
+    "semijoin_plan": {
+        "guard": "watdiv1052644",
+        "children": [
+            {
+                "guard": "watdiv1052584",
+                "children": [
+                    {
+                        "guard": "watdiv1052649",
+                        "children": [
+                            {
+                                "guard": "watdiv1052648",
+                                "children": [],
+                                "partitioned": false,
+                                "id": 0,
+                                "partitioning": "hash"
+                            }
+                        ],
+                        "partitioned": false,
+                        "id": 0,
+                        "partitioning": "hash"
+                    }
+                ],
+                "partitioned": false,
+                "id": 0,
+                "partitioning": "hash"
+            },
+            {
+                "guard": "watdiv1052655",
+                "children": [
+                    {
+                        "guard": "watdiv1052624",
+                        "children": [
+                            {
+                                "guard": "watdiv1052587",
+                                "children": [],
+                                "partitioned": false,
+                                "id": 0,
+                                "partitioning": "hash"
+                            }
+                        ],
+                        "partitioned": false,
+                        "id": 0,
+                        "partitioning": "hash"
+                    }
+                ],
+                "partitioned": false,
+                "id": 0,
+                "partitioning": "hash"
+            }
+        ],
+        "partitioned": false,
+        "id": 0,
+        "partitioning": "hash"
+    },
+    "replacements": {
+        "watdiv1052644": {
+            "name": "SEQUENTIALSCAN",
+            "execution_time": 0.009917,
+            "actual_rows": 3289074,
+            "estimated_cardinality": 3289307,
+            "children": [],
+            "relation": "watdiv1052644",
+            "opt_filter": "s>=206163 AND s<=876145 AND s IS NOT NULL",
+            "projection": [
+                {
+                    "table_name": "watdiv1052644",
+                    "field_name": "s"
+                },
+                {
+                    "table_name": "watdiv1052644",
+                    "field_name": "d"
+                }
+            ]
+        },
+        "watdiv1052584": {
+            "name": "SEQUENTIALSCAN",
+            "execution_time": 0.000375,
+            "actual_rows": 111892,
+            "estimated_cardinality": 136215,
+            "children": [],
+            "relation": "watdiv1052584",
+            "opt_filter": "s>=206163 AND s<=876145 AND s IS NOT NULL",
+            "projection": [
+                {
+                    "table_name": "watdiv1052584",
+                    "field_name": "s"
+                }
+            ]
+        },
+        "watdiv1052649": {
+            "name": "SEQUENTIALSCAN",
+            "execution_time": 0.000101,
+            "actual_rows": 69964,
+            "estimated_cardinality": 69970,
+            "children": [],
+            "relation": "watdiv1052649",
+            "opt_filter": "s>=206163 AND s IS NOT NULL",
+            "projection": [
+                {
+                    "table_name": "watdiv1052649",
+                    "field_name": "s"
+                }
+            ]
+        },
+        "watdiv1052648": {
+            "name": "SEQUENTIALSCAN",
+            "execution_time": 4.4e-05,
+            "actual_rows": 50095,
+            "estimated_cardinality": 50095,
+            "children": [],
+            "relation": "watdiv1052648",
+            "opt_filter": null,
+            "projection": [
+                {
+                    "table_name": "watdiv1052648",
+                    "field_name": "s"
+                }
+            ]
+        },
+        "watdiv1052624": {
+            "name": "SEQUENTIALSCAN",
+            "execution_time": 0.000224,
+            "actual_rows": 150000,
+            "estimated_cardinality": 150000,
+            "children": [],
+            "relation": "watdiv1052624",
+            "opt_filter": null,
+            "projection": [
+                {
+                    "table_name": "watdiv1052624",
+                    "field_name": "s"
+                },
+                {
+                    "table_name": "watdiv1052624",
+                    "field_name": "d"
+                }
+            ]
+        },
+        "watdiv1052655": {
+            "name": "SEQUENTIALSCAN",
+            "execution_time": 0.000321,
+            "actual_rows": 149998,
+            "estimated_cardinality": 149998,
+            "children": [],
+            "relation": "watdiv1052655",
+            "opt_filter": null,
+            "projection": [
+                {
+                    "table_name": "watdiv1052655",
+                    "field_name": "s"
+                },
+                {
+                    "table_name": "watdiv1052655",
+                    "field_name": "d"
+                }
+            ]
+        },
+        "watdiv1052587": {
+            "name": "SEQUENTIALSCAN",
+            "execution_time": 0.000314,
+            "actual_rows": 147261,
+            "estimated_cardinality": 147271,
+            "children": [],
+            "relation": "watdiv1052587",
+            "opt_filter": "s>=271 AND s IS NOT NULL",
+            "projection": [
+                {
+                    "table_name": "watdiv1052587",
+                    "field_name": "s"
+                }
+            ]
+        }
+    }
+}

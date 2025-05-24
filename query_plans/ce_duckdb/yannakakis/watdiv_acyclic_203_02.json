@@ -1,0 +1,250 @@
+{
+    "execution_time": 0.013745,
+    "root": {
+        "name": "AGGREGATE",
+        "execution_time": 4e-06,
+        "actual_rows": 1,
+        "estimated_cardinality": null,
+        "children": [
+            {
+                "name": "YANNAKAKIS",
+                "root": {
+                    "name": "MULTISEMIJOIN",
+                    "partitioned": false,
+                    "id": 0,
+                    "partitioning": "hash",
+                    "equijoin_keys": [
+                        [
+                            [
+                                0,
+                                0
+                            ]
+                        ]
+                    ],
+                    "guard": {
+                        "name": "SEQUENTIALSCAN",
+                        "execution_time": 0.000405,
+                        "actual_rows": 152255,
+                        "estimated_cardinality": 152275,
+                        "children": [],
+                        "relation": "watdiv1052642",
+                        "opt_filter": "s>=206163 AND s<=876145 AND s IS NOT NULL",
+                        "projection": [
+                            {
+                                "table_name": "watdiv1052642",
+                                "field_name": "s"
+                            }
+                        ]
+                    },
+                    "children": [
+                        {
+                            "name": "GROUPBY",
+                            "partitioned": false,
+                            "id": 0,
+                            "group_on": [
+                                0
+                            ],
+                            "child": {
+                                "name": "MULTISEMIJOIN",
+                                "partitioned": false,
+                                "id": 0,
+                                "partitioning": "hash",
+                                "equijoin_keys": [
+                                    [
+                                        [
+                                            0,
+                                            0
+                                        ]
+                                    ]
+                                ],
+                                "guard": {
+                                    "name": "SEQUENTIALSCAN",
+                                    "execution_time": 0.000123,
+                                    "actual_rows": 50095,
+                                    "estimated_cardinality": 50095,
+                                    "children": [],
+                                    "relation": "watdiv1052648",
+                                    "opt_filter": null,
+                                    "projection": [
+                                        {
+                                            "table_name": "watdiv1052648",
+                                            "field_name": "s"
+                                        }
+                                    ]
+                                },
+                                "children": [
+                                    {
+                                        "name": "GROUPBY",
+                                        "partitioned": false,
+                                        "id": 0,
+                                        "group_on": [
+                                            0
+                                        ],
+                                        "child": {
+                                            "name": "MULTISEMIJOIN",
+                                            "partitioned": false,
+                                            "id": 0,
+                                            "partitioning": "hash",
+                                            "equijoin_keys": [
+                                                [
+                                                    [
+                                                        1,
+                                                        0
+                                                    ]
+                                                ]
+                                            ],
+                                            "guard": {
+                                                "name": "SEQUENTIALSCAN",
+                                                "execution_time": 0.00092,
+                                                "actual_rows": 112266,
+                                                "estimated_cardinality": 112401,
+                                                "children": [],
+                                                "relation": "watdiv1052652",
+                                                "opt_filter": "d>=318 AND d<=433766 AND d IS NOT NULL",
+                                                "projection": [
+                                                    {
+                                                        "table_name": "watdiv1052652",
+                                                        "field_name": "s"
+                                                    },
+                                                    {
+                                                        "table_name": "watdiv1052652",
+                                                        "field_name": "d"
+                                                    }
+                                                ]
+                                            },
+                                            "children": [
+                                                {
+                                                    "name": "GROUPBY",
+                                                    "partitioned": false,
+                                                    "id": 0,
+                                                    "group_on": [
+                                                        0
+                                                    ],
+                                                    "child": {
+                                                        "name": "MULTISEMIJOIN",
+                                                        "partitioned": false,
+                                                        "id": 0,
+                                                        "partitioning": "hash",
+                                                        "equijoin_keys": [
+                                                            [
+                                                                [
+                                                                    1,
+                                                                    0
+                                                                ]
+                                                            ],
+                                                            [
+                                                                [
+                                                                    1,
+                                                                    0
+                                                                ]
+                                                            ]
+                                                        ],
+                                                        "guard": {
+                                                            "name": "SEQUENTIALSCAN",
+                                                            "execution_time": 0.000531,
+                                                            "actual_rows": 15991,
+                                                            "estimated_cardinality": 15991,
+                                                            "children": [],
+                                                            "relation": "watdiv1052608",
+                                                            "opt_filter": null,
+                                                            "projection": [
+                                                                {
+                                                                    "table_name": "watdiv1052608",
+                                                                    "field_name": "s"
+                                                                },
+                                                                {
+                                                                    "table_name": "watdiv1052608",
+                                                                    "field_name": "d"
+                                                                }
+                                                            ]
+                                                        },
+                                                        "children": [
+                                                            {
+                                                                "name": "GROUPBY",
+                                                                "partitioned": false,
+                                                                "id": 0,
+                                                                "group_on": [
+                                                                    0
+                                                                ],
+                                                                "child": {
+                                                                    "name": "MULTISEMIJOIN",
+                                                                    "partitioned": false,
+                                                                    "id": 0,
+                                                                    "partitioning": "hash",
+                                                                    "equijoin_keys": [],
+                                                                    "guard": {
+                                                                        "name": "SEQUENTIALSCAN",
+                                                                        "execution_time": 0.000187,
+                                                                        "actual_rows": 8913,
+                                                                        "estimated_cardinality": 59784,
+                                                                        "children": [],
+                                                                        "relation": "watdiv1052645",
+                                                                        "opt_filter": "s>=206051 AND s<=443125 AND s IS NOT NULL",
+                                                                        "projection": [
+                                                                            {
+                                                                                "table_name": "watdiv1052645",
+                                                                                "field_name": "s"
+                                                                            }
+                                                                        ]
+                                                                    },
+                                                                    "children": []
+                                                                }
+                                                            },
+                                                            {
+                                                                "name": "GROUPBY",
+                                                                "partitioned": false,
+                                                                "id": 0,
+                                                                "group_on": [
+                                                                    0
+                                                                ],
+                                                                "child": {
+                                                                    "name": "MULTISEMIJOIN",
+                                                                    "partitioned": false,
+                                                                    "id": 0,
+                                                                    "partitioning": "hash",
+                                                                    "equijoin_keys": [],
+                                                                    "guard": {
+                                                                        "name": "SEQUENTIALSCAN",
+                                                                        "execution_time": 0.000271,
+                                                                        "actual_rows": 13383,
+                                                                        "estimated_cardinality": 91004,
+                                                                        "children": [],
+                                                                        "relation": "watdiv1052629",
+                                                                        "opt_filter": "s>=206051 AND s<=443125 AND s IS NOT NULL",
+                                                                        "projection": [
+                                                                            {
+                                                                                "table_name": "watdiv1052629",
+                                                                                "field_name": "s"
+                                                                            }
+                                                                        ]
+                                                                    },
+                                                                    "children": []
+                                                                }
+                                                            }
+                                                        ]
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            }
+        ],
+        "group_by": null,
+        "aggregate": [
+            "count_star()"
+        ]
+    },
+    "aliases": {
+        "watdiv1052652": "watdiv1052652",
+        "watdiv1052645": "watdiv1052645",
+        "watdiv1052629": "watdiv1052629",
+        "watdiv1052642": "watdiv1052642",
+        "watdiv1052648": "watdiv1052648",
+        "watdiv1052608": "watdiv1052608"
+    }
+}

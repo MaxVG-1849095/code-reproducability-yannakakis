@@ -1,0 +1,121 @@
+{
+   "name":  "Query", 
+   "result": 0.007621,
+   "timing": 0.007621,
+   "cardinality": 0,
+   "extra-info": "select count(*) from yago57, yago5_1, yago5_2, yago22, yago5_4, yago13 where yago57.s = yago5_1.d and yago5_1.d = yago5_2.d and yago5_2.d = yago22.d and yago22.d = yago5_4.d and yago5_4.d = yago13.d;PRAGMA profile_output = '/home/maxvg/Documents/masterINF/Masterproef/code-reproducability-yannakakis/query_plans/ce_duckdb/2_original_with_aliases/yago_acyclic_star_6_39/run_1.json';", 
+   "timings": [
+
+   ],
+   "children": [
+    {
+      "name": "RESULT_COLLECTOR",
+      "timing":0.000001,
+      "cardinality":0,
+      "extra_info": "",
+      "children": [
+       {
+         "name": "UNGROUPED_AGGREGATE",
+         "timing":0.000007,
+         "cardinality":1,
+         "extra_info": "count_star()",
+         "children": [
+          {
+            "name": "HASH_JOIN",
+            "timing":0.001368,
+            "cardinality":7353,
+            "extra_info": "INNER\nyago5_4.d = yago13.d\n\n[INFOSEPARATOR]\nEC: 3986\n",
+            "children": [
+             {
+               "name": "SEQ_SCAN ",
+               "timing":0.000249,
+               "cardinality":95041,
+               "extra_info": "yago5_4\n[INFOSEPARATOR]\nd\n[INFOSEPARATOR]\nFilters: d>=135 AND d<=2968596 AND d IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 95092",
+               "children": [
+               ]
+             }
+,
+             {
+               "name": "HASH_JOIN",
+               "timing":0.001341,
+               "cardinality":6947,
+               "extra_info": "INNER\nyago5_2.d = yago13.d\n\n[INFOSEPARATOR]\nEC: 3786\n",
+               "children": [
+                {
+                  "name": "SEQ_SCAN ",
+                  "timing":0.000236,
+                  "cardinality":95041,
+                  "extra_info": "yago5_2\n[INFOSEPARATOR]\nd\n[INFOSEPARATOR]\nFilters: d>=135 AND d<=2968596 AND d IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 95092",
+                  "children": [
+                  ]
+                }
+,
+                {
+                  "name": "HASH_JOIN",
+                  "timing":0.001245,
+                  "cardinality":6753,
+                  "extra_info": "INNER\nyago5_1.d = yago13.d\n\n[INFOSEPARATOR]\nEC: 3596\n",
+                  "children": [
+                   {
+                     "name": "SEQ_SCAN ",
+                     "timing":0.000232,
+                     "cardinality":95041,
+                     "extra_info": "yago5_1\n[INFOSEPARATOR]\nd\n[INFOSEPARATOR]\nFilters: d>=135 AND d<=2968596 AND d IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 95092",
+                     "children": [
+                     ]
+                   }
+,
+                   {
+                     "name": "HASH_JOIN",
+                     "timing":0.000843,
+                     "cardinality":12238,
+                     "extra_info": "INNER\nyago57.s = yago22.d\n\n[INFOSEPARATOR]\nEC: 3415\n",
+                     "children": [
+                      {
+                        "name": "SEQ_SCAN ",
+                        "timing":0.000105,
+                        "cardinality":40717,
+                        "extra_info": "yago57\n[INFOSEPARATOR]\ns\n[INFOSEPARATOR]\nFilters: s>=135 AND s<=2968596 AND s IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 40738",
+                        "children": [
+                        ]
+                      }
+,
+                      {
+                        "name": "HASH_JOIN",
+                        "timing":0.000783,
+                        "cardinality":16626,
+                        "extra_info": "INNER\nyago22.d = yago13.d\n\n[INFOSEPARATOR]\nEC: 7573\n",
+                        "children": [
+                         {
+                           "name": "SEQ_SCAN ",
+                           "timing":0.000073,
+                           "cardinality":28812,
+                           "extra_info": "yago22\n[INFOSEPARATOR]\nd\n[INFOSEPARATOR]\nFilters: d<=2968596 AND d IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 28835",
+                           "children": [
+                           ]
+                         }
+,
+                         {
+                           "name": "SEQ_SCAN ",
+                           "timing":0.000036,
+                           "cardinality":23722,
+                           "extra_info": "yago13\n[INFOSEPARATOR]\nd\n[INFOSEPARATOR]\nEC: 23722",
+                           "children": [
+                           ]
+                         }
+                        ]
+                      }
+                     ]
+                   }
+                  ]
+                }
+               ]
+             }
+            ]
+          }
+         ]
+       }
+      ]
+    }
+   ]
+}

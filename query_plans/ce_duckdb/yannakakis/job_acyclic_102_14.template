@@ -1,0 +1,72 @@
+{
+    "semijoin_plan": {
+        "guard": "imdb100",
+        "children": [
+            {
+                "guard": "imdb124",
+                "children": [
+                    {
+                        "guard": "imdb51",
+                        "children": [],
+                        "partitioned": false,
+                        "id": 0,
+                        "partitioning": "hash"
+                    }
+                ],
+                "partitioned": false,
+                "id": 0,
+                "partitioning": "hash"
+            }
+        ],
+        "partitioned": false,
+        "id": 0,
+        "partitioning": "hash"
+    },
+    "replacements": {
+        "imdb100": {
+            "name": "SEQUENTIALSCAN",
+            "execution_time": 0.011153,
+            "actual_rows": 4516948,
+            "estimated_cardinality": 4520446,
+            "children": [],
+            "relation": "imdb100",
+            "opt_filter": "d>=6264 AND d<=2525525 AND d IS NOT NULL",
+            "projection": [
+                {
+                    "table_name": "imdb100",
+                    "field_name": "d"
+                }
+            ]
+        },
+        "imdb124": {
+            "name": "SEQUENTIALSCAN",
+            "execution_time": 0.000793,
+            "actual_rows": 315359,
+            "estimated_cardinality": 316100,
+            "children": [],
+            "relation": "imdb124",
+            "opt_filter": "d>=6264 AND d<=2525525 AND d IS NOT NULL",
+            "projection": [
+                {
+                    "table_name": "imdb124",
+                    "field_name": "d"
+                }
+            ]
+        },
+        "imdb51": {
+            "name": "SEQUENTIALSCAN",
+            "execution_time": 0.009061,
+            "actual_rows": 109034,
+            "estimated_cardinality": 109034,
+            "children": [],
+            "relation": "imdb51",
+            "opt_filter": null,
+            "projection": [
+                {
+                    "table_name": "imdb51",
+                    "field_name": "s"
+                }
+            ]
+        }
+    }
+}

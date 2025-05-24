@@ -1,0 +1,95 @@
+{
+    "semijoin_plan": {
+        "guard": "imdb100",
+        "children": [
+            {
+                "guard": "imdb8",
+                "children": [
+                    {
+                        "guard": "imdb127",
+                        "children": [
+                            {
+                                "guard": "imdb52",
+                                "children": [],
+                                "partitioned": false,
+                                "id": 0,
+                                "partitioning": "hash"
+                            }
+                        ],
+                        "partitioned": false,
+                        "id": 0,
+                        "partitioning": "hash"
+                    }
+                ],
+                "partitioned": false,
+                "id": 0,
+                "partitioning": "hash"
+            }
+        ],
+        "partitioned": false,
+        "id": 0,
+        "partitioning": "hash"
+    },
+    "replacements": {
+        "imdb100": {
+            "name": "SEQUENTIALSCAN",
+            "execution_time": 0.015472,
+            "actual_rows": 4516948,
+            "estimated_cardinality": 4520446,
+            "children": [],
+            "relation": "imdb100",
+            "opt_filter": "d>=6264 AND d<=2525525 AND d IS NOT NULL",
+            "projection": [
+                {
+                    "table_name": "imdb100",
+                    "field_name": "d"
+                }
+            ]
+        },
+        "imdb8": {
+            "name": "SEQUENTIALSCAN",
+            "execution_time": 0.003823,
+            "actual_rows": 1400663,
+            "estimated_cardinality": 1401902,
+            "children": [],
+            "relation": "imdb8",
+            "opt_filter": "s>=6264 AND s<=2525525 AND s IS NOT NULL",
+            "projection": [
+                {
+                    "table_name": "imdb8",
+                    "field_name": "s"
+                }
+            ]
+        },
+        "imdb127": {
+            "name": "SEQUENTIALSCAN",
+            "execution_time": 0.000864,
+            "actual_rows": 275873,
+            "estimated_cardinality": 276403,
+            "children": [],
+            "relation": "imdb127",
+            "opt_filter": "d>=6264 AND d<=2525525 AND d IS NOT NULL",
+            "projection": [
+                {
+                    "table_name": "imdb127",
+                    "field_name": "d"
+                }
+            ]
+        },
+        "imdb52": {
+            "name": "SEQUENTIALSCAN",
+            "execution_time": 2.1e-05,
+            "actual_rows": 18214,
+            "estimated_cardinality": 18214,
+            "children": [],
+            "relation": "imdb52",
+            "opt_filter": null,
+            "projection": [
+                {
+                    "table_name": "imdb52",
+                    "field_name": "s"
+                }
+            ]
+        }
+    }
+}

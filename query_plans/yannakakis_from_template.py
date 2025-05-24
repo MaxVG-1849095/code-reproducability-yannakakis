@@ -163,6 +163,7 @@ def generate_semijoin_node(node, replacements):
         "name": "MULTISEMIJOIN",
         "partitioned": False,
         "id": 0,
+        "partitioning": "hash",
         "equijoin_keys": [[] for _ in range(len(children))],
         "guard": guard,
         "children": children,

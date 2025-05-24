@@ -1,0 +1,229 @@
+{
+    "execution_time": 0.349334,
+    "root": {
+        "name": "AGGREGATE",
+        "execution_time": 0.006818,
+        "actual_rows": 1,
+        "estimated_cardinality": null,
+        "children": [
+            {
+                "name": "HASHJOIN",
+                "execution_time": 0.277211,
+                "actual_rows": 32682850,
+                "estimated_cardinality": null,
+                "children": [
+                    {
+                        "name": "HASHJOIN",
+                        "execution_time": 0.001784,
+                        "actual_rows": 8774,
+                        "estimated_cardinality": null,
+                        "children": [
+                            {
+                                "name": "HASHJOIN",
+                                "execution_time": 0.002341,
+                                "actual_rows": 8922,
+                                "estimated_cardinality": null,
+                                "children": [
+                                    {
+                                        "name": "SEQUENTIALSCAN",
+                                        "execution_time": 0.009473,
+                                        "actual_rows": 480706,
+                                        "estimated_cardinality": 3289307,
+                                        "children": [],
+                                        "relation": "watdiv1052644",
+                                        "opt_filter": "s>=205954 AND s<=443145 AND s IS NOT NULL",
+                                        "projection": [
+                                            {
+                                                "table_name": "watdiv1052644",
+                                                "field_name": "s"
+                                            },
+                                            {
+                                                "table_name": "watdiv1052644",
+                                                "field_name": "d"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "name": "HASHJOIN",
+                                        "execution_time": 8.1e-05,
+                                        "actual_rows": 264,
+                                        "estimated_cardinality": null,
+                                        "children": [
+                                            {
+                                                "name": "SEQUENTIALSCAN",
+                                                "execution_time": 1.9e-05,
+                                                "actual_rows": 3947,
+                                                "estimated_cardinality": 3975,
+                                                "children": [],
+                                                "relation": "watdiv1052602",
+                                                "opt_filter": "s>=414 AND s<=402515 AND s IS NOT NULL",
+                                                "projection": [
+                                                    {
+                                                        "table_name": "watdiv1052602",
+                                                        "field_name": "s"
+                                                    },
+                                                    {
+                                                        "table_name": "watdiv1052602",
+                                                        "field_name": "d"
+                                                    }
+                                                ]
+                                            },
+                                            {
+                                                "name": "SEQUENTIALSCAN",
+                                                "execution_time": 0.000663,
+                                                "actual_rows": 344,
+                                                "estimated_cardinality": 344,
+                                                "children": [],
+                                                "relation": "watdiv1052618",
+                                                "opt_filter": null,
+                                                "projection": [
+                                                    {
+                                                        "table_name": "watdiv1052618",
+                                                        "field_name": "d"
+                                                    },
+                                                    {
+                                                        "table_name": "watdiv1052618",
+                                                        "field_name": "s"
+                                                    }
+                                                ]
+                                            }
+                                        ],
+                                        "condition": [
+                                            [
+                                                {
+                                                    "table_name": "watdiv1052602",
+                                                    "field_name": "s"
+                                                },
+                                                {
+                                                    "table_name": "watdiv1052618",
+                                                    "field_name": "s"
+                                                }
+                                            ]
+                                        ]
+                                    }
+                                ],
+                                "condition": [
+                                    [
+                                        {
+                                            "table_name": "watdiv1052644",
+                                            "field_name": "s"
+                                        },
+                                        {
+                                            "table_name": "watdiv1052602",
+                                            "field_name": "d"
+                                        }
+                                    ]
+                                ]
+                            },
+                            {
+                                "name": "SEQUENTIALSCAN",
+                                "execution_time": 0.000218,
+                                "actual_rows": 99995,
+                                "estimated_cardinality": 100000,
+                                "children": [],
+                                "relation": "watdiv1052643",
+                                "opt_filter": "s>=205954 AND s<=870643 AND s IS NOT NULL",
+                                "projection": [
+                                    {
+                                        "table_name": "watdiv1052643",
+                                        "field_name": "s"
+                                    }
+                                ]
+                            }
+                        ],
+                        "condition": [
+                            [
+                                {
+                                    "table_name": "watdiv1052644",
+                                    "field_name": "d"
+                                },
+                                {
+                                    "table_name": "watdiv1052643",
+                                    "field_name": "s"
+                                }
+                            ]
+                        ]
+                    },
+                    {
+                        "name": "HASHJOIN",
+                        "execution_time": 0.001697,
+                        "actual_rows": 150000,
+                        "estimated_cardinality": null,
+                        "children": [
+                            {
+                                "name": "SEQUENTIALSCAN",
+                                "execution_time": 0.000225,
+                                "actual_rows": 150000,
+                                "estimated_cardinality": 150000,
+                                "children": [],
+                                "relation": "watdiv1052637",
+                                "opt_filter": null,
+                                "projection": [
+                                    {
+                                        "table_name": "watdiv1052637",
+                                        "field_name": "s"
+                                    },
+                                    {
+                                        "table_name": "watdiv1052637",
+                                        "field_name": "d"
+                                    }
+                                ]
+                            },
+                            {
+                                "name": "SEQUENTIALSCAN",
+                                "execution_time": 0.000147,
+                                "actual_rows": 150000,
+                                "estimated_cardinality": 150000,
+                                "children": [],
+                                "relation": "watdiv1052638",
+                                "opt_filter": null,
+                                "projection": [
+                                    {
+                                        "table_name": "watdiv1052638",
+                                        "field_name": "s"
+                                    }
+                                ]
+                            }
+                        ],
+                        "condition": [
+                            [
+                                {
+                                    "table_name": "watdiv1052637",
+                                    "field_name": "s"
+                                },
+                                {
+                                    "table_name": "watdiv1052638",
+                                    "field_name": "s"
+                                }
+                            ]
+                        ]
+                    }
+                ],
+                "condition": [
+                    [
+                        {
+                            "table_name": "watdiv1052618",
+                            "field_name": "d"
+                        },
+                        {
+                            "table_name": "watdiv1052637",
+                            "field_name": "d"
+                        }
+                    ]
+                ]
+            }
+        ],
+        "group_by": null,
+        "aggregate": [
+            "count_star()"
+        ]
+    },
+    "aliases": {
+        "watdiv1052602": "watdiv1052602",
+        "watdiv1052637": "watdiv1052637",
+        "watdiv1052644": "watdiv1052644",
+        "watdiv1052618": "watdiv1052618",
+        "watdiv1052638": "watdiv1052638",
+        "watdiv1052643": "watdiv1052643"
+    }
+}

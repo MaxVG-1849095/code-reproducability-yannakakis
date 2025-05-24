@@ -1,0 +1,177 @@
+{
+    "execution_time": 0.120452,
+    "root": {
+        "name": "AGGREGATE",
+        "execution_time": 8.7e-05,
+        "actual_rows": 1,
+        "estimated_cardinality": null,
+        "children": [
+            {
+                "name": "HASHJOIN",
+                "execution_time": 0.032006,
+                "actual_rows": 129150,
+                "estimated_cardinality": null,
+                "children": [
+                    {
+                        "name": "SEQUENTIALSCAN",
+                        "execution_time": 0.005755,
+                        "actual_rows": 2124299,
+                        "estimated_cardinality": 2124368,
+                        "children": [],
+                        "relation": "yago2",
+                        "opt_filter": "d>=8 AND d<=4531942 AND d IS NOT NULL",
+                        "projection": [
+                            {
+                                "table_name": "yago2_4",
+                                "field_name": "d"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "HASHJOIN",
+                        "execution_time": 0.031554,
+                        "actual_rows": 129150,
+                        "estimated_cardinality": null,
+                        "children": [
+                            {
+                                "name": "SEQUENTIALSCAN",
+                                "execution_time": 0.005247,
+                                "actual_rows": 2124299,
+                                "estimated_cardinality": 2124368,
+                                "children": [],
+                                "relation": "yago2",
+                                "opt_filter": "d>=8 AND d<=4531942 AND d IS NOT NULL",
+                                "projection": [
+                                    {
+                                        "table_name": "yago2_3",
+                                        "field_name": "d"
+                                    }
+                                ]
+                            },
+                            {
+                                "name": "HASHJOIN",
+                                "execution_time": 0.029822,
+                                "actual_rows": 129150,
+                                "estimated_cardinality": null,
+                                "children": [
+                                    {
+                                        "name": "SEQUENTIALSCAN",
+                                        "execution_time": 0.005588,
+                                        "actual_rows": 2124299,
+                                        "estimated_cardinality": 2124368,
+                                        "children": [],
+                                        "relation": "yago2",
+                                        "opt_filter": "d>=8 AND d<=4531942 AND d IS NOT NULL",
+                                        "projection": [
+                                            {
+                                                "table_name": "yago2_2",
+                                                "field_name": "d"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "name": "HASHJOIN",
+                                        "execution_time": 0.003521,
+                                        "actual_rows": 129150,
+                                        "estimated_cardinality": null,
+                                        "children": [
+                                            {
+                                                "name": "SEQUENTIALSCAN",
+                                                "execution_time": 0.000117,
+                                                "actual_rows": 110830,
+                                                "estimated_cardinality": 110830,
+                                                "children": [],
+                                                "relation": "yago11",
+                                                "opt_filter": null,
+                                                "projection": [
+                                                    {
+                                                        "table_name": "yago11_1",
+                                                        "field_name": "s"
+                                                    }
+                                                ]
+                                            },
+                                            {
+                                                "name": "SEQUENTIALSCAN",
+                                                "execution_time": 0.000172,
+                                                "actual_rows": 110830,
+                                                "estimated_cardinality": 110830,
+                                                "children": [],
+                                                "relation": "yago11",
+                                                "opt_filter": null,
+                                                "projection": [
+                                                    {
+                                                        "table_name": "yago11_0",
+                                                        "field_name": "s"
+                                                    }
+                                                ]
+                                            }
+                                        ],
+                                        "condition": [
+                                            [
+                                                {
+                                                    "table_name": "yago11_1",
+                                                    "field_name": "s"
+                                                },
+                                                {
+                                                    "table_name": "yago11_0",
+                                                    "field_name": "s"
+                                                }
+                                            ]
+                                        ]
+                                    }
+                                ],
+                                "condition": [
+                                    [
+                                        {
+                                            "table_name": "yago2_2",
+                                            "field_name": "d"
+                                        },
+                                        {
+                                            "table_name": "yago11_1",
+                                            "field_name": "s"
+                                        }
+                                    ]
+                                ]
+                            }
+                        ],
+                        "condition": [
+                            [
+                                {
+                                    "table_name": "yago2_3",
+                                    "field_name": "d"
+                                },
+                                {
+                                    "table_name": "yago2_2",
+                                    "field_name": "d"
+                                }
+                            ]
+                        ]
+                    }
+                ],
+                "condition": [
+                    [
+                        {
+                            "table_name": "yago2_4",
+                            "field_name": "d"
+                        },
+                        {
+                            "table_name": "yago2_3",
+                            "field_name": "d"
+                        }
+                    ]
+                ]
+            }
+        ],
+        "group_by": null,
+        "aggregate": [
+            "count_star()"
+        ]
+    },
+    "aliases": {
+        "yago11_0": "yago11",
+        "yago11_1": "yago11",
+        "yago2_4": "yago2",
+        "yago2_3": "yago2",
+        "yago2_2": "yago2"
+    }
+}

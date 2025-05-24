@@ -1,0 +1,109 @@
+{
+    "execution_time": 0.393083,
+    "root": {
+        "name": "AGGREGATE",
+        "execution_time": 0.000569,
+        "actual_rows": 1,
+        "estimated_cardinality": null,
+        "children": [
+            {
+                "name": "HASHJOIN",
+                "execution_time": 0.174817,
+                "actual_rows": 2435246,
+                "estimated_cardinality": null,
+                "children": [
+                    {
+                        "name": "HASHJOIN",
+                        "execution_time": 0.140769,
+                        "actual_rows": 2043538,
+                        "estimated_cardinality": null,
+                        "children": [
+                            {
+                                "name": "SEQUENTIALSCAN",
+                                "execution_time": 0.00846,
+                                "actual_rows": 2594060,
+                                "estimated_cardinality": 2594356,
+                                "children": [],
+                                "relation": "imdb123",
+                                "opt_filter": "d>=6 AND d<=2525671 AND d IS NOT NULL",
+                                "projection": [
+                                    {
+                                        "table_name": "imdb123",
+                                        "field_name": "d"
+                                    },
+                                    {
+                                        "table_name": "imdb123",
+                                        "field_name": "s"
+                                    }
+                                ]
+                            },
+                            {
+                                "name": "SEQUENTIALSCAN",
+                                "execution_time": 0.00118,
+                                "actual_rows": 1215529,
+                                "estimated_cardinality": 1215529,
+                                "children": [],
+                                "relation": "imdb3",
+                                "opt_filter": null,
+                                "projection": [
+                                    {
+                                        "table_name": "imdb3",
+                                        "field_name": "d"
+                                    }
+                                ]
+                            }
+                        ],
+                        "condition": [
+                            [
+                                {
+                                    "table_name": "imdb123",
+                                    "field_name": "d"
+                                },
+                                {
+                                    "table_name": "imdb3",
+                                    "field_name": "d"
+                                }
+                            ]
+                        ]
+                    },
+                    {
+                        "name": "SEQUENTIALSCAN",
+                        "execution_time": 0.006327,
+                        "actual_rows": 656212,
+                        "estimated_cardinality": 1262722,
+                        "children": [],
+                        "relation": "imdb1",
+                        "opt_filter": "s>=19474748 AND s<=22703127 AND s IS NOT NULL",
+                        "projection": [
+                            {
+                                "table_name": "imdb1",
+                                "field_name": "s"
+                            }
+                        ]
+                    }
+                ],
+                "condition": [
+                    [
+                        {
+                            "table_name": "imdb123",
+                            "field_name": "s"
+                        },
+                        {
+                            "table_name": "imdb1",
+                            "field_name": "s"
+                        }
+                    ]
+                ]
+            }
+        ],
+        "group_by": null,
+        "aggregate": [
+            "count_star()"
+        ]
+    },
+    "aliases": {
+        "imdb1": "imdb1",
+        "imdb123": "imdb123",
+        "imdb3": "imdb3"
+    }
+}

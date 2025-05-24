@@ -1,0 +1,72 @@
+{
+    "semijoin_plan": {
+        "guard": "imdb119",
+        "children": [
+            {
+                "guard": "imdb100",
+                "children": [
+                    {
+                        "guard": "imdb26",
+                        "children": [],
+                        "partitioned": false,
+                        "id": 0,
+                        "partitioning": "hash"
+                    }
+                ],
+                "partitioned": false,
+                "id": 0,
+                "partitioning": "hash"
+            }
+        ],
+        "partitioned": false,
+        "id": 0,
+        "partitioning": "hash"
+    },
+    "replacements": {
+        "imdb119": {
+            "name": "SEQUENTIALSCAN",
+            "execution_time": 0.020724,
+            "actual_rows": 7326508,
+            "estimated_cardinality": 7326771,
+            "children": [],
+            "relation": "imdb119",
+            "opt_filter": "d>=92 AND d<=2525840 AND d IS NOT NULL",
+            "projection": [
+                {
+                    "table_name": "imdb119",
+                    "field_name": "d"
+                }
+            ]
+        },
+        "imdb100": {
+            "name": "SEQUENTIALSCAN",
+            "execution_time": 0.010435,
+            "actual_rows": 4520428,
+            "estimated_cardinality": 4520446,
+            "children": [],
+            "relation": "imdb100",
+            "opt_filter": "d>=92 AND d<=2525840 AND d IS NOT NULL",
+            "projection": [
+                {
+                    "table_name": "imdb100",
+                    "field_name": "d"
+                }
+            ]
+        },
+        "imdb26": {
+            "name": "SEQUENTIALSCAN",
+            "execution_time": 0.000126,
+            "actual_rows": 140065,
+            "estimated_cardinality": 140065,
+            "children": [],
+            "relation": "imdb26",
+            "opt_filter": null,
+            "projection": [
+                {
+                    "table_name": "imdb26",
+                    "field_name": "s"
+                }
+            ]
+        }
+    }
+}

@@ -1,0 +1,266 @@
+{
+    "execution_time": 1.13262,
+    "root": {
+        "name": "AGGREGATE",
+        "execution_time": 0.000888,
+        "actual_rows": 1,
+        "estimated_cardinality": null,
+        "children": [
+            {
+                "name": "HASHJOIN",
+                "execution_time": 0.268449,
+                "actual_rows": 5966824,
+                "estimated_cardinality": null,
+                "children": [
+                    {
+                        "name": "HASHJOIN",
+                        "execution_time": 0.284652,
+                        "actual_rows": 9835375,
+                        "estimated_cardinality": null,
+                        "children": [
+                            {
+                                "name": "SEQUENTIALSCAN",
+                                "execution_time": 0.007524,
+                                "actual_rows": 5740837,
+                                "estimated_cardinality": 5740837,
+                                "children": [],
+                                "relation": "dblp25",
+                                "opt_filter": null,
+                                "projection": [
+                                    {
+                                        "table_name": "dblp25",
+                                        "field_name": "s"
+                                    }
+                                ]
+                            },
+                            {
+                                "name": "SEQUENTIALSCAN",
+                                "execution_time": 0.007565,
+                                "actual_rows": 3552265,
+                                "estimated_cardinality": 3572810,
+                                "children": [],
+                                "relation": "dblp24",
+                                "opt_filter": "s>=1206438 AND s<=3341100 AND s IS NOT NULL",
+                                "projection": [
+                                    {
+                                        "table_name": "dblp24",
+                                        "field_name": "s"
+                                    }
+                                ]
+                            }
+                        ],
+                        "condition": [
+                            [
+                                {
+                                    "table_name": "dblp25",
+                                    "field_name": "s"
+                                },
+                                {
+                                    "table_name": "dblp24",
+                                    "field_name": "s"
+                                }
+                            ]
+                        ]
+                    },
+                    {
+                        "name": "HASHJOIN",
+                        "execution_time": 0.113481,
+                        "actual_rows": 1186797,
+                        "estimated_cardinality": null,
+                        "children": [
+                            {
+                                "name": "SEQUENTIALSCAN",
+                                "execution_time": 0.007083,
+                                "actual_rows": 4021814,
+                                "estimated_cardinality": 6432394,
+                                "children": [],
+                                "relation": "dblp22",
+                                "opt_filter": "s>=1206437 AND s IS NOT NULL",
+                                "projection": [
+                                    {
+                                        "table_name": "dblp22",
+                                        "field_name": "s"
+                                    }
+                                ]
+                            },
+                            {
+                                "name": "HASHJOIN",
+                                "execution_time": 0.089005,
+                                "actual_rows": 650522,
+                                "estimated_cardinality": null,
+                                "children": [
+                                    {
+                                        "name": "SEQUENTIALSCAN",
+                                        "execution_time": 0.006364,
+                                        "actual_rows": 4201734,
+                                        "estimated_cardinality": 4302340,
+                                        "children": [],
+                                        "relation": "dblp23",
+                                        "opt_filter": "s>=1245736 AND s IS NOT NULL",
+                                        "projection": [
+                                            {
+                                                "table_name": "dblp23",
+                                                "field_name": "s"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "name": "HASHJOIN",
+                                        "execution_time": 0.044896,
+                                        "actual_rows": 324876,
+                                        "estimated_cardinality": null,
+                                        "children": [
+                                            {
+                                                "name": "SEQUENTIALSCAN",
+                                                "execution_time": 0.005827,
+                                                "actual_rows": 1102768,
+                                                "estimated_cardinality": 3823259,
+                                                "children": [],
+                                                "relation": "dblp2",
+                                                "opt_filter": "d<=3341108 AND d IS NOT NULL",
+                                                "projection": [
+                                                    {
+                                                        "table_name": "dblp2",
+                                                        "field_name": "s"
+                                                    },
+                                                    {
+                                                        "table_name": "dblp2",
+                                                        "field_name": "d"
+                                                    }
+                                                ]
+                                            },
+                                            {
+                                                "name": "HASHJOIN",
+                                                "execution_time": 0.037085,
+                                                "actual_rows": 324876,
+                                                "estimated_cardinality": null,
+                                                "children": [
+                                                    {
+                                                        "name": "FILTER",
+                                                        "execution_time": 0.002063,
+                                                        "actual_rows": 324876,
+                                                        "estimated_cardinality": 3343619,
+                                                        "children": [
+                                                            {
+                                                                "name": "SEQUENTIALSCAN",
+                                                                "execution_time": 0.008192,
+                                                                "actual_rows": 849743,
+                                                                "estimated_cardinality": 3343619,
+                                                                "children": [],
+                                                                "relation": "dblp21",
+                                                                "opt_filter": "d<=3341108 AND d IS NOT NULL",
+                                                                "projection": [
+                                                                    {
+                                                                        "table_name": "dblp21",
+                                                                        "field_name": "s"
+                                                                    },
+                                                                    {
+                                                                        "table_name": "dblp21",
+                                                                        "field_name": "d"
+                                                                    }
+                                                                ]
+                                                            }
+                                                        ],
+                                                        "condition": "(dblp21.s >= 2238341)"
+                                                    },
+                                                    {
+                                                        "name": "SEQUENTIALSCAN",
+                                                        "execution_time": 0.002311,
+                                                        "actual_rows": 2095373,
+                                                        "estimated_cardinality": 2141839,
+                                                        "children": [],
+                                                        "relation": "dblp5",
+                                                        "opt_filter": "s>=1245736 AND s IS NOT NULL",
+                                                        "projection": [
+                                                            {
+                                                                "table_name": "dblp5",
+                                                                "field_name": "s"
+                                                            }
+                                                        ]
+                                                    }
+                                                ],
+                                                "condition": [
+                                                    [
+                                                        {
+                                                            "table_name": "dblp21",
+                                                            "field_name": "d"
+                                                        },
+                                                        {
+                                                            "table_name": "dblp5",
+                                                            "field_name": "s"
+                                                        }
+                                                    ]
+                                                ]
+                                            }
+                                        ],
+                                        "condition": [
+                                            [
+                                                {
+                                                    "table_name": "dblp2",
+                                                    "field_name": "d"
+                                                },
+                                                {
+                                                    "table_name": "dblp21",
+                                                    "field_name": "s"
+                                                }
+                                            ]
+                                        ]
+                                    }
+                                ],
+                                "condition": [
+                                    [
+                                        {
+                                            "table_name": "dblp23",
+                                            "field_name": "s"
+                                        },
+                                        {
+                                            "table_name": "dblp5",
+                                            "field_name": "s"
+                                        }
+                                    ]
+                                ]
+                            }
+                        ],
+                        "condition": [
+                            [
+                                {
+                                    "table_name": "dblp22",
+                                    "field_name": "s"
+                                },
+                                {
+                                    "table_name": "dblp2",
+                                    "field_name": "s"
+                                }
+                            ]
+                        ]
+                    }
+                ],
+                "condition": [
+                    [
+                        {
+                            "table_name": "dblp24",
+                            "field_name": "s"
+                        },
+                        {
+                            "table_name": "dblp22",
+                            "field_name": "s"
+                        }
+                    ]
+                ]
+            }
+        ],
+        "group_by": null,
+        "aggregate": [
+            "count_star()"
+        ]
+    },
+    "aliases": {
+        "dblp22": "dblp22",
+        "dblp5": "dblp5",
+        "dblp24": "dblp24",
+        "dblp25": "dblp25",
+        "dblp21": "dblp21",
+        "dblp2": "dblp2",
+        "dblp23": "dblp23"
+    }
+}

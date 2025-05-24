@@ -1,0 +1,198 @@
+{
+    "name": "Query",
+    "result": 0.0577,
+    "timing": 0.0577,
+    "cardinality": 0,
+    "extra-info": "select count(*) from yago5_0, yago54, yago23, yago46_3, yago17_4, yago46_5, yago46_6, yago17_7, yago17_8, yago5_9, yago2_10, yago2_11 where yago5_0.d = yago46_3.d and yago54.s = yago2_10.d and yago54.d = yago23.s and yago46_3.s = yago17_4.d and yago17_4.s = yago46_5.s and yago46_5.d = yago46_6.d and yago46_6.s = yago17_7.s and yago17_7.d = yago17_8.s and yago17_8.d = yago5_9.d and yago5_9.s = yago2_11.d and yago2_10.s = yago2_11.s;PRAGMA profile_output = '/home/maxvg/Documents/masterINF/Masterproef/code-reproducability-yannakakis/query_plans/ce_duckdb/2_original_with_aliases/yago_acyclic_chain_12_35/run_1.json';",
+    "timings": [],
+    "children": [
+        {
+            "name": "RESULT_COLLECTOR",
+            "timing": 1e-06,
+            "cardinality": 0,
+            "extra_info": "",
+            "children": [
+                {
+                    "name": "UNGROUPED_AGGREGATE",
+                    "timing": 1e-06,
+                    "cardinality": 1,
+                    "extra_info": "count_star()",
+                    "children": [
+                        {
+                            "name": "HASH_JOIN",
+                            "timing": 0.000252,
+                            "cardinality": 90,
+                            "extra_info": "INNER\nyago23.s = yago54.d\n\n[INFOSEPARATOR]\nEC: 43\n",
+                            "children": [
+                                {
+                                    "name": "SEQ_SCAN ",
+                                    "timing": 5.2e-05,
+                                    "cardinality": 22634,
+                                    "extra_info": "yago23\n[INFOSEPARATOR]\ns\n[INFOSEPARATOR]\nFilters: s>=291 AND s<=1846437 AND s IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 22640",
+                                    "children": []
+                                },
+                                {
+                                    "name": "HASH_JOIN",
+                                    "timing": 0.000715,
+                                    "cardinality": 481,
+                                    "extra_info": "INNER\nyago5_0.d = yago46_3.d\n\n[INFOSEPARATOR]\nEC: 38\n",
+                                    "children": [
+                                        {
+                                            "name": "SEQ_SCAN ",
+                                            "timing": 0.000625,
+                                            "cardinality": 95087,
+                                            "extra_info": "yago5_0\n[INFOSEPARATOR]\nd\n[INFOSEPARATOR]\nFilters: d>=173 AND d<=4420083 AND d IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 95092",
+                                            "children": []
+                                        },
+                                        {
+                                            "name": "HASH_JOIN",
+                                            "timing": 0.000321,
+                                            "cardinality": 578,
+                                            "extra_info": "INNER\nyago46_3.s = yago17_4.d\n\n[INFOSEPARATOR]\nEC: 36\n",
+                                            "children": [
+                                                {
+                                                    "name": "SEQ_SCAN ",
+                                                    "timing": 0.000575,
+                                                    "cardinality": 20515,
+                                                    "extra_info": "yago46_3\n[INFOSEPARATOR]\nd\ns\n[INFOSEPARATOR]\nEC: 20515",
+                                                    "children": []
+                                                },
+                                                {
+                                                    "name": "HASH_JOIN",
+                                                    "timing": 0.000561,
+                                                    "cardinality": 622,
+                                                    "extra_info": "INNER\nyago17_4.s = yago46_5.s\n\n[INFOSEPARATOR]\nEC: 96\n",
+                                                    "children": [
+                                                        {
+                                                            "name": "SEQ_SCAN ",
+                                                            "timing": 8.7e-05,
+                                                            "cardinality": 55535,
+                                                            "extra_info": "yago17_4\n[INFOSEPARATOR]\nd\ns\n[INFOSEPARATOR]\nEC: 55535",
+                                                            "children": []
+                                                        },
+                                                        {
+                                                            "name": "HASH_JOIN",
+                                                            "timing": 0.000318,
+                                                            "cardinality": 635,
+                                                            "extra_info": "INNER\nyago46_5.d = yago46_6.d\n\n[INFOSEPARATOR]\nEC: 95\n",
+                                                            "children": [
+                                                                {
+                                                                    "name": "SEQ_SCAN ",
+                                                                    "timing": 0.000595,
+                                                                    "cardinality": 20515,
+                                                                    "extra_info": "yago46_5\n[INFOSEPARATOR]\ns\nd\n[INFOSEPARATOR]\nEC: 20515",
+                                                                    "children": []
+                                                                },
+                                                                {
+                                                                    "name": "HASH_JOIN",
+                                                                    "timing": 0.00041,
+                                                                    "cardinality": 622,
+                                                                    "extra_info": "INNER\nyago46_6.s = yago17_7.s\n\n[INFOSEPARATOR]\nEC: 95\n",
+                                                                    "children": [
+                                                                        {
+                                                                            "name": "SEQ_SCAN ",
+                                                                            "timing": 0.000588,
+                                                                            "cardinality": 20514,
+                                                                            "extra_info": "yago46_6\n[INFOSEPARATOR]\nd\ns\n[INFOSEPARATOR]\nFilters: s>=173 AND s IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 20515",
+                                                                            "children": []
+                                                                        },
+                                                                        {
+                                                                            "name": "HASH_JOIN",
+                                                                            "timing": 0.000916,
+                                                                            "cardinality": 3555,
+                                                                            "extra_info": "INNER\nyago17_7.d = yago17_8.s\n\n[INFOSEPARATOR]\nEC: 255\n",
+                                                                            "children": [
+                                                                                {
+                                                                                    "name": "SEQ_SCAN ",
+                                                                                    "timing": 0.000162,
+                                                                                    "cardinality": 55528,
+                                                                                    "extra_info": "yago17_7\n[INFOSEPARATOR]\ns\nd\n[INFOSEPARATOR]\nFilters: d>=173 AND d<=4314880 AND d IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 55535",
+                                                                                    "children": []
+                                                                                },
+                                                                                {
+                                                                                    "name": "HASH_JOIN",
+                                                                                    "timing": 0.001567,
+                                                                                    "cardinality": 5102,
+                                                                                    "extra_info": "INNER\nyago17_8.d = yago5_9.d\n\n[INFOSEPARATOR]\nEC: 253\n",
+                                                                                    "children": [
+                                                                                        {
+                                                                                            "name": "SEQ_SCAN ",
+                                                                                            "timing": 0.00086,
+                                                                                            "cardinality": 55534,
+                                                                                            "extra_info": "yago17_8\n[INFOSEPARATOR]\ns\nd\n[INFOSEPARATOR]\nFilters: d>=64 AND d IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 55535",
+                                                                                            "children": []
+                                                                                        },
+                                                                                        {
+                                                                                            "name": "HASH_JOIN",
+                                                                                            "timing": 0.002561,
+                                                                                            "cardinality": 27421,
+                                                                                            "extra_info": "INNER\nyago5_9.s = yago2_11.d\n\n[INFOSEPARATOR]\nEC: 412\n",
+                                                                                            "children": [
+                                                                                                {
+                                                                                                    "name": "SEQ_SCAN ",
+                                                                                                    "timing": 0.000155,
+                                                                                                    "cardinality": 95092,
+                                                                                                    "extra_info": "yago5_9\n[INFOSEPARATOR]\nd\ns\n[INFOSEPARATOR]\nEC: 95092",
+                                                                                                    "children": []
+                                                                                                },
+                                                                                                {
+                                                                                                    "name": "HASH_JOIN",
+                                                                                                    "timing": 0.015942,
+                                                                                                    "cardinality": 8701,
+                                                                                                    "extra_info": "INNER\nyago2_11.s = yago2_10.s\n\n[INFOSEPARATOR]\nEC: 8954\n",
+                                                                                                    "children": [
+                                                                                                        {
+                                                                                                            "name": "SEQ_SCAN ",
+                                                                                                            "timing": 0.003906,
+                                                                                                            "cardinality": 2124368,
+                                                                                                            "extra_info": "yago2_11\n[INFOSEPARATOR]\nd\ns\n[INFOSEPARATOR]\nEC: 2124368",
+                                                                                                            "children": []
+                                                                                                        },
+                                                                                                        {
+                                                                                                            "name": "HASH_JOIN",
+                                                                                                            "timing": 0.013098,
+                                                                                                            "cardinality": 8701,
+                                                                                                            "extra_info": "INNER\nyago2_10.d = yago54.s\n\n[INFOSEPARATOR]\nEC: 2124368\n",
+                                                                                                            "children": [
+                                                                                                                {
+                                                                                                                    "name": "SEQ_SCAN ",
+                                                                                                                    "timing": 0.009266,
+                                                                                                                    "cardinality": 1656762,
+                                                                                                                    "extra_info": "yago2_10\n[INFOSEPARATOR]\nd\ns\n[INFOSEPARATOR]\nFilters: d>=163 AND d<=1846038 AND d IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 2124368",
+                                                                                                                    "children": []
+                                                                                                                },
+                                                                                                                {
+                                                                                                                    "name": "SEQ_SCAN ",
+                                                                                                                    "timing": 2.7e-05,
+                                                                                                                    "cardinality": 8702,
+                                                                                                                    "extra_info": "yago54\n[INFOSEPARATOR]\ns\nd\n[INFOSEPARATOR]\nEC: 8702",
+                                                                                                                    "children": []
+                                                                                                                }
+                                                                                                            ]
+                                                                                                        }
+                                                                                                    ]
+                                                                                                }
+                                                                                            ]
+                                                                                        }
+                                                                                    ]
+                                                                                }
+                                                                            ]
+                                                                        }
+                                                                    ]
+                                                                }
+                                                            ]
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

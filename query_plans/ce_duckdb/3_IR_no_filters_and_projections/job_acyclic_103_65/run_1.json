@@ -1,0 +1,105 @@
+{
+    "execution_time": 0.105815,
+    "root": {
+        "name": "AGGREGATE",
+        "execution_time": 0.000247,
+        "actual_rows": 1,
+        "estimated_cardinality": null,
+        "children": [
+            {
+                "name": "HASHJOIN",
+                "execution_time": 0.073432,
+                "actual_rows": 871205,
+                "estimated_cardinality": null,
+                "children": [
+                    {
+                        "name": "SEQUENTIALSCAN",
+                        "execution_time": 0.0093,
+                        "actual_rows": 4252813,
+                        "estimated_cardinality": 4263708,
+                        "children": [],
+                        "relation": "imdb122",
+                        "opt_filter": "d>=6264 AND d<=2525525 AND d IS NOT NULL",
+                        "projection": [
+                            {
+                                "table_name": "imdb122",
+                                "field_name": "d"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "HASHJOIN",
+                        "execution_time": 0.005508,
+                        "actual_rows": 18129,
+                        "estimated_cardinality": null,
+                        "children": [
+                            {
+                                "name": "SEQUENTIALSCAN",
+                                "execution_time": 0.01263,
+                                "actual_rows": 459162,
+                                "estimated_cardinality": 459925,
+                                "children": [],
+                                "relation": "imdb16",
+                                "opt_filter": "s>=6264 AND s<=2525525 AND s IS NOT NULL",
+                                "projection": [
+                                    {
+                                        "table_name": "imdb16",
+                                        "field_name": "s"
+                                    }
+                                ]
+                            },
+                            {
+                                "name": "SEQUENTIALSCAN",
+                                "execution_time": 2e-05,
+                                "actual_rows": 18214,
+                                "estimated_cardinality": 18214,
+                                "children": [],
+                                "relation": "imdb52",
+                                "opt_filter": null,
+                                "projection": [
+                                    {
+                                        "table_name": "imdb52",
+                                        "field_name": "s"
+                                    }
+                                ]
+                            }
+                        ],
+                        "condition": [
+                            [
+                                {
+                                    "table_name": "imdb16",
+                                    "field_name": "s"
+                                },
+                                {
+                                    "table_name": "imdb52",
+                                    "field_name": "s"
+                                }
+                            ]
+                        ]
+                    }
+                ],
+                "condition": [
+                    [
+                        {
+                            "table_name": "imdb122",
+                            "field_name": "d"
+                        },
+                        {
+                            "table_name": "imdb52",
+                            "field_name": "s"
+                        }
+                    ]
+                ]
+            }
+        ],
+        "group_by": null,
+        "aggregate": [
+            "count_star()"
+        ]
+    },
+    "aliases": {
+        "imdb122": "imdb122",
+        "imdb52": "imdb52",
+        "imdb16": "imdb16"
+    }
+}

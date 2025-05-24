@@ -189,7 +189,7 @@ async fn exec_plan(
 
         res = results.clone();
 
-        println!("{}", pretty_format_batches(&results)?.to_string());
+        // println!("{}", pretty_format_batches(&results)?.to_string());
         //print amount of rows
         // println!("Rows: {}", results[0].num_rows());
         let mut results_count = 0;
@@ -245,7 +245,7 @@ async fn exec_plan(
     let avg_duration = durations.iter().sum::<Duration>() / repetitions as u32;
     println!("Average execution time: {:?}", avg_duration);
 
-    let outputname = format!("results_{}.csv", 8);
+    let outputname = format!("results.csv");
 
     // write durations to csv
     // write_durations_to_csv(path, durations, "results_4.csv")?;

@@ -1,0 +1,81 @@
+{
+    "semijoin_plan": {
+        "guard": "imdb100",
+        "children": [
+            {
+                "guard": "imdb6",
+                "children": [
+                    {
+                        "guard": "imdb121",
+                        "children": [],
+                        "partitioned": false,
+                        "id": 0,
+                        "partitioning": "hash"
+                    }
+                ],
+                "partitioned": false,
+                "id": 0,
+                "partitioning": "hash"
+            }
+        ],
+        "partitioned": false,
+        "id": 0,
+        "partitioning": "hash"
+    },
+    "replacements": {
+        "imdb100": {
+            "name": "SEQUENTIALSCAN",
+            "execution_time": 0.004398,
+            "actual_rows": 4520446,
+            "estimated_cardinality": 4520446,
+            "children": [],
+            "relation": "imdb100",
+            "opt_filter": null,
+            "projection": [
+                {
+                    "table_name": "imdb100",
+                    "field_name": "d"
+                }
+            ]
+        },
+        "imdb6": {
+            "name": "FILTER",
+            "execution_time": 0.002979,
+            "actual_rows": 1288922,
+            "estimated_cardinality": 1288928,
+            "children": [
+                {
+                    "name": "SEQUENTIALSCAN",
+                    "execution_time": 0.019728,
+                    "actual_rows": 1288925,
+                    "estimated_cardinality": 1288928,
+                    "children": [],
+                    "relation": "imdb6",
+                    "opt_filter": "s>=2 AND s<=2525974 AND s IS NOT NULL",
+                    "projection": [
+                        {
+                            "table_name": "imdb6",
+                            "field_name": "s"
+                        }
+                    ]
+                }
+            ],
+            "condition": "(imdb6.s BETWEEN 21 AND 2525972)"
+        },
+        "imdb121": {
+            "name": "SEQUENTIALSCAN",
+            "execution_time": 0.002148,
+            "actual_rows": 1093360,
+            "estimated_cardinality": 1093367,
+            "children": [],
+            "relation": "imdb121",
+            "opt_filter": "d>=21 AND d<=2525972 AND d IS NOT NULL",
+            "projection": [
+                {
+                    "table_name": "imdb121",
+                    "field_name": "d"
+                }
+            ]
+        }
+    }
+}

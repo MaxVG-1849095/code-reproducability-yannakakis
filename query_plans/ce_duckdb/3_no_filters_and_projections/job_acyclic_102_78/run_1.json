@@ -1,0 +1,63 @@
+{
+    "name": "Query",
+    "result": 0.734162,
+    "timing": 0.734162,
+    "cardinality": 0,
+    "extra-info": "select count(*) from imdb100, imdb127, imdb5 where imdb100.d = imdb127.d and imdb127.d = imdb5.s;PRAGMA profile_output = '/home/maxvg/Documents/masterINF/Masterproef/code-reproducability-yannakakis/query_plans/ce_duckdb/2_original_with_aliases/job_acyclic_102_79/run_1.json';",
+    "timings": [],
+    "children": [
+        {
+            "name": "RESULT_COLLECTOR",
+            "timing": 1e-06,
+            "cardinality": 0,
+            "extra_info": "",
+            "children": [
+                {
+                    "name": "UNGROUPED_AGGREGATE",
+                    "timing": 0.005242,
+                    "cardinality": 1,
+                    "extra_info": "count_star()",
+                    "children": [
+                        {
+                            "name": "HASH_JOIN",
+                            "timing": 0.567775,
+                            "cardinality": 30828853,
+                            "extra_info": "INNER\nimdb100.d = imdb127.d\n\n[INFOSEPARATOR]\nEC: 841974\n",
+                            "children": [
+                                {
+                                    "name": "SEQ_SCAN ",
+                                    "timing": 0.011846,
+                                    "cardinality": 4520439,
+                                    "extra_info": "imdb100\n[INFOSEPARATOR]\nd\n[INFOSEPARATOR]\nFilters: d>=31 AND d<=2525793 AND d IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 4520446",
+                                    "children": []
+                                },
+                                {
+                                    "name": "HASH_JOIN",
+                                    "timing": 0.061086,
+                                    "cardinality": 773535,
+                                    "extra_info": "INNER\nimdb5.s = imdb127.d\n\n[INFOSEPARATOR]\nEC: 395396\n",
+                                    "children": [
+                                        {
+                                            "name": "SEQ_SCAN ",
+                                            "timing": 0.035734,
+                                            "cardinality": 3036500,
+                                            "extra_info": "imdb5\n[INFOSEPARATOR]\ns\n[INFOSEPARATOR]\nFilters: s>=31 AND s<=2525793 AND s IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 3036719",
+                                            "children": []
+                                        },
+                                        {
+                                            "name": "SEQ_SCAN ",
+                                            "timing": 0.000286,
+                                            "cardinality": 276403,
+                                            "extra_info": "imdb127\n[INFOSEPARATOR]\nd\n[INFOSEPARATOR]\nEC: 276403",
+                                            "children": []
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

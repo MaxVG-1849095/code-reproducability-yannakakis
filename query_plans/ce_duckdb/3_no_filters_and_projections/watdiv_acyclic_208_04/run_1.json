@@ -1,0 +1,123 @@
+{
+    "name": "Query",
+    "result": 0.061197,
+    "timing": 0.061197,
+    "cardinality": 0,
+    "extra-info": "select count(*) from watdiv1052584, watdiv1052649, watdiv1052646, watdiv1052644, watdiv1052652, watdiv1052586, watdiv1052585 where watdiv1052584.s = watdiv1052649.s and watdiv1052649.s = watdiv1052646.s and watdiv1052646.s = watdiv1052644.s and watdiv1052644.d = watdiv1052652.s and watdiv1052652.d = watdiv1052586.s and watdiv1052586.s = watdiv1052585.s;PRAGMA profile_output = '/home/maxvg/Documents/masterINF/Masterproef/code-reproducability-yannakakis/query_plans/ce_duckdb/2_original_with_aliases/watdiv_acyclic_208_05/run_1.json';",
+    "timings": [],
+    "children": [
+        {
+            "name": "RESULT_COLLECTOR",
+            "timing": 1e-06,
+            "cardinality": 0,
+            "extra_info": "",
+            "children": [
+                {
+                    "name": "UNGROUPED_AGGREGATE",
+                    "timing": 9e-06,
+                    "cardinality": 1,
+                    "extra_info": "count_star()",
+                    "children": [
+                        {
+                            "name": "HASH_JOIN",
+                            "timing": 0.008559,
+                            "cardinality": 74684,
+                            "extra_info": "INNER\nwatdiv1052644.s = watdiv1052646.s\n\n[INFOSEPARATOR]\nBuild Min: 206051\nBuild Max: 871137\n\n[INFOSEPARATOR]\nEC: 78015\n",
+                            "children": [
+                                {
+                                    "name": "HASH_JOIN",
+                                    "timing": 0.035444,
+                                    "cardinality": 239760,
+                                    "extra_info": "INNER\nwatdiv1052644.d = watdiv1052652.s\n\n[INFOSEPARATOR]\nBuild Min: 206127\nBuild Max: 870643\n\n[INFOSEPARATOR]\nEC: 260387\n",
+                                    "children": [
+                                        {
+                                            "name": "SEQ_SCAN ",
+                                            "timing": 0.007005,
+                                            "cardinality": 3287711,
+                                            "extra_info": "watdiv1052644\n[INFOSEPARATOR]\ns\nd\n[INFOSEPARATOR]\nFilters: d>=206127 AND d IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 3289307",
+                                            "children": []
+                                        },
+                                        {
+                                            "name": "HASH_JOIN",
+                                            "timing": 0.000274,
+                                            "cardinality": 7272,
+                                            "extra_info": "INNER\nwatdiv1052652.d = watdiv1052586.s\n\n[INFOSEPARATOR]\nBuild Min: 322\nBuild Max: 443041\n\n[INFOSEPARATOR]\nEC: 8221\n",
+                                            "children": [
+                                                {
+                                                    "name": "SEQ_SCAN ",
+                                                    "timing": 0.000342,
+                                                    "cardinality": 112372,
+                                                    "extra_info": "watdiv1052652\n[INFOSEPARATOR]\ns\nd\n[INFOSEPARATOR]\nFilters: d>=322 AND d IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 112401",
+                                                    "children": []
+                                                },
+                                                {
+                                                    "name": "HASH_JOIN",
+                                                    "timing": 0.000213,
+                                                    "cardinality": 1942,
+                                                    "extra_info": "INNER\nwatdiv1052586.s = watdiv1052585.s\n\n[INFOSEPARATOR]\nEC: 11204\n",
+                                                    "children": [
+                                                        {
+                                                            "name": "SEQ_SCAN ",
+                                                            "timing": 3.2e-05,
+                                                            "cardinality": 7002,
+                                                            "extra_info": "watdiv1052586\n[INFOSEPARATOR]\ns\n[INFOSEPARATOR]\nFilters: s>=322 AND s<=443041 AND s IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 11204",
+                                                            "children": []
+                                                        },
+                                                        {
+                                                            "name": "SEQ_SCAN ",
+                                                            "timing": 9e-06,
+                                                            "cardinality": 7530,
+                                                            "extra_info": "watdiv1052585\n[INFOSEPARATOR]\ns\n[INFOSEPARATOR]\nEC: 7530",
+                                                            "children": []
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                },
+                                {
+                                    "name": "HASH_JOIN",
+                                    "timing": 0.000872,
+                                    "cardinality": 31281,
+                                    "extra_info": "INNER\nwatdiv1052584.s = watdiv1052649.s\n\n[INFOSEPARATOR]\nBuild Min: 206051\nBuild Max: 871137\n\n[INFOSEPARATOR]\nEC: 32546\n",
+                                    "children": [
+                                        {
+                                            "name": "SEQ_SCAN ",
+                                            "timing": 0.000256,
+                                            "cardinality": 111914,
+                                            "extra_info": "watdiv1052584\n[INFOSEPARATOR]\ns\n[INFOSEPARATOR]\nFilters: s>=206051 AND s<=871137 AND s IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 136215",
+                                            "children": []
+                                        },
+                                        {
+                                            "name": "HASH_JOIN",
+                                            "timing": 0.000813,
+                                            "cardinality": 28210,
+                                            "extra_info": "INNER\nwatdiv1052649.s = watdiv1052646.s\n\n[INFOSEPARATOR]\nBuild Min: 206051\nBuild Max: 871137\n\n[INFOSEPARATOR]\nEC: 25955\n",
+                                            "children": [
+                                                {
+                                                    "name": "SEQ_SCAN ",
+                                                    "timing": 0.00014,
+                                                    "cardinality": 69967,
+                                                    "extra_info": "watdiv1052649\n[INFOSEPARATOR]\ns\n[INFOSEPARATOR]\nFilters: s>=206051 AND s<=871137 AND s IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 69970",
+                                                    "children": []
+                                                },
+                                                {
+                                                    "name": "SEQ_SCAN ",
+                                                    "timing": 3.5e-05,
+                                                    "cardinality": 40297,
+                                                    "extra_info": "watdiv1052646\n[INFOSEPARATOR]\ns\n[INFOSEPARATOR]\nEC: 40297",
+                                                    "children": []
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

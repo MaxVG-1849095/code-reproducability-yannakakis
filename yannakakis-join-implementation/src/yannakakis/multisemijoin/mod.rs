@@ -3,6 +3,8 @@
 use std::pin::Pin;
 use std::sync::Arc;
 use std::task::Poll;
+use std::time::SystemTime;
+use std::time::UNIX_EPOCH;
 
 use datafusion::execution::RecordBatchStream;
 use datafusion::physical_plan::metrics::MetricsSet;
@@ -421,6 +423,7 @@ impl MultiSemiJoinStream {
 
 impl Stream for MultiSemiJoinStream {
     type Item = Result<SemiJoinResultBatch, DataFusionError>;
+
 
     fn poll_next(
         mut self: Pin<&mut Self>,

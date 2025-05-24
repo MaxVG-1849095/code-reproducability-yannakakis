@@ -1,0 +1,78 @@
+{
+    "name": "Query",
+    "result": 0.278465,
+    "timing": 0.278465,
+    "cardinality": 0,
+    "extra-info": "select count(*) from imdb1, imdb124, imdb3, imdb13 where imdb1.s = imdb124.s and imdb124.d = imdb3.d and imdb3.d = imdb13.s;PRAGMA profile_output = '/home/maxvg/Documents/masterINF/Masterproef/code-reproducability-yannakakis/query_plans/ce_duckdb/2_original_with_aliases/job_acyclic_108_38/run_1.json';",
+    "timings": [],
+    "children": [
+        {
+            "name": "RESULT_COLLECTOR",
+            "timing": 1e-06,
+            "cardinality": 0,
+            "extra_info": "",
+            "children": [
+                {
+                    "name": "UNGROUPED_AGGREGATE",
+                    "timing": 3.3e-05,
+                    "cardinality": 1,
+                    "extra_info": "count_star()",
+                    "children": [
+                        {
+                            "name": "HASH_JOIN",
+                            "timing": 0.134667,
+                            "cardinality": 522945,
+                            "extra_info": "INNER\nimdb1.s = imdb124.s\n\n[INFOSEPARATOR]\nEC: 337235\n",
+                            "children": [
+                                {
+                                    "name": "SEQ_SCAN ",
+                                    "timing": 0.005894,
+                                    "cardinality": 772560,
+                                    "extra_info": "imdb1\n[INFOSEPARATOR]\ns\n[INFOSEPARATOR]\nFilters: s>=19474837 AND s<=23536633 AND s IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 1262722",
+                                    "children": []
+                                },
+                                {
+                                    "name": "HASH_JOIN",
+                                    "timing": 0.06092,
+                                    "cardinality": 507481,
+                                    "extra_info": "INNER\nimdb13.s = imdb3.d\n\n[INFOSEPARATOR]\nEC: 289904\n",
+                                    "children": [
+                                        {
+                                            "name": "SEQ_SCAN ",
+                                            "timing": 0.003094,
+                                            "cardinality": 1325262,
+                                            "extra_info": "imdb13\n[INFOSEPARATOR]\ns\n[INFOSEPARATOR]\nFilters: s>=30 AND s<=2525671 AND s IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 1325361",
+                                            "children": []
+                                        },
+                                        {
+                                            "name": "HASH_JOIN",
+                                            "timing": 0.033022,
+                                            "cardinality": 409158,
+                                            "extra_info": "INNER\nimdb3.d = imdb124.d\n\n[INFOSEPARATOR]\nEC: 289904\n",
+                                            "children": [
+                                                {
+                                                    "name": "SEQ_SCAN ",
+                                                    "timing": 0.001905,
+                                                    "cardinality": 1215526,
+                                                    "extra_info": "imdb3\n[INFOSEPARATOR]\nd\n[INFOSEPARATOR]\nFilters: d>=30 AND d IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 1215529",
+                                                    "children": []
+                                                },
+                                                {
+                                                    "name": "SEQ_SCAN ",
+                                                    "timing": 0.000681,
+                                                    "cardinality": 316052,
+                                                    "extra_info": "imdb124\n[INFOSEPARATOR]\ns\nd\n[INFOSEPARATOR]\nFilters: d<=2525671 AND d IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 316100",
+                                                    "children": []
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

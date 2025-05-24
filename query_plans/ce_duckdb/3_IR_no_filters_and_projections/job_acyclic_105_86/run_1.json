@@ -1,0 +1,141 @@
+{
+    "execution_time": 0.118218,
+    "root": {
+        "name": "AGGREGATE",
+        "execution_time": 0.000313,
+        "actual_rows": 1,
+        "estimated_cardinality": null,
+        "children": [
+            {
+                "name": "HASHJOIN",
+                "execution_time": 0.083487,
+                "actual_rows": 1122889,
+                "estimated_cardinality": null,
+                "children": [
+                    {
+                        "name": "SEQUENTIALSCAN",
+                        "execution_time": 0.009577,
+                        "actual_rows": 4518480,
+                        "estimated_cardinality": 4520446,
+                        "children": [],
+                        "relation": "imdb100",
+                        "opt_filter": "d>=1559 AND d<=2525392 AND d IS NOT NULL",
+                        "projection": [
+                            {
+                                "table_name": "imdb100",
+                                "field_name": "d"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "HASHJOIN",
+                        "execution_time": 0.011197,
+                        "actual_rows": 13510,
+                        "estimated_cardinality": null,
+                        "children": [
+                            {
+                                "name": "SEQUENTIALSCAN",
+                                "execution_time": 0.002615,
+                                "actual_rows": 1332753,
+                                "estimated_cardinality": 1333580,
+                                "children": [],
+                                "relation": "imdb2",
+                                "opt_filter": "d>=1559 AND d<=2525392 AND d IS NOT NULL",
+                                "projection": [
+                                    {
+                                        "table_name": "imdb2",
+                                        "field_name": "d"
+                                    }
+                                ]
+                            },
+                            {
+                                "name": "HASHJOIN",
+                                "execution_time": 0.00425,
+                                "actual_rows": 6563,
+                                "estimated_cardinality": null,
+                                "children": [
+                                    {
+                                        "name": "SEQUENTIALSCAN",
+                                        "execution_time": 0.000939,
+                                        "actual_rows": 459652,
+                                        "estimated_cardinality": 459925,
+                                        "children": [],
+                                        "relation": "imdb17",
+                                        "opt_filter": "s>=1559 AND s<=2525392 AND s IS NOT NULL",
+                                        "projection": [
+                                            {
+                                                "table_name": "imdb17",
+                                                "field_name": "s"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "name": "SEQUENTIALSCAN",
+                                        "execution_time": 1e-05,
+                                        "actual_rows": 6595,
+                                        "estimated_cardinality": 6595,
+                                        "children": [],
+                                        "relation": "imdb66",
+                                        "opt_filter": null,
+                                        "projection": [
+                                            {
+                                                "table_name": "imdb66",
+                                                "field_name": "s"
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "condition": [
+                                    [
+                                        {
+                                            "table_name": "imdb17",
+                                            "field_name": "s"
+                                        },
+                                        {
+                                            "table_name": "imdb66",
+                                            "field_name": "s"
+                                        }
+                                    ]
+                                ]
+                            }
+                        ],
+                        "condition": [
+                            [
+                                {
+                                    "table_name": "imdb2",
+                                    "field_name": "d"
+                                },
+                                {
+                                    "table_name": "imdb17",
+                                    "field_name": "s"
+                                }
+                            ]
+                        ]
+                    }
+                ],
+                "condition": [
+                    [
+                        {
+                            "table_name": "imdb100",
+                            "field_name": "d"
+                        },
+                        {
+                            "table_name": "imdb2",
+                            "field_name": "d"
+                        }
+                    ]
+                ]
+            }
+        ],
+        "group_by": null,
+        "aggregate": [
+            "count_star()"
+        ]
+    },
+    "aliases": {
+        "imdb66": "imdb66",
+        "imdb2": "imdb2",
+        "imdb17": "imdb17",
+        "imdb100": "imdb100"
+    }
+}

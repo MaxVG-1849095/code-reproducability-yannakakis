@@ -1,0 +1,141 @@
+{
+    "execution_time": 0.177898,
+    "root": {
+        "name": "AGGREGATE",
+        "execution_time": 0.000555,
+        "actual_rows": 1,
+        "estimated_cardinality": null,
+        "children": [
+            {
+                "name": "HASHJOIN",
+                "execution_time": 0.120945,
+                "actual_rows": 1562863,
+                "estimated_cardinality": null,
+                "children": [
+                    {
+                        "name": "SEQUENTIALSCAN",
+                        "execution_time": 0.018877,
+                        "actual_rows": 4520187,
+                        "estimated_cardinality": 4520446,
+                        "children": [],
+                        "relation": "imdb100",
+                        "opt_filter": "d>=80 AND d<=2525590 AND d IS NOT NULL",
+                        "projection": [
+                            {
+                                "table_name": "imdb100",
+                                "field_name": "d"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "HASHJOIN",
+                        "execution_time": 0.010673,
+                        "actual_rows": 29060,
+                        "estimated_cardinality": null,
+                        "children": [
+                            {
+                                "name": "SEQUENTIALSCAN",
+                                "execution_time": 0.002552,
+                                "actual_rows": 328789,
+                                "estimated_cardinality": 328857,
+                                "children": [],
+                                "relation": "imdb11",
+                                "opt_filter": "s>=80 AND s<=2525590 AND s IS NOT NULL",
+                                "projection": [
+                                    {
+                                        "table_name": "imdb11",
+                                        "field_name": "s"
+                                    }
+                                ]
+                            },
+                            {
+                                "name": "HASHJOIN",
+                                "execution_time": 0.009321,
+                                "actual_rows": 30391,
+                                "estimated_cardinality": null,
+                                "children": [
+                                    {
+                                        "name": "SEQUENTIALSCAN",
+                                        "execution_time": 0.001828,
+                                        "actual_rows": 276377,
+                                        "estimated_cardinality": 276403,
+                                        "children": [],
+                                        "relation": "imdb127",
+                                        "opt_filter": "d>=80 AND d<=2525590 AND d IS NOT NULL",
+                                        "projection": [
+                                            {
+                                                "table_name": "imdb127",
+                                                "field_name": "d"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "name": "SEQUENTIALSCAN",
+                                        "execution_time": 0.000104,
+                                        "actual_rows": 61128,
+                                        "estimated_cardinality": 61128,
+                                        "children": [],
+                                        "relation": "imdb19",
+                                        "opt_filter": null,
+                                        "projection": [
+                                            {
+                                                "table_name": "imdb19",
+                                                "field_name": "s"
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "condition": [
+                                    [
+                                        {
+                                            "table_name": "imdb127",
+                                            "field_name": "d"
+                                        },
+                                        {
+                                            "table_name": "imdb19",
+                                            "field_name": "s"
+                                        }
+                                    ]
+                                ]
+                            }
+                        ],
+                        "condition": [
+                            [
+                                {
+                                    "table_name": "imdb11",
+                                    "field_name": "s"
+                                },
+                                {
+                                    "table_name": "imdb19",
+                                    "field_name": "s"
+                                }
+                            ]
+                        ]
+                    }
+                ],
+                "condition": [
+                    [
+                        {
+                            "table_name": "imdb100",
+                            "field_name": "d"
+                        },
+                        {
+                            "table_name": "imdb127",
+                            "field_name": "d"
+                        }
+                    ]
+                ]
+            }
+        ],
+        "group_by": null,
+        "aggregate": [
+            "count_star()"
+        ]
+    },
+    "aliases": {
+        "imdb127": "imdb127",
+        "imdb11": "imdb11",
+        "imdb19": "imdb19",
+        "imdb100": "imdb100"
+    }
+}

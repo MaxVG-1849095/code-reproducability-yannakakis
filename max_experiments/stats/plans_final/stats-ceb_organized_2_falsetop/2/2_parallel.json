@@ -1,0 +1,117 @@
+{
+    "execution_time": 0.224177,
+    "root": {
+        "name": "AGGREGATE",
+        "execution_time": 0.0015,
+        "actual_rows": 1,
+        "estimated_cardinality": null,
+        "children": [
+            {
+                "name": "REPARTITION",
+                "num_partitions": 1,
+                "partitioning": "round-robin",
+                "partition_on": 0,
+                "children": [
+                    {
+                        "name": "YANNAKAKIS",
+                        "root": {
+                            "name": "MULTISEMIJOIN",
+                            "partitioned": false,
+                            "id": 0,
+                            "partitioning": "hash",
+                            "equijoin_keys": [
+                                [
+                                    [
+                                        0,
+                                        0
+                                    ]
+                                ]
+                            ],
+                            "guard": {
+                                "name": "REPARTITION",
+                                "num_partitions": 2,
+                                "partitioning": "unknown",
+                                "partition_on": 0,
+                                "children": [
+                                    {
+                                        "name": "FILTER",
+                                        "execution_time": 0.000221,
+                                        "actual_rows": 79630,
+                                        "estimated_cardinality": 15970,
+                                        "children": [
+                                            {
+                                                "name": "SEQUENTIALSCAN",
+                                                "execution_time": 0.000562,
+                                                "actual_rows": 79633,
+                                                "estimated_cardinality": 15970,
+                                                "children": [],
+                                                "relation": "badges",
+                                                "opt_filter": "Date<='2014-09-11 14:33:06'::TIMESTAMP AND Date IS NOT NULL",
+                                                "projection": [
+                                                    {
+                                                        "table_name": "b",
+                                                        "field_name": "UserId"
+                                                    }
+                                                ]
+                                            }
+                                        ],
+                                        "condition": "(b.UserId >= 3)"
+                                    }
+                                ]
+                            },
+                            "children": [
+                                {
+                                    "name": "GROUPBY",
+                                    "partitioned": false,
+                                    "id": 0,
+                                    "group_on": [
+                                        0
+                                    ],
+                                    "child": {
+                                        "name": "MULTISEMIJOIN",
+                                        "partitioned": true,
+                                        "id": 0,
+                                        "partitioning": "hash",
+                                        "equijoin_keys": [],
+                                        "guard": {
+                                            "name": "REPARTITION",
+                                            "num_partitions": 2,
+                                            "partitioning": "unknown",
+                                            "partition_on": 0,
+                                            "children": [
+                                                {
+                                                    "name": "SEQUENTIALSCAN",
+                                                    "execution_time": 0.000614,
+                                                    "actual_rows": 134887,
+                                                    "estimated_cardinality": 9684,
+                                                    "children": [],
+                                                    "relation": "comments",
+                                                    "opt_filter": "Score=0 AND Score IS NOT NULL",
+                                                    "projection": [
+                                                        {
+                                                            "table_name": "c",
+                                                            "field_name": "UserId"
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        },
+                                        "children": []
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        ],
+        "group_by": null,
+        "aggregate": [
+            "count_star()"
+        ]
+    },
+    "aliases": {
+        "b": "badges",
+        "c": "comments"
+    }
+}

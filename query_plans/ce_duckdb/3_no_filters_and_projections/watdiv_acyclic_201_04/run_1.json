@@ -1,0 +1,108 @@
+{
+    "name": "Query",
+    "result": 0.026821,
+    "timing": 0.026821,
+    "cardinality": 0,
+    "extra-info": "select count(*) from watdiv1052646, watdiv1052629, watdiv1052650, watdiv1052644, watdiv1052643, watdiv1052649 where watdiv1052646.s = watdiv1052629.s and watdiv1052629.s = watdiv1052650.s and watdiv1052650.s = watdiv1052644.s and watdiv1052644.s = watdiv1052643.s and watdiv1052643.s = watdiv1052649.s;PRAGMA profile_output = '/home/maxvg/Documents/masterINF/Masterproef/code-reproducability-yannakakis/query_plans/ce_duckdb/2_original_with_aliases/watdiv_acyclic_201_05/run_1.json';",
+    "timings": [],
+    "children": [
+        {
+            "name": "RESULT_COLLECTOR",
+            "timing": 1.1e-05,
+            "cardinality": 0,
+            "extra_info": "",
+            "children": [
+                {
+                    "name": "UNGROUPED_AGGREGATE",
+                    "timing": 9e-05,
+                    "cardinality": 1,
+                    "extra_info": "count_star()",
+                    "children": [
+                        {
+                            "name": "HASH_JOIN",
+                            "timing": 0.006156,
+                            "cardinality": 833740,
+                            "extra_info": "INNER\nwatdiv1052644.s = watdiv1052649.s\n\n[INFOSEPARATOR]\nBuild Min: 206051\nBuild Max: 871137\n\n[INFOSEPARATOR]\nEC: 590556\n",
+                            "children": [
+                                {
+                                    "name": "SEQ_SCAN ",
+                                    "timing": 0.006887,
+                                    "cardinality": 3289140,
+                                    "extra_info": "watdiv1052644\n[INFOSEPARATOR]\ns\n[INFOSEPARATOR]\nFilters: s>=206051 AND s<=871137 AND s IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 3289307",
+                                    "children": []
+                                },
+                                {
+                                    "name": "HASH_JOIN",
+                                    "timing": 0.001369,
+                                    "cardinality": 25432,
+                                    "extra_info": "INNER\nwatdiv1052643.s = watdiv1052649.s\n\n[INFOSEPARATOR]\nBuild Min: 206051\nBuild Max: 871137\n\n[INFOSEPARATOR]\nEC: 17953\n",
+                                    "children": [
+                                        {
+                                            "name": "SEQ_SCAN ",
+                                            "timing": 0.000305,
+                                            "cardinality": 99996,
+                                            "extra_info": "watdiv1052643\n[INFOSEPARATOR]\ns\n[INFOSEPARATOR]\nFilters: s>=206051 AND s<=871137 AND s IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 100000",
+                                            "children": []
+                                        },
+                                        {
+                                            "name": "HASH_JOIN",
+                                            "timing": 0.001149,
+                                            "cardinality": 25432,
+                                            "extra_info": "INNER\nwatdiv1052629.s = watdiv1052649.s\n\n[INFOSEPARATOR]\nBuild Min: 206051\nBuild Max: 871137\n\n[INFOSEPARATOR]\nEC: 17953\n",
+                                            "children": [
+                                                {
+                                                    "name": "SEQ_SCAN ",
+                                                    "timing": 0.000307,
+                                                    "cardinality": 91001,
+                                                    "extra_info": "watdiv1052629\n[INFOSEPARATOR]\ns\n[INFOSEPARATOR]\nFilters: s>=206051 AND s<=871137 AND s IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 91004",
+                                                    "children": []
+                                                },
+                                                {
+                                                    "name": "HASH_JOIN",
+                                                    "timing": 0.000985,
+                                                    "cardinality": 28210,
+                                                    "extra_info": "INNER\nwatdiv1052649.s = watdiv1052650.s\n\n[INFOSEPARATOR]\nBuild Min: 206051\nBuild Max: 871137\n\n[INFOSEPARATOR]\nEC: 19728\n",
+                                                    "children": [
+                                                        {
+                                                            "name": "SEQ_SCAN ",
+                                                            "timing": 0.000184,
+                                                            "cardinality": 69967,
+                                                            "extra_info": "watdiv1052649\n[INFOSEPARATOR]\ns\n[INFOSEPARATOR]\nFilters: s>=206051 AND s<=871137 AND s IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 69970",
+                                                            "children": []
+                                                        },
+                                                        {
+                                                            "name": "HASH_JOIN",
+                                                            "timing": 0.001243,
+                                                            "cardinality": 28210,
+                                                            "extra_info": "INNER\nwatdiv1052650.s = watdiv1052646.s\n\n[INFOSEPARATOR]\nBuild Min: 206051\nBuild Max: 871137\n\n[INFOSEPARATOR]\nEC: 28195\n",
+                                                            "children": [
+                                                                {
+                                                                    "name": "SEQ_SCAN ",
+                                                                    "timing": 0.000166,
+                                                                    "cardinality": 69967,
+                                                                    "extra_info": "watdiv1052650\n[INFOSEPARATOR]\ns\n[INFOSEPARATOR]\nFilters: s>=206051 AND s<=871137 AND s IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 69970",
+                                                                    "children": []
+                                                                },
+                                                                {
+                                                                    "name": "SEQ_SCAN ",
+                                                                    "timing": 7e-05,
+                                                                    "cardinality": 40297,
+                                                                    "extra_info": "watdiv1052646\n[INFOSEPARATOR]\ns\n[INFOSEPARATOR]\nEC: 40297",
+                                                                    "children": []
+                                                                }
+                                                            ]
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

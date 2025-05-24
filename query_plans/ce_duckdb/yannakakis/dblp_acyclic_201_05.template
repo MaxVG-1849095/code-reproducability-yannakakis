@@ -1,0 +1,141 @@
+{
+    "semijoin_plan": {
+        "guard": "dblp5",
+        "children": [
+            {
+                "guard": "dblp8",
+                "children": [
+                    {
+                        "guard": "dblp7",
+                        "children": [
+                            {
+                                "guard": "dblp6",
+                                "children": [
+                                    {
+                                        "guard": "dblp19",
+                                        "children": [
+                                            {
+                                                "guard": "dblp4",
+                                                "children": [],
+                                                "partitioned": false,
+                                                "id": 0,
+                                                "partitioning": "hash"
+                                            }
+                                        ],
+                                        "partitioned": false,
+                                        "id": 0,
+                                        "partitioning": "hash"
+                                    }
+                                ],
+                                "partitioned": false,
+                                "id": 0,
+                                "partitioning": "hash"
+                            }
+                        ],
+                        "partitioned": false,
+                        "id": 0,
+                        "partitioning": "hash"
+                    }
+                ],
+                "partitioned": false,
+                "id": 0,
+                "partitioning": "hash"
+            }
+        ],
+        "partitioned": false,
+        "id": 0,
+        "partitioning": "hash"
+    },
+    "replacements": {
+        "dblp5": {
+            "name": "SEQUENTIALSCAN",
+            "execution_time": 0.004111,
+            "actual_rows": 2131991,
+            "estimated_cardinality": 2141839,
+            "children": [],
+            "relation": "dblp5",
+            "opt_filter": "s>=1208135 AND s<=3340131 AND s IS NOT NULL",
+            "projection": [
+                {
+                    "table_name": "dblp5",
+                    "field_name": "s"
+                }
+            ]
+        },
+        "dblp8": {
+            "name": "SEQUENTIALSCAN",
+            "execution_time": 0.003492,
+            "actual_rows": 2131991,
+            "estimated_cardinality": 2134666,
+            "children": [],
+            "relation": "dblp8",
+            "opt_filter": "s>=1208135 AND s<=3340131 AND s IS NOT NULL",
+            "projection": [
+                {
+                    "table_name": "dblp8",
+                    "field_name": "s"
+                }
+            ]
+        },
+        "dblp7": {
+            "name": "SEQUENTIALSCAN",
+            "execution_time": 0.003468,
+            "actual_rows": 2131991,
+            "estimated_cardinality": 2134666,
+            "children": [],
+            "relation": "dblp7",
+            "opt_filter": "s>=1208135 AND s<=3340131 AND s IS NOT NULL",
+            "projection": [
+                {
+                    "table_name": "dblp7",
+                    "field_name": "s"
+                }
+            ]
+        },
+        "dblp6": {
+            "name": "SEQUENTIALSCAN",
+            "execution_time": 0.003274,
+            "actual_rows": 2131960,
+            "estimated_cardinality": 2134627,
+            "children": [],
+            "relation": "dblp6",
+            "opt_filter": "s>=1208135 AND s<=3340131 AND s IS NOT NULL",
+            "projection": [
+                {
+                    "table_name": "dblp6",
+                    "field_name": "s"
+                }
+            ]
+        },
+        "dblp19": {
+            "name": "SEQUENTIALSCAN",
+            "execution_time": 0.010046,
+            "actual_rows": 899101,
+            "estimated_cardinality": 900001,
+            "children": [],
+            "relation": "dblp19",
+            "opt_filter": "s>=1208135 AND s<=3340131 AND s IS NOT NULL",
+            "projection": [
+                {
+                    "table_name": "dblp19",
+                    "field_name": "s"
+                }
+            ]
+        },
+        "dblp4": {
+            "name": "SEQUENTIALSCAN",
+            "execution_time": 0.00023,
+            "actual_rows": 217413,
+            "estimated_cardinality": 217413,
+            "children": [],
+            "relation": "dblp4",
+            "opt_filter": null,
+            "projection": [
+                {
+                    "table_name": "dblp4",
+                    "field_name": "s"
+                }
+            ]
+        }
+    }
+}

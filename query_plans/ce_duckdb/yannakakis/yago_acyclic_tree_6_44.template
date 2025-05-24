@@ -1,0 +1,145 @@
+{
+    "semijoin_plan": {
+        "guard": "yago2_2",
+        "children": [
+            {
+                "guard": "yago2_1",
+                "children": [
+                    {
+                        "guard": "yago5_0",
+                        "children": [
+                            {
+                                "guard": "yago5_3",
+                                "children": [
+                                    {
+                                        "guard": "yago5_5",
+                                        "children": [
+                                            {
+                                                "guard": "yago5_4",
+                                                "children": [],
+                                                "partitioned": false,
+                                                "id": 0,
+                                                "partitioning": "hash"
+                                            }
+                                        ],
+                                        "partitioned": false,
+                                        "id": 0,
+                                        "partitioning": "hash"
+                                    }
+                                ],
+                                "partitioned": false,
+                                "id": 0,
+                                "partitioning": "hash"
+                            }
+                        ],
+                        "partitioned": false,
+                        "id": 0,
+                        "partitioning": "hash"
+                    }
+                ],
+                "partitioned": false,
+                "id": 0,
+                "partitioning": "hash"
+            }
+        ],
+        "partitioned": false,
+        "id": 0,
+        "partitioning": "hash"
+    },
+    "replacements": {
+        "yago2_2": {
+            "name": "SEQUENTIALSCAN",
+            "execution_time": 0.002018,
+            "actual_rows": 2124368,
+            "estimated_cardinality": 2124368,
+            "children": [],
+            "relation": "yago2",
+            "opt_filter": null,
+            "projection": [
+                {
+                    "table_name": "yago2_2",
+                    "field_name": "s"
+                }
+            ]
+        },
+        "yago2_1": {
+            "name": "SEQUENTIALSCAN",
+            "execution_time": 0.007422,
+            "actual_rows": 2123161,
+            "estimated_cardinality": 2124368,
+            "children": [],
+            "relation": "yago2",
+            "opt_filter": "d>=64 AND d<=4523488 AND d IS NOT NULL",
+            "projection": [
+                {
+                    "table_name": "yago2_1",
+                    "field_name": "d"
+                },
+                {
+                    "table_name": "yago2_1",
+                    "field_name": "s"
+                }
+            ]
+        },
+        "yago5_0": {
+            "name": "SEQUENTIALSCAN",
+            "execution_time": 0.000273,
+            "actual_rows": 95092,
+            "estimated_cardinality": 95092,
+            "children": [],
+            "relation": "yago5",
+            "opt_filter": null,
+            "projection": [
+                {
+                    "table_name": "yago5_0",
+                    "field_name": "d"
+                }
+            ]
+        },
+        "yago5_3": {
+            "name": "SEQUENTIALSCAN",
+            "execution_time": 0.000132,
+            "actual_rows": 95092,
+            "estimated_cardinality": 95092,
+            "children": [],
+            "relation": "yago5",
+            "opt_filter": null,
+            "projection": [
+                {
+                    "table_name": "yago5_3",
+                    "field_name": "d"
+                }
+            ]
+        },
+        "yago5_5": {
+            "name": "SEQUENTIALSCAN",
+            "execution_time": 0.00015,
+            "actual_rows": 95092,
+            "estimated_cardinality": 95092,
+            "children": [],
+            "relation": "yago5",
+            "opt_filter": null,
+            "projection": [
+                {
+                    "table_name": "yago5_5",
+                    "field_name": "d"
+                }
+            ]
+        },
+        "yago5_4": {
+            "name": "SEQUENTIALSCAN",
+            "execution_time": 0.000146,
+            "actual_rows": 95092,
+            "estimated_cardinality": 95092,
+            "children": [],
+            "relation": "yago5",
+            "opt_filter": null,
+            "projection": [
+                {
+                    "table_name": "yago5_4",
+                    "field_name": "d"
+                }
+            ]
+        }
+    }
+}

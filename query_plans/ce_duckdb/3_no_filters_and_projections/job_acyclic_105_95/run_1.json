@@ -1,0 +1,78 @@
+{
+    "name": "Query",
+    "result": 1.538508,
+    "timing": 1.538508,
+    "cardinality": 0,
+    "extra-info": "select count(*) from imdb100, imdb124, imdb11, imdb5 where imdb100.d = imdb124.d and imdb124.d = imdb11.s and imdb11.s = imdb5.s;PRAGMA profile_output = '/home/maxvg/Documents/masterINF/Masterproef/code-reproducability-yannakakis/query_plans/ce_duckdb/2_original_with_aliases/job_acyclic_105_96/run_1.json';",
+    "timings": [],
+    "children": [
+        {
+            "name": "RESULT_COLLECTOR",
+            "timing": 1.4e-05,
+            "cardinality": 0,
+            "extra_info": "",
+            "children": [
+                {
+                    "name": "UNGROUPED_AGGREGATE",
+                    "timing": 0.011882,
+                    "cardinality": 1,
+                    "extra_info": "count_star()",
+                    "children": [
+                        {
+                            "name": "HASH_JOIN",
+                            "timing": 1.33981,
+                            "cardinality": 55982596,
+                            "extra_info": "INNER\nimdb100.d = imdb124.d\n\n[INFOSEPARATOR]\nEC: 149167\n",
+                            "children": [
+                                {
+                                    "name": "SEQ_SCAN ",
+                                    "timing": 0.009114,
+                                    "cardinality": 4520445,
+                                    "extra_info": "imdb100\n[INFOSEPARATOR]\nd\n[INFOSEPARATOR]\nFilters: d>=30 AND d IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 4520446",
+                                    "children": []
+                                },
+                                {
+                                    "name": "HASH_JOIN",
+                                    "timing": 0.04909,
+                                    "cardinality": 713703,
+                                    "extra_info": "INNER\nimdb5.s = imdb11.s\n\n[INFOSEPARATOR]\nEC: 70049\n",
+                                    "children": [
+                                        {
+                                            "name": "SEQ_SCAN ",
+                                            "timing": 0.006671,
+                                            "cardinality": 3036678,
+                                            "extra_info": "imdb5\n[INFOSEPARATOR]\ns\n[INFOSEPARATOR]\nFilters: s>=30 AND s<=2525974 AND s IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 3036719",
+                                            "children": []
+                                        },
+                                        {
+                                            "name": "HASH_JOIN",
+                                            "timing": 0.011228,
+                                            "cardinality": 104070,
+                                            "extra_info": "INNER\nimdb11.s = imdb124.d\n\n[INFOSEPARATOR]\nEC: 328857\n",
+                                            "children": [
+                                                {
+                                                    "name": "SEQ_SCAN ",
+                                                    "timing": 0.000612,
+                                                    "cardinality": 328856,
+                                                    "extra_info": "imdb11\n[INFOSEPARATOR]\ns\n[INFOSEPARATOR]\nFilters: s>=30 AND s IS NOT NULL\n\n[INFOSEPARATOR]\nEC: 328857",
+                                                    "children": []
+                                                },
+                                                {
+                                                    "name": "SEQ_SCAN ",
+                                                    "timing": 0.000262,
+                                                    "cardinality": 316100,
+                                                    "extra_info": "imdb124\n[INFOSEPARATOR]\nd\n[INFOSEPARATOR]\nEC: 316100",
+                                                    "children": []
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}

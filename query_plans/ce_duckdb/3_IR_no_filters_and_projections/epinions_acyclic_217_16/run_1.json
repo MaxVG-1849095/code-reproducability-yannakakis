@@ -1,0 +1,314 @@
+{
+    "execution_time": 0.38499,
+    "root": {
+        "name": "AGGREGATE",
+        "execution_time": 0.002467,
+        "actual_rows": 1,
+        "estimated_cardinality": null,
+        "children": [
+            {
+                "name": "HASHJOIN",
+                "execution_time": 0.328808,
+                "actual_rows": 18417888,
+                "estimated_cardinality": null,
+                "children": [
+                    {
+                        "name": "HASHJOIN",
+                        "execution_time": 0.007087,
+                        "actual_rows": 501699,
+                        "estimated_cardinality": null,
+                        "children": [
+                            {
+                                "name": "HASHJOIN",
+                                "execution_time": 0.000594,
+                                "actual_rows": 22636,
+                                "estimated_cardinality": null,
+                                "children": [
+                                    {
+                                        "name": "SEQUENTIALSCAN",
+                                        "execution_time": 7.4e-05,
+                                        "actual_rows": 10289,
+                                        "estimated_cardinality": 10290,
+                                        "children": [],
+                                        "relation": "epinions75899",
+                                        "opt_filter": "s<=75867 AND s IS NOT NULL",
+                                        "projection": [
+                                            {
+                                                "table_name": "epinions75899",
+                                                "field_name": "s"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "name": "SEQUENTIALSCAN",
+                                        "execution_time": 1.2e-05,
+                                        "actual_rows": 10101,
+                                        "estimated_cardinality": 10101,
+                                        "children": [],
+                                        "relation": "epinions75905",
+                                        "opt_filter": null,
+                                        "projection": [
+                                            {
+                                                "table_name": "epinions75905",
+                                                "field_name": "s"
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "condition": [
+                                    [
+                                        {
+                                            "table_name": "epinions75899",
+                                            "field_name": "s"
+                                        },
+                                        {
+                                            "table_name": "epinions75905",
+                                            "field_name": "s"
+                                        }
+                                    ]
+                                ]
+                            },
+                            {
+                                "name": "HASHJOIN",
+                                "execution_time": 0.000751,
+                                "actual_rows": 35722,
+                                "estimated_cardinality": null,
+                                "children": [
+                                    {
+                                        "name": "SEQUENTIALSCAN",
+                                        "execution_time": 2.6e-05,
+                                        "actual_rows": 10190,
+                                        "estimated_cardinality": 10192,
+                                        "children": [],
+                                        "relation": "epinions75908",
+                                        "opt_filter": "d<=75865 AND d IS NOT NULL",
+                                        "projection": [
+                                            {
+                                                "table_name": "epinions75908",
+                                                "field_name": "s"
+                                            },
+                                            {
+                                                "table_name": "epinions75908",
+                                                "field_name": "d"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "name": "SEQUENTIALSCAN",
+                                        "execution_time": 3.1e-05,
+                                        "actual_rows": 10168,
+                                        "estimated_cardinality": 10169,
+                                        "children": [],
+                                        "relation": "epinions75929",
+                                        "opt_filter": "s<=75867 AND s IS NOT NULL",
+                                        "projection": [
+                                            {
+                                                "table_name": "epinions75929",
+                                                "field_name": "d"
+                                            },
+                                            {
+                                                "table_name": "epinions75929",
+                                                "field_name": "s"
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "condition": [
+                                    [
+                                        {
+                                            "table_name": "epinions75908",
+                                            "field_name": "d"
+                                        },
+                                        {
+                                            "table_name": "epinions75929",
+                                            "field_name": "d"
+                                        }
+                                    ]
+                                ]
+                            }
+                        ],
+                        "condition": [
+                            [
+                                {
+                                    "table_name": "epinions75905",
+                                    "field_name": "s"
+                                },
+                                {
+                                    "table_name": "epinions75929",
+                                    "field_name": "s"
+                                }
+                            ]
+                        ]
+                    },
+                    {
+                        "name": "HASHJOIN",
+                        "execution_time": 0.006865,
+                        "actual_rows": 134570,
+                        "estimated_cardinality": null,
+                        "children": [
+                            {
+                                "name": "HASHJOIN",
+                                "execution_time": 0.00076,
+                                "actual_rows": 36596,
+                                "estimated_cardinality": null,
+                                "children": [
+                                    {
+                                        "name": "SEQUENTIALSCAN",
+                                        "execution_time": 2.5e-05,
+                                        "actual_rows": 10090,
+                                        "estimated_cardinality": 10090,
+                                        "children": [],
+                                        "relation": "epinions75911",
+                                        "opt_filter": null,
+                                        "projection": [
+                                            {
+                                                "table_name": "epinions75911",
+                                                "field_name": "d"
+                                            },
+                                            {
+                                                "table_name": "epinions75911",
+                                                "field_name": "s"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "name": "SEQUENTIALSCAN",
+                                        "execution_time": 2.4e-05,
+                                        "actual_rows": 9992,
+                                        "estimated_cardinality": 9999,
+                                        "children": [],
+                                        "relation": "epinions75936",
+                                        "opt_filter": "d<=75644 AND d IS NOT NULL",
+                                        "projection": [
+                                            {
+                                                "table_name": "epinions75936",
+                                                "field_name": "s"
+                                            },
+                                            {
+                                                "table_name": "epinions75936",
+                                                "field_name": "d"
+                                            }
+                                        ]
+                                    }
+                                ],
+                                "condition": [
+                                    [
+                                        {
+                                            "table_name": "epinions75911",
+                                            "field_name": "d"
+                                        },
+                                        {
+                                            "table_name": "epinions75936",
+                                            "field_name": "d"
+                                        }
+                                    ]
+                                ]
+                            },
+                            {
+                                "name": "HASHJOIN",
+                                "execution_time": 0.000466,
+                                "actual_rows": 15797,
+                                "estimated_cardinality": null,
+                                "children": [
+                                    {
+                                        "name": "SEQUENTIALSCAN",
+                                        "execution_time": 1.1e-05,
+                                        "actual_rows": 10258,
+                                        "estimated_cardinality": 10258,
+                                        "children": [],
+                                        "relation": "epinions75910",
+                                        "opt_filter": null,
+                                        "projection": [
+                                            {
+                                                "table_name": "epinions75910",
+                                                "field_name": "d"
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "name": "FILTER",
+                                        "execution_time": 1.6e-05,
+                                        "actual_rows": 10064,
+                                        "estimated_cardinality": 10067,
+                                        "children": [
+                                            {
+                                                "name": "SEQUENTIALSCAN",
+                                                "execution_time": 3.2e-05,
+                                                "actual_rows": 10064,
+                                                "estimated_cardinality": 10067,
+                                                "children": [],
+                                                "relation": "epinions75912",
+                                                "opt_filter": "s<=75794 AND s IS NOT NULL",
+                                                "projection": [
+                                                    {
+                                                        "table_name": "epinions75912",
+                                                        "field_name": "s"
+                                                    },
+                                                    {
+                                                        "table_name": "epinions75912",
+                                                        "field_name": "d"
+                                                    }
+                                                ]
+                                            }
+                                        ],
+                                        "condition": "(epinions75912.d <= 75829)"
+                                    }
+                                ],
+                                "condition": [
+                                    [
+                                        {
+                                            "table_name": "epinions75910",
+                                            "field_name": "d"
+                                        },
+                                        {
+                                            "table_name": "epinions75912",
+                                            "field_name": "s"
+                                        }
+                                    ]
+                                ]
+                            }
+                        ],
+                        "condition": [
+                            [
+                                {
+                                    "table_name": "epinions75936",
+                                    "field_name": "s"
+                                },
+                                {
+                                    "table_name": "epinions75912",
+                                    "field_name": "d"
+                                }
+                            ]
+                        ]
+                    }
+                ],
+                "condition": [
+                    [
+                        {
+                            "table_name": "epinions75908",
+                            "field_name": "s"
+                        },
+                        {
+                            "table_name": "epinions75911",
+                            "field_name": "s"
+                        }
+                    ]
+                ]
+            }
+        ],
+        "group_by": null,
+        "aggregate": [
+            "count_star()"
+        ]
+    },
+    "aliases": {
+        "epinions75911": "epinions75911",
+        "epinions75929": "epinions75929",
+        "epinions75899": "epinions75899",
+        "epinions75905": "epinions75905",
+        "epinions75912": "epinions75912",
+        "epinions75936": "epinions75936",
+        "epinions75910": "epinions75910",
+        "epinions75908": "epinions75908"
+    }
+}

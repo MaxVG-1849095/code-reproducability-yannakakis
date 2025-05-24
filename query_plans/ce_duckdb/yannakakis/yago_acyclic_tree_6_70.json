@@ -1,0 +1,250 @@
+{
+    "execution_time": 0.009613,
+    "root": {
+        "name": "AGGREGATE",
+        "execution_time": 6e-06,
+        "actual_rows": 1,
+        "estimated_cardinality": null,
+        "children": [
+            {
+                "name": "YANNAKAKIS",
+                "root": {
+                    "name": "MULTISEMIJOIN",
+                    "partitioned": false,
+                    "id": 0,
+                    "partitioning": "hash",
+                    "equijoin_keys": [
+                        [
+                            [
+                                0,
+                                0
+                            ]
+                        ]
+                    ],
+                    "guard": {
+                        "name": "SEQUENTIALSCAN",
+                        "execution_time": 2.8e-05,
+                        "actual_rows": 28835,
+                        "estimated_cardinality": 28835,
+                        "children": [],
+                        "relation": "yago22",
+                        "opt_filter": null,
+                        "projection": [
+                            {
+                                "table_name": "yago22",
+                                "field_name": "s"
+                            }
+                        ]
+                    },
+                    "children": [
+                        {
+                            "name": "GROUPBY",
+                            "partitioned": false,
+                            "id": 0,
+                            "group_on": [
+                                1
+                            ],
+                            "child": {
+                                "name": "MULTISEMIJOIN",
+                                "partitioned": false,
+                                "id": 0,
+                                "partitioning": "hash",
+                                "equijoin_keys": [
+                                    [
+                                        [
+                                            0,
+                                            0
+                                        ]
+                                    ]
+                                ],
+                                "guard": {
+                                    "name": "SEQUENTIALSCAN",
+                                    "execution_time": 0.000306,
+                                    "actual_rows": 95087,
+                                    "estimated_cardinality": 95092,
+                                    "children": [],
+                                    "relation": "yago5",
+                                    "opt_filter": "d>=173 AND d<=4420083 AND d IS NOT NULL",
+                                    "projection": [
+                                        {
+                                            "table_name": "yago5",
+                                            "field_name": "d"
+                                        },
+                                        {
+                                            "table_name": "yago5",
+                                            "field_name": "s"
+                                        }
+                                    ]
+                                },
+                                "children": [
+                                    {
+                                        "name": "GROUPBY",
+                                        "partitioned": false,
+                                        "id": 0,
+                                        "group_on": [
+                                            0
+                                        ],
+                                        "child": {
+                                            "name": "MULTISEMIJOIN",
+                                            "partitioned": false,
+                                            "id": 0,
+                                            "partitioning": "hash",
+                                            "equijoin_keys": [
+                                                [
+                                                    [
+                                                        0,
+                                                        0
+                                                    ]
+                                                ]
+                                            ],
+                                            "guard": {
+                                                "name": "SEQUENTIALSCAN",
+                                                "execution_time": 0.000125,
+                                                "actual_rows": 55529,
+                                                "estimated_cardinality": 55535,
+                                                "children": [],
+                                                "relation": "yago17",
+                                                "opt_filter": "d>=173 AND d<=4420083 AND d IS NOT NULL",
+                                                "projection": [
+                                                    {
+                                                        "table_name": "yago17_0",
+                                                        "field_name": "d"
+                                                    }
+                                                ]
+                                            },
+                                            "children": [
+                                                {
+                                                    "name": "GROUPBY",
+                                                    "partitioned": false,
+                                                    "id": 0,
+                                                    "group_on": [
+                                                        0
+                                                    ],
+                                                    "child": {
+                                                        "name": "MULTISEMIJOIN",
+                                                        "partitioned": false,
+                                                        "id": 0,
+                                                        "partitioning": "hash",
+                                                        "equijoin_keys": [
+                                                            [
+                                                                [
+                                                                    0,
+                                                                    0
+                                                                ]
+                                                            ],
+                                                            [
+                                                                [
+                                                                    1,
+                                                                    0
+                                                                ]
+                                                            ]
+                                                        ],
+                                                        "guard": {
+                                                            "name": "SEQUENTIALSCAN",
+                                                            "execution_time": 0.000196,
+                                                            "actual_rows": 55529,
+                                                            "estimated_cardinality": 55535,
+                                                            "children": [],
+                                                            "relation": "yago17",
+                                                            "opt_filter": "d>=173 AND d<=4420083 AND d IS NOT NULL",
+                                                            "projection": [
+                                                                {
+                                                                    "table_name": "yago17_1",
+                                                                    "field_name": "d"
+                                                                },
+                                                                {
+                                                                    "table_name": "yago17_1",
+                                                                    "field_name": "s"
+                                                                }
+                                                            ]
+                                                        },
+                                                        "children": [
+                                                            {
+                                                                "name": "GROUPBY",
+                                                                "partitioned": false,
+                                                                "id": 0,
+                                                                "group_on": [
+                                                                    0
+                                                                ],
+                                                                "child": {
+                                                                    "name": "MULTISEMIJOIN",
+                                                                    "partitioned": false,
+                                                                    "id": 0,
+                                                                    "partitioning": "hash",
+                                                                    "equijoin_keys": [],
+                                                                    "guard": {
+                                                                        "name": "SEQUENTIALSCAN",
+                                                                        "execution_time": 3.4e-05,
+                                                                        "actual_rows": 20515,
+                                                                        "estimated_cardinality": 20515,
+                                                                        "children": [],
+                                                                        "relation": "yago46",
+                                                                        "opt_filter": null,
+                                                                        "projection": [
+                                                                            {
+                                                                                "table_name": "yago46",
+                                                                                "field_name": "d"
+                                                                            }
+                                                                        ]
+                                                                    },
+                                                                    "children": []
+                                                                }
+                                                            },
+                                                            {
+                                                                "name": "GROUPBY",
+                                                                "partitioned": false,
+                                                                "id": 0,
+                                                                "group_on": [
+                                                                    0
+                                                                ],
+                                                                "child": {
+                                                                    "name": "MULTISEMIJOIN",
+                                                                    "partitioned": false,
+                                                                    "id": 0,
+                                                                    "partitioning": "hash",
+                                                                    "equijoin_keys": [],
+                                                                    "guard": {
+                                                                        "name": "SEQUENTIALSCAN",
+                                                                        "execution_time": 0.00012,
+                                                                        "actual_rows": 55528,
+                                                                        "estimated_cardinality": 55535,
+                                                                        "children": [],
+                                                                        "relation": "yago17",
+                                                                        "opt_filter": "d>=173 AND d<=4314880 AND d IS NOT NULL",
+                                                                        "projection": [
+                                                                            {
+                                                                                "table_name": "yago17_5",
+                                                                                "field_name": "d"
+                                                                            }
+                                                                        ]
+                                                                    },
+                                                                    "children": []
+                                                                }
+                                                            }
+                                                        ]
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            }
+        ],
+        "group_by": null,
+        "aggregate": [
+            "count_star()"
+        ]
+    },
+    "aliases": {
+        "yago17_5": "yago17",
+        "yago17_1": "yago17",
+        "yago22": "yago22",
+        "yago46": "yago46",
+        "yago17_0": "yago17",
+        "yago5": "yago5"
+    }
+}
