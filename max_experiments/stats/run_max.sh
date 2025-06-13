@@ -4,10 +4,10 @@ root_dir="../../"
 parquet_data="$root_dir/benchmarks/stats-ceb/parquet-zstd-lowercase"
 out_folder="./output" # non-existing output folder
 timings="timings.csv"
-plan="./133_rr/"
+plan="./17/17.json"
 
 
-repetitions=50
+repetitions=1
 
 rm ./results.csv
 rm -rf ./output/
