@@ -43,8 +43,6 @@ impl NestedCombinerWrapper {
             return;
         }
 
-        // println!("\n\n\n\n\nADDING INNER COL FOR PARTITION {} AND CHILD {}\n {:?}\n\n\n\n\n", index, child_index, inner_col);
-
         self.nested_combiners[child_index].add_inner_col(inner_col, index);
     }
 
@@ -53,7 +51,6 @@ impl NestedCombinerWrapper {
         if self.ready {
             return;
         }
-        // println!("\n\n\n\n\nADDING EMPTY INNER COL FOR PARTITION {} AND CHILD {}\n {:?}\n\n\n\n\n", index, child_index, inner_col);
         for i in 0..self.nested_combiners.len() {
             self.nested_combiners[i].add_none_inner_col(index);
         }
@@ -199,15 +196,11 @@ impl NestedCombiner {
         //check if all partitions are present
         for i in 0..self.present_partitions.len() {
             if self.present_partitions[i] != i {
-                // println!("RETURNING EARLY IN COMBINE, NOT ALL PARTITIONS PRESENT");
-                //return error
                 return Err(DataFusionError::Internal(
                     "Not all partitions are present in the NestedCombiner".to_string(),
                 ));
             }
         }
-
-        // println!("[][][]Combining nested columns");
 
         let mut curr_offset= 0;
         let mut final_inner_col: Option<NestedColumn> = None;
@@ -219,7 +212,6 @@ impl NestedCombiner {
                 Some(NestedColumn::Singular(ref mut s)) => match inner_col {
                     Some(NestedColumn::Singular(ref inner_s)) => {
                         s.weights.extend(inner_s.weights.iter());
-                        // println!("singular", );
                     }
                     Some(NestedColumn::NonSingular(ref inner_ns)) => {
                         let mut new_weights = s.weights.clone();
@@ -238,21 +230,15 @@ impl NestedCombiner {
                         }
                         Some(NestedColumn::NonSingular(ref inner_nested)) => {
                             if !inner_nested.is_highest_level() {
-                                // println!("append other recursive");
-                                // println!(" \n\n\n -----\nfinal nested before append\n: {:?} \n\n other: \n {:?} \n\n", final_nested, inner_nested);
                                 final_nested
                                     .append_other_2nd_level(inner_nested);
-                                // println!("final nested after append: {:?}\n -----\n\n", final_nested);
                             }
                             let next_offset = final_nested
                                 .append_other_top_level(inner_nested, curr_offset as usize);
-                            // println!("final nested after append: {:?}", final_nested);
-                            // println!("BEFORE OFFSETS: {:?}", self.offsets);
                             if i + 1 != self.inner_cols.len() {
                                 self.offsets[i + 1] = next_offset;
                                 curr_offset = self.offsets[i + 1] as u32;
                             }
-                            // println!("nonsingular");
                         }
                         None => {
                             if i + 1 != self.inner_cols.len() {
@@ -262,10 +248,8 @@ impl NestedCombiner {
                     }
                 }
                 None => {
-                    // println!("IN NONE STATEMENT TEST");
                     //combine all inner columns
                     final_inner_col = self.inner_cols[i].clone();
-                    // println!("=======\ninitial final inner col: {:?}\n========", final_inner_col);
                     
                     match final_inner_col {
                         Some(NestedColumn::Singular(ref s)) => {
@@ -273,7 +257,6 @@ impl NestedCombiner {
                         }
                         Some(NestedColumn::NonSingular(ref ns)) => {
                             curr_offset = ns.data.next.as_ref().unwrap().iter().len() as u32;
-                            // println!("\nns data next \n{:?}\n", );
                         }
                         None => {
                             curr_offset = 0;
@@ -288,9 +271,6 @@ impl NestedCombiner {
         self.final_inner_col = final_inner_col.clone().expect("final_inner_col is None");
         self.ready = true;
 
-        // println!("print end of combined:");
-        // println!("final offsets: {:?}", self.offsets);
-        // self.print_content();
 
         Ok(self.final_inner_col.clone())
     }
